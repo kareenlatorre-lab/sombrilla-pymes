@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Cotización digital del Seguro Pymes de Seguros Bolívar: Vida Pymes incluida en el paquete, varias sedes en tabla, coberturas con pestañas, y un flujo más corto: quedarse con el sugerido salta directo a fotos, y personalizar salta directo a ajustar coberturas.">
   <title>Seguro Pymes (paquete, sedes en tabla, flujo corto) | Seguros Bolívar</title>
+  <!-- Mapa (Leaflet + OpenStreetMap, sin llave de API) para confirmar/mover el pin de cada sede.
+       A diferencia del resto de este archivo, esto SÍ necesita conexión a internet: los mosaicos
+       del mapa y la búsqueda de direcciones se piden en vivo, no se pueden empaquetar offline. -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <style>@font-face {
   font-family: 'Material Symbols Outlined';
   font-style: normal;
@@ -1443,6 +1448,7 @@ button, input, select { font: inherit; }
     }
   `;T([b({type:String,reflect:!0})],A.prototype,"type",2);T([b({type:String,reflect:!0})],A.prototype,"position",2);T([b({type:String,reflect:!0})],A.prototype,"size",2);T([b({type:String})],A.prototype,"title",2);T([b({type:String})],A.prototype,"message",2);T([b({type:Boolean,reflect:!0})],A.prototype,"visible",2);T([b({type:Boolean,attribute:"show-close"})],A.prototype,"showClose",2);T([b({type:Number,attribute:"auto-dismiss"})],A.prototype,"autoDismiss",2);T([b({type:Boolean,attribute:"show-progress"})],A.prototype,"showProgress",2);T([b({type:Boolean})],A.prototype,"clickable",2);T([N()],A.prototype,"_progressWidth",2);A=T([we("sb-ui-toast")],A);var Qs={adapt(s){let e=s;return{data:e.data,total:e.total}}},ei={adapt(s){let e=s;return{data:e.content,total:e.totalElements}}},ti={adapt(s){let e=s;return{data:e.edges.map(t=>t.node),total:e.pageInfo.total}}},si={adapt(s){let e=s;return{data:e.data,total:e.meta.total}}};if(typeof window<"u"){let s=window;s.SbUiTable={...s.SbUiTable,defaultAdapter:Qs,springPageAdapter:ei,graphqlAdapter:ti,laravelAdapter:si}}typeof window<"u"&&(window.showToast=Hs,window.showSuccess=js,window.showInfo=Vs,window.showWarning=Ys,window.showError=Fs,window.hideToast=Ws,window.hideAllToasts=Js,window.removeToast=Xs,window.removeAllToasts=Ks);})();
 //# sourceMappingURL=sb-ui-seguros-bolivar.min.js.map
+
 'use strict';
 
 /** Reglas de negocio replicadas del prototipo original Pymes. */
@@ -1499,12 +1505,12 @@ const BAJADAS = {
   emision: 'Guarde el número de su póliza; ya puede descargarla o consultarla cuando quiera.'
 };
 
-const nuevaSede = () => ({ direccion: '', ciudad: '', propietario: null, tipo: 'Local comercial', primerPiso: null, valores: { ...BASE }, ciber: { interrupciones: null, plan: 'Full', monto: 80000000 }, mov: { frecuencia: 'Mensual', limite: 40000000 } });
+const nuevaSede = () => ({ direccion: '', ciudad: '', propietario: null, tipo: 'Local comercial', primerPiso: null, ubicacion: null, valores: { ...BASE }, ciber: { interrupciones: null, plan: 'Full', monto: 80000000 }, mov: { frecuencia: 'Mensual', limite: 40000000 } });
 
 const state = {
   paso: 'landing', consultado: false, encontrado: true,
   tipoDoc: 'CC', numDoc: '', nombre: '', correo: '', celular: '',
-  actividadBusqueda: '', actividad: '', ventas: '1200000000',
+  actividadBusqueda: '', actividad: '', ventas: '',
   multiSede: null, sedes: [nuevaSede()], sedeActiva: 0,
   plan: 'sugerido', periodicidad: 'anual', personalizando: false,
   opcionales: { dinero: false, muebles: false, roboEmpleados: false, ciber: false, movMercancias: false },
@@ -1513,6 +1519,7 @@ const state = {
   benefNombre: '', benefParentesco: 'Cónyuge', benefPct: 100, benefIdx: -1,
   medioPago: '', otp: '', otpValidado: false, declaracion: false, autoriza: false, modalPlan: null, drawerVida: false, drawerBenef: false, benefEditIdx: -1,
   drawerSede: false, sedeEditIdx: -1, sedeDraft: nuevaSede(),
+  drawerMapa: false, mapaSedeIdx: null, mapaBusqueda: '', mapaError: '', mapaBuscando: false,
   oliviaAbierta: false, oliviaTexto: '',
   oliviaLog: [{ from: 'olivia', text: '¡Hola! Soy OLIVIA. Pregúnteme sobre coberturas, exclusiones o el clausulado del Seguro Pymes y Vida Pymes.' }]
 };
@@ -1632,7 +1639,7 @@ const negocio = () => `<div style="background:#FAFAFA;border:1px solid #E1E1E1;b
   <div style="height:1px;background:#E1E1E1"></div>
   <div>
     <div style="font-weight:700;font-size:15px;margin-bottom:8px">¿Cuánto vende aproximadamente su negocio al año?</div>
-    <div style="display:flex;align-items:center;gap:8px;max-width:340px"><span style="font-weight:700;font-size:15px;color:#5B5B5B">$</span><input id="ventas" class="sb-ui-input" style="flex:1;min-width:0" value="${esc(state.ventas)}" data-model="ventas"></div>
+    <div style="display:flex;align-items:center;gap:8px;max-width:340px"><span style="font-weight:700;font-size:15px;color:#5B5B5B">$</span><input id="ventas" class="sb-ui-input" style="flex:1;min-width:0" value="${esc(state.ventas)}" placeholder="Ej. 1.200.000.000" data-model="ventas"></div>
     <div style="font-weight:400;font-size:12.5px;line-height:1.45;color:#5B5B5B;margin-top:8px;max-width:520px">Usamos este dato para recomendarle una protección acorde al tamaño de su negocio.</div>
   </div>
   <div style="height:1px;background:#E1E1E1"></div>
@@ -1685,7 +1692,10 @@ const sedes = () => {
             <td style="${td}"><select class="sb-ui-select sb-ui-select--block" style="min-width:170px" data-sede-row="${i}" data-sede-field="tipo">${TIPOS_INMUEBLE.map((t) => `<option ${s.tipo === t ? 'selected' : ''}>${t}</option>`).join('')}</select></td>
             <td style="${td}">${yesNoFila(i, 'propietario', s.propietario)}</td>
             <td style="${td}">${yesNoFila(i, 'primerPiso', s.primerPiso)}</td>
-            <td style="${td}">${state.sedes.length > 1 ? `<button type="button" class="sb-ui-button sb-ui-button--error sb-ui-button--stroke sb-ui-button--circle sb-ui-button--icon-only" data-action="delSede:${i}" title="Quitar sede" aria-label="Quitar sede"><span class="material-symbols-outlined" style="font-size:18px">delete</span></button>` : ''}</td>
+            <td style="${td}"><div style="display:flex;gap:6px">
+              <button type="button" class="sb-ui-button ${s.ubicacion ? 'sb-ui-button--primary sb-ui-button--fill' : 'sb-ui-button--secondary sb-ui-button--stroke'} sb-ui-button--circle sb-ui-button--icon-only" data-action="abrirMapaSede:${i}" title="${s.ubicacion ? 'Ubicación confirmada en el mapa' : 'Ver y ajustar en el mapa'}" aria-label="Ver en el mapa"><span class="material-symbols-outlined" style="font-size:18px">${s.ubicacion ? 'location_on' : 'add_location'}</span></button>
+              ${state.sedes.length > 1 ? `<button type="button" class="sb-ui-button sb-ui-button--error sb-ui-button--stroke sb-ui-button--circle sb-ui-button--icon-only" data-action="delSede:${i}" title="Quitar sede" aria-label="Quitar sede"><span class="material-symbols-outlined" style="font-size:18px">delete</span></button>` : ''}
+            </div></td>
           </tr>`).join('')}
         </tbody>
       </table>
@@ -1706,6 +1716,7 @@ const sedeDrawer = () => {
     </div>
     <div><div style="font-weight:700;font-size:12.5px;margin-bottom:6px">Dirección</div><input id="sedeDireccion" class="sb-ui-input" placeholder="Ej. Cra 13 # 12-21" value="${esc(d.direccion)}" data-sede-field="direccion"></div>
     <div><div style="font-weight:700;font-size:12.5px;margin-bottom:6px">Ciudad</div><input id="sedeCiudad" class="sb-ui-input" placeholder="Ej. Bogotá" value="${esc(d.ciudad)}" data-sede-field="ciudad"></div>
+    <button type="button" class="sb-ui-button ${d.ubicacion ? 'sb-ui-button--primary sb-ui-button--fill' : 'sb-ui-button--secondary sb-ui-button--stroke'} sb-ui-button--small sb-ui-button--icon-left" style="align-self:flex-start" data-action="abrirMapaSede:draft"><span class="material-symbols-outlined" style="font-size:18px">${d.ubicacion ? 'location_on' : 'add_location'}</span>${d.ubicacion ? 'Ubicación confirmada · ver en el mapa' : 'Ver y ajustar en el mapa'}</button>
     <div><div style="font-weight:700;font-size:12.5px;margin-bottom:6px">Tipo de inmueble</div><select id="sedeTipo" class="sb-ui-select sb-ui-select--block" data-sede-field="tipo">${TIPOS_INMUEBLE.map((t) => `<option ${d.tipo === t ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
     <div><div style="font-weight:700;font-size:12.5px;margin-bottom:8px">¿El negocio es propietario del inmueble?</div>${yesNoDraft('propietario', ['Sí'], ['No'], d.propietario)}</div>
     <div><div style="font-weight:700;font-size:12.5px;margin-bottom:8px">¿Está ubicado en primer piso?</div>${yesNoDraft('primerPiso', ['Sí'], ['No'], d.primerPiso)}</div>
@@ -1715,6 +1726,63 @@ const sedeDrawer = () => {
     </div>
   `);
 };
+
+/** El mapa opera sobre la sede indicada por state.mapaSedeIdx: un índice de state.sedes cuando se
+ * abre desde la tabla, o 'draft' cuando se abre desde el drawer de sede única (antes de guardar). */
+const mapaObjetivo = () => (state.mapaSedeIdx === 'draft' ? state.sedeDraft : state.sedes[state.mapaSedeIdx]);
+
+/** Drawer con un mapa (Leaflet + OpenStreetMap) para confirmar o corregir a mano el punto exacto
+ * de la sede: la dirección escrita a veces no coincide con lo que muestra Google Maps, así que
+ * aquí se ve un pin sobre el mapa real y se puede arrastrar o hacer clic para reubicarlo. */
+const mapaDrawer = () => {
+  if (!state.drawerMapa) return '';
+  const obj = mapaObjetivo();
+  if (!obj) return '';
+  return drawerShell(`
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+      <div><div style="font-weight:700;font-size:20px">Ubicar en el mapa</div><div style="font-weight:400;font-size:12.5px;color:#5B5B5B;margin-top:2px">Busque la dirección y, si el pin no cae en el lugar correcto, arrástrelo o haga clic en el punto exacto.</div></div>
+      <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--circle sb-ui-button--icon-only" data-action="cerrarDrawerMapa">×</button>
+    </div>
+    <div style="display:flex;gap:8px">
+      <input id="mapaBusqueda" class="sb-ui-input" style="flex:1" value="${esc(state.mapaBusqueda)}" placeholder="Ej. Cra 13 # 12-21, Bogotá" data-model="mapaBusqueda">
+      <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--icon-only" data-action="buscarEnMapa" title="Buscar dirección" ${state.mapaBuscando ? 'disabled' : ''}><span class="material-symbols-outlined" style="font-size:20px">search</span></button>
+    </div>
+    <div id="mapaPymes" style="width:100%;height:280px;border-radius:16px;overflow:hidden;border:1px solid #E1E1E1;background:#EEE"></div>
+    ${state.mapaBuscando ? '<div style="font-weight:400;font-size:12px;color:#5B5B5B">Buscando dirección…</div>' : ''}
+    ${state.mapaError ? `<div style="font-weight:600;font-size:12.5px;color:#B3261E">${esc(state.mapaError)}</div>` : ''}
+    ${obj.ubicacion ? `<div style="display:flex;align-items:center;gap:6px;font-weight:400;font-size:12px;color:#5B5B5B"><span class="material-symbols-outlined" style="font-size:16px;color:#006B40">check_small</span>Pin confirmado (${obj.ubicacion.lat.toFixed(5)}, ${obj.ubicacion.lng.toFixed(5)})</div>` : '<div style="font-weight:400;font-size:12px;color:#9B9B9B">Aún no hay un pin confirmado para esta sede.</div>'}
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:auto">
+      <button type="button" class="sb-ui-button sb-ui-button--primary sb-ui-button--fill" data-action="cerrarDrawerMapa" ${obj.ubicacion ? '' : 'disabled'}>Confirmar ubicación</button>
+    </div>
+  `);
+};
+
+/** Geocodifica el texto de búsqueda con Nominatim (OpenStreetMap, sin llave de API) para ubicar el
+ * pin automáticamente; si no encuentra nada o falla la red, el usuario igual puede hacer clic o
+ * arrastrar el pin a mano sobre el mapa (initMapaSiNecesario más abajo maneja eso). Requiere
+ * conexión a internet: a diferencia del resto del prototipo, el mapa no puede embeberse offline. */
+async function buscarDireccionEnMapa() {
+  const query = state.mapaBusqueda.trim();
+  const obj = mapaObjetivo();
+  if (!obj) { state.mapaBuscando = false; render(); return; }
+  if (!query) { state.mapaBuscando = false; state.mapaError = 'Escriba una dirección para buscar.'; render(); return; }
+  try {
+    const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=co&q=' + encodeURIComponent(query);
+    const res = await fetch(url, { headers: { 'Accept-Language': 'es' } });
+    const data = await res.json();
+    if (data && data[0]) {
+      obj.ubicacion = { lat: Number(data[0].lat), lng: Number(data[0].lon) };
+      state.mapaError = '';
+    } else {
+      state.mapaError = 'No encontramos esa dirección; haga clic en el mapa o arrastre el pin al punto correcto.';
+    }
+  } catch (e) {
+    state.mapaError = 'No fue posible buscar la dirección (revise su conexión); haga clic en el mapa o arrastre el pin al punto correcto.';
+  } finally {
+    state.mapaBuscando = false;
+    render();
+  }
+}
 
 const PLANES = [
   { id: 'basico', nombre: 'Plan Básico', nivel: 'Protección esencial', items: [
@@ -1843,7 +1911,7 @@ const vidaDrawer = () => {
   `);
 };
 
-const overlays = () => coberturasModal() + vidaDrawer() + benefDrawer() + sedeDrawer();
+const overlays = () => coberturasModal() + vidaDrawer() + benefDrawer() + sedeDrawer() + mapaDrawer();
 
 /** OLIVIA es un panel flotante disponible en todo el flujo, para resolver dudas sobre coberturas
  * sin interrumpir la cotización en curso. */
@@ -2375,7 +2443,7 @@ const render = () => {
     if (location.hash !== rutaHash) history.replaceState(null, '', rutaHash);
     const currentRoute = ruta();
     const index = currentRoute.indexOf(state.paso);
-    if (state.paso === 'landing') { app.innerHTML = landing(); modalRoot.innerHTML = overlays(); oliviaRoot.innerHTML = oliviaWidget(); return; }
+    if (state.paso === 'landing') { app.innerHTML = landing(); modalRoot.innerHTML = overlays(); oliviaRoot.innerHTML = oliviaWidget(); initMapaSiNecesario(); return; }
     const nextLabel = state.paso === 'pago' ? `Pagar ${primaTxt()}` : (state.paso === 'resumen' ? 'Confirmar y validar' : 'Continuar');
     const bloqueado = !puedeSeguir();
     const conRail = CON_RAIL.includes(state.paso);
@@ -2399,11 +2467,49 @@ const render = () => {
       const log = document.getElementById('oliviaLog');
       if (log) log.scrollTop = log.scrollHeight;
     }
+    initMapaSiNecesario();
   } finally {
     renderizando = false;
   }
 };
-window.__cerrarOverlays = () => { state.modalPlan = null; state.drawerVida = false; state.drawerBenef = false; state.drawerSede = false; render(); };
+window.__cerrarOverlays = () => { state.modalPlan = null; state.drawerVida = false; state.drawerBenef = false; state.drawerSede = false; state.drawerMapa = false; render(); };
+
+/** Instancia de Leaflet activa (si hay una), para poder destruirla antes de crear otra: cada
+ * render() reemplaza el <div id="mapaPymes"> por uno nuevo (innerHTML completo), así que el mapa
+ * se reconstruye sobre el nodo nuevo cada vez que cambia algo mientras el drawer está abierto. */
+let mapaLeaflet = null;
+function initMapaSiNecesario() {
+  if (!state.drawerMapa || typeof L === 'undefined') {
+    if (mapaLeaflet) { mapaLeaflet.remove(); mapaLeaflet = null; }
+    return;
+  }
+  const el = document.getElementById('mapaPymes');
+  if (!el) { if (mapaLeaflet) { mapaLeaflet.remove(); mapaLeaflet = null; } return; }
+  if (mapaLeaflet) { mapaLeaflet.remove(); mapaLeaflet = null; }
+  const obj = mapaObjetivo();
+  const centro = (obj && obj.ubicacion) ? [obj.ubicacion.lat, obj.ubicacion.lng] : [4.6097, -74.0817];
+  const zoom = (obj && obj.ubicacion) ? 16 : 12;
+  const map = L.map(el, { attributionControl: true }).setView(centro, zoom);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'
+  }).addTo(map);
+  const marker = L.marker(centro, { draggable: true }).addTo(map);
+  const fijarPin = (lat, lng) => {
+    const o = mapaObjetivo();
+    if (!o) return;
+    o.ubicacion = { lat, lng };
+    state.mapaError = '';
+    render();
+  };
+  marker.on('dragend', () => { const ll = marker.getLatLng(); fijarPin(ll.lat, ll.lng); });
+  map.on('click', (e) => { marker.setLatLng(e.latlng); fijarPin(e.latlng.lat, e.latlng.lng); });
+  mapaLeaflet = map;
+  /** El drawer puede animar su ancho al abrirse; si el mapa se crea antes de que el contenedor
+   * tenga su tamaño final, Leaflet dibuja mosaicos incompletos. Un invalidateSize corto después
+   * lo corrige sin que se note. */
+  setTimeout(() => { if (mapaLeaflet === map) map.invalidateSize(); }, 80);
+}
 
 /** Sincroniza inputs de texto/número/select con el estado. */
 /** Delegados en document.body (no en app) porque los drawers viven en #modalRoot, fuera de #app. */
@@ -2505,6 +2611,17 @@ document.body.addEventListener('click', (event) => {
     if (state.sedeActiva >= state.sedes.length) state.sedeActiva = Math.max(0, state.sedes.length - 1);
     state.drawerSede = false;
   }
+  else if (action.startsWith('abrirMapaSede:')) {
+    const raw = action.slice(14);
+    state.mapaSedeIdx = raw === 'draft' ? 'draft' : Number(raw);
+    const obj = mapaObjetivo();
+    state.mapaBusqueda = obj ? [obj.direccion, obj.ciudad].filter(Boolean).join(', ') : '';
+    state.mapaError = '';
+    state.drawerMapa = true;
+    if (obj && !obj.ubicacion && state.mapaBusqueda.trim()) { state.mapaBuscando = true; buscarDireccionEnMapa(); }
+  }
+  else if (action === 'cerrarDrawerMapa') state.drawerMapa = false;
+  else if (action === 'buscarEnMapa') { state.mapaBuscando = true; state.mapaError = ''; buscarDireccionEnMapa(); }
   else if (action.startsWith('ciberInt:')) sede.ciber.interrupciones = action.endsWith('1');
   else if (action.startsWith('ciberPlan:')) sede.ciber.plan = action.slice(10);
   else if (action.startsWith('mov:') && !action.startsWith('mov:limite:')) sede.mov.frecuencia = action.slice(4);
