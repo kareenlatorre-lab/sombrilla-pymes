@@ -2367,6 +2367,12 @@ let renderizando = false;
 const render = () => {
   renderizando = true;
   try {
+    /** Sincroniza la URL con la pantalla actual (solo hash, sin reload) para que herramientas
+     * externas de testing de usabilidad (p. ej. Useberry) puedan detectar el cambio de pantalla
+     * por path y usarlo como criterio de éxito de una task. No afecta el back/back del flujo,
+     * que sigue manejado por state.paso, no por el historial del navegador. */
+    const rutaHash = '#/' + state.paso;
+    if (location.hash !== rutaHash) history.replaceState(null, '', rutaHash);
     const currentRoute = ruta();
     const index = currentRoute.indexOf(state.paso);
     if (state.paso === 'landing') { app.innerHTML = landing(); modalRoot.innerHTML = overlays(); oliviaRoot.innerHTML = oliviaWidget(); return; }
