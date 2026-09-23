@@ -1521,6 +1521,7 @@ const state = {
   medioPago: '', otp: '', otpValidado: false, declaracion: false, autoriza: false, modalPlan: null, drawerVida: false, drawerBenef: false, benefEditIdx: -1,
   drawerSede: false, sedeEditIdx: -1, sedeDraft: nuevaSede(),
   drawerMapa: false, mapaSedeIdx: null, mapaBusqueda: '', mapaError: '', mapaBuscando: false,
+  incluirCorreoPrincipal: true, correosExtra: [], nuevoCorreoExtra: '',
   oliviaAbierta: false, oliviaTexto: '',
   oliviaLog: [{ from: 'olivia', text: '¡Hola! Soy OLIVIA. Pregúnteme sobre coberturas, exclusiones o el clausulado del Seguro Pymes y Vida Pymes.' }]
 };
@@ -1561,6 +1562,11 @@ const btn = (label, action, variant = 'primary', block = false, disabled = false
   `<button type="button" class="sb-ui-button sb-ui-button--${variant} ${variant === 'tertiary' ? 'sb-ui-button--text' : 'sb-ui-button--fill'} ${block ? 'sb-ui-button--block' : ''}" data-action="${action}" ${disabled ? 'disabled' : ''}>${label}</button>`;
 const chip = (label, action, active) => `<button type="button" class="sb-ui-chip sb-ui-chip--md sb-ui-chip--clickable ${active ? 'sb-ui-chip--primary sb-ui-chip--selected' : 'sb-ui-chip--outline sb-ui-chip--default'}" data-action="${action}">${label}</button>`;
 const inputField = (id, label, value, placeholder = '', type = 'text') => `<div><label class="sb-ui-input-label" for="${id}">${label}</label><input id="${id}" class="sb-ui-input" type="${type}" value="${esc(value)}" placeholder="${placeholder}" data-model="${id}"></div>`;
+/** Campo con un "%" que siempre queda pegado al final del valor y no se puede borrar (basta con
+ * escribir los dígitos). Antes era type="number": ese tipo de input no soporta setSelectionRange,
+ * así que renderConFoco no podía restaurar el cursor y la escritura se sentía rota. */
+const campoPorcentaje = (id, label, value, dataAttr) => `<div><label class="sb-ui-input-label" for="${id}">${label}</label><input id="${id}" class="sb-ui-input" type="text" inputmode="numeric" value="${value === '' ? '' : esc(value) + '%'}" placeholder="Ej: 10%" ${dataAttr}></div>`;
+const esValidoCorreo = (s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(s || '').trim());
 const selectField = (id, label, value, options) => `<div><label class="sb-ui-select-label" for="${id}">${label}</label><select id="${id}" class="sb-ui-select sb-ui-select--block" data-model="${id}">${options.map(([optionValue, optionLabel]) => `<option value="${esc(optionValue)}" ${value === optionValue ? 'selected' : ''}>${esc(optionLabel)}</option>`).join('')}</select></div>`;
 
 /** Paso 1: datos del cliente (igual que antes). Paso 2 (nuevo, opcional): datos del asesor que lo
@@ -2240,7 +2246,7 @@ const progressBar = (pct) => `<div>
 
 const beneficiarios = () => {
   const total = totalBenef();
-  return `<div style="background:#fff;border:1px solid #E1E1E1;border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:16px;max-width:620px">
+  return `<div style="background:#fff;border:1px solid #E1E1E1;border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:16px;max-width:620px;margin:0 auto">
     <div>
       <div style="font-weight:700;font-size:14px">Vida Pymes</div>
       <div style="font-weight:400;font-size:13.5px;color:#5B5B5B;margin-top:2px">Distribuya el porcentaje del beneficio de esta cobertura. La suma debe dar 100%.</div>
@@ -2272,7 +2278,7 @@ const benefDrawer = () => {
     <div style="font-weight:700;font-size:20px">${editando ? 'Editar beneficiario' : 'Agregar beneficiario'}</div>
     ${inputField('benefNombre', 'Nombres y apellidos', state.benefNombre, 'Ej. María Pérez')}
     ${selectField('benefParentesco', 'Parentesco', state.benefParentesco, PARENTESCOS)}
-    ${inputField('benefPct', '¿Qué porcentaje recibiría?', state.benefPct, 'Ej: 10', 'number')}
+    ${campoPorcentaje('benefPct', '¿Qué porcentaje recibiría?', state.benefPct, 'data-porcentaje="benefPct"')}
     <div style="display:flex;flex-direction:column;gap:10px;margin-top:auto">
       <button type="button" class="sb-ui-button sb-ui-button--primary sb-ui-button--fill sb-ui-button--block" data-action="guardarBenef" ${valido ? '' : 'disabled'}>${editando ? 'Guardar cambios' : 'Agregar beneficiario'}</button>
       ${editando ? `<button type="button" class="sb-ui-button sb-ui-button--error sb-ui-button--stroke sb-ui-button--block" data-action="delBenef:${state.benefEditIdx}">Eliminar</button>` : ''}
@@ -2281,6 +2287,42 @@ const benefDrawer = () => {
 };
 
 const row = (label, value) => `<div style="display:flex;justify-content:space-between;gap:12px;font-weight:400;font-size:13.5px;color:#414141"><span style="color:#5B5B5B">${label}</span><strong>${value}</strong></div>`;
+
+/** Correos a los que se enviaría la cotización: el del inicio (si está marcado) + los que el
+ * cliente haya agregado a mano. Se puede desmarcar el del inicio o agregar otros antes de enviar. */
+const correosParaCotizacion = () => [
+  ...(state.incluirCorreoPrincipal && state.correo ? [state.correo] : []),
+  ...state.correosExtra,
+];
+
+/** Tarjeta de "Revise antes de pagar" para descargar la cotización o elegir a qué correos
+ * enviarla: por defecto viene marcado el correo que el cliente dio en la landing, pero puede
+ * desmarcarlo y/o agregar otros (por ejemplo el de un socio o el de su asesor). */
+const cotizacionCard = () => {
+  const destinos = correosParaCotizacion();
+  return `<div style="background:#fff;border:1px solid #E1E1E1;border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;gap:10px"><span class="material-symbols-outlined" style="font-size:22px;color:#006B40">mail</span><div style="font-weight:700;font-size:18px">Descargue o envíe su cotización</div></div>
+    <div style="font-weight:400;font-size:13px;color:#5B5B5B">Por defecto la enviamos al correo que nos dio al inicio; puede quitarlo o agregar otros destinatarios.</div>
+    ${state.correo ? `<label class="sb-ui-checkbox">
+      <input type="checkbox" class="sb-ui-checkbox__input" data-incluir-correo-principal ${state.incluirCorreoPrincipal ? 'checked' : ''}>
+      <span class="sb-ui-checkbox__box"></span>
+      <span class="sb-ui-checkbox__label">${esc(state.correo)} <span style="color:#9B9B9B">(el que dio al inicio)</span></span>
+    </label>` : ''}
+    ${state.correosExtra.map((c, i) => `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;background:#F5F5F5;border-radius:12px">
+      <span style="font-weight:400;font-size:13.5px;color:#1B1B1B">${esc(c)}</span>
+      <button type="button" class="sb-ui-button sb-ui-button--error sb-ui-button--stroke sb-ui-button--circle sb-ui-button--icon-only" data-action="quitarCorreoExtra:${i}" title="Quitar correo" aria-label="Quitar correo"><span class="material-symbols-outlined" style="font-size:16px">close</span></button>
+    </div>`).join('')}
+    <div style="display:flex;gap:8px">
+      <input id="nuevoCorreoExtra" class="sb-ui-input" style="flex:1;min-width:0" type="email" placeholder="Agregar otro correo" value="${esc(state.nuevoCorreoExtra)}" data-model="nuevoCorreoExtra">
+      <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--icon-only" data-action="agregarCorreoExtra" title="Agregar correo" aria-label="Agregar correo" ${esValidoCorreo(state.nuevoCorreoExtra) ? '' : 'disabled'}><span class="material-symbols-outlined" style="font-size:20px">add</span></button>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:4px">
+      <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--icon-left" data-action="descargarCotizacion"><span class="material-symbols-outlined" style="font-size:20px">download</span>Descargar cotización</button>
+      <button type="button" class="sb-ui-button sb-ui-button--primary sb-ui-button--fill sb-ui-button--icon-left" data-action="enviarCotizacion" ${destinos.length ? '' : 'disabled'}><span class="material-symbols-outlined" style="font-size:20px">send</span>Enviar por correo</button>
+    </div>
+    ${!destinos.length ? '<div style="font-weight:400;font-size:12px;color:#9B9B9B">Marque el correo del inicio o agregue uno para poder enviarla.</div>' : ''}
+  </div>`;
+};
 const resumen = () => {
   const sede = state.sedes[0];
   const opcionalesActivas = Object.keys(OPC).filter((k) => state.opcionales[k]);
@@ -2321,6 +2363,7 @@ const resumen = () => {
     ${row('Correo', esc(state.correo))}
     ${row('Celular', esc(state.celular))}
   </div>
+  ${cotizacionCard()}
   <div style="background:#009056;border-radius:24px;padding:18px;display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap"><div><div style="font-weight:400;font-size:13px;color:rgba(255,255,255,.85)">Total a pagar ${state.periodicidad}</div><div style="font-weight:700;font-size:34px;line-height:1.1;color:#fff;margin-top:4px">${primaTxt()}</div></div></div>
   <label class="sb-ui-checkbox">
     <input type="checkbox" class="sb-ui-checkbox__input" data-declaracion ${state.declaracion ? 'checked' : ''}>
@@ -2556,6 +2599,12 @@ document.body.addEventListener('input', (event) => {
     if (key === 'actividadBusqueda' && state.actividadBusqueda !== state.actividad) state.actividad = '';
     renderConFoco();
   }
+  if (target.dataset.porcentaje) {
+    const key = target.dataset.porcentaje;
+    const digits = target.value.replace(/\D/g, '');
+    state[key] = digits === '' ? '' : String(Math.min(100, Number(digits)));
+    renderConFoco();
+  }
   if (target.dataset.sedeField) {
     if (target.dataset.sedeRow !== undefined) {
       const fila = state.sedes[Number(target.dataset.sedeRow)];
@@ -2571,6 +2620,7 @@ document.body.addEventListener('input', (event) => {
   if (target.hasAttribute('data-vas')) state.vas = Number(target.value.replace(/\D/g, '')) || 0;
   if (target.hasAttribute('data-declaracion')) { state.declaracion = target.checked; render(); }
   if (target.hasAttribute('data-autoriza')) { state.autoriza = target.checked; render(); }
+  if (target.hasAttribute('data-incluir-correo-principal')) { state.incluirCorreoPrincipal = target.checked; render(); }
 });
 /** Los sliders/inputs numéricos solo re-renderizan al soltar/perder foco, para no interrumpir el arrastre. */
 document.body.addEventListener('change', (event) => {
@@ -2700,6 +2750,20 @@ document.body.addEventListener('click', (event) => {
   else if (action.startsWith('delBenef:')) { state.beneficiarios.splice(Number(action.slice(9)), 1); state.drawerBenef = false; }
   else if (action === 'validarOtp') state.otpValidado = state.otp.trim() === '481203';
   else if (action === 'download') { window.alert('Descarga de póliza simulada en el prototipo.'); return; }
+  else if (action === 'agregarCorreoExtra') {
+    const correo = state.nuevoCorreoExtra.trim();
+    if (esValidoCorreo(correo) && correo !== state.correo && !state.correosExtra.includes(correo)) {
+      state.correosExtra.push(correo);
+      state.nuevoCorreoExtra = '';
+    }
+  }
+  else if (action.startsWith('quitarCorreoExtra:')) state.correosExtra.splice(Number(action.slice(18)), 1);
+  else if (action === 'descargarCotizacion') { window.alert('Descarga de la cotización simulada en el prototipo.'); return; }
+  else if (action === 'enviarCotizacion') {
+    const destinos = correosParaCotizacion();
+    if (destinos.length) window.alert('Simulación: enviaríamos la cotización a ' + destinos.join(', ') + '.');
+    return;
+  }
   else if (action === 'toggleOlivia') state.oliviaAbierta = !state.oliviaAbierta;
   else if (action.startsWith('oliviaChip:')) {
     const pregunta = decodeURIComponent(action.slice(11));
