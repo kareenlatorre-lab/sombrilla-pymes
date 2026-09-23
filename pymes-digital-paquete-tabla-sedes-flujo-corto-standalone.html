@@ -1510,6 +1510,7 @@ const nuevaSede = () => ({ direccion: '', ciudad: '', propietario: null, tipo: '
 const state = {
   paso: 'landing', consultado: false, encontrado: true,
   tipoDoc: 'CC', numDoc: '', nombre: '', correo: '', celular: '',
+  landingPaso: 1, claveAsesor: '', correoAsesor: '',
   actividadBusqueda: '', actividad: '', ventas: '',
   multiSede: null, sedes: [nuevaSede()], sedeActiva: 0,
   plan: 'sugerido', periodicidad: 'anual', personalizando: false,
@@ -1562,8 +1563,13 @@ const chip = (label, action, active) => `<button type="button" class="sb-ui-chip
 const inputField = (id, label, value, placeholder = '', type = 'text') => `<div><label class="sb-ui-input-label" for="${id}">${label}</label><input id="${id}" class="sb-ui-input" type="${type}" value="${esc(value)}" placeholder="${placeholder}" data-model="${id}"></div>`;
 const selectField = (id, label, value, options) => `<div><label class="sb-ui-select-label" for="${id}">${label}</label><select id="${id}" class="sb-ui-select sb-ui-select--block" data-model="${id}">${options.map(([optionValue, optionLabel]) => `<option value="${esc(optionValue)}" ${value === optionValue ? 'selected' : ''}>${esc(optionLabel)}</option>`).join('')}</select></div>`;
 
-const landingForm = () => `<div style="flex:1 1 380px;max-width:440px;background:#fff;border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:16px">
-  <div><div style="font-weight:700;font-size:20px">Empiece su cotización</div><div style="font-weight:400;font-size:13.5px;line-height:1.45;color:#5B5B5B;margin-top:4px">Le pedimos estos datos una sola vez. No se los volvemos a solicitar en el resto del proceso.</div></div>
+/** Paso 1: datos del cliente (igual que antes). Paso 2 (nuevo, opcional): datos del asesor que lo
+ * asistió, con la misma tarjeta y una barra de progreso arriba para dar la sensación de que falta
+ * poco. No es obligatorio: "Continuar" en el paso 2 nunca queda bloqueado por estos dos campos. */
+const landingBarraProgreso = () => `<div style="height:6px;border-radius:999px;background:#E1E1E1;overflow:hidden"><div style="height:100%;width:${state.landingPaso === 1 ? '50%' : '100%'};background:#009056;border-radius:999px;transition:width .2s ease"></div></div>`;
+
+const landingFormPaso1 = () => `
+  ${landingBarraProgreso()}
   <div style="display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px">
     ${selectField('tipoDoc', 'Tipo de documento', state.tipoDoc, [['CC', 'Cédula de ciudadanía'], ['CE', 'Cédula de extranjería'], ['NIT', 'NIT'], ['PA', 'Pasaporte']])}
     ${inputField('numDoc', 'Número de documento', state.numDoc, 'Ej. 1.020.445.778')}
@@ -1577,7 +1583,21 @@ const landingForm = () => `<div style="flex:1 1 380px;max-width:440px;background
     <span class="sb-ui-checkbox__box"></span>
     <span class="sb-ui-checkbox__label" style="font-size:12.5px">Autorizo la utilización de mis datos personales con fines comerciales.</span>
   </label>
-  ${btn('Solicitar mi cotización ahora', 'next', 'primary', true)}
+  ${btn('Continuar', 'landingPaso2', 'primary', true, !puedeSeguir())}
+`;
+
+const landingFormPaso2 = () => `
+  ${landingBarraProgreso()}
+  <div style="font-weight:400;font-size:12.5px;line-height:1.45;color:#5B5B5B">Si un asesor lo está acompañando, complete sus datos. Este paso es opcional.</div>
+  ${inputField('claveAsesor', 'Clave del asesor (opcional)', state.claveAsesor, 'Ej. 172237')}
+  ${inputField('correoAsesor', 'Correo del asesor (opcional)', state.correoAsesor, 'Ej. asesor@segurosbolivar.com', 'email')}
+  ${btn('Continuar', 'next', 'primary', true)}
+  <button type="button" class="pymes-link-volver" style="align-self:center" data-action="landingPaso1"><span class="material-symbols-outlined" style="font-size:20px">chevron_left</span>Volver</button>
+`;
+
+const landingForm = () => `<div style="flex:1 1 380px;max-width:440px;background:#fff;border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:16px">
+  <div><div style="font-weight:700;font-size:20px">Empiece su cotización</div><div style="font-weight:400;font-size:13.5px;line-height:1.45;color:#5B5B5B;margin-top:4px">Le pedimos estos datos una sola vez. No se los volvemos a solicitar en el resto del proceso.</div></div>
+  ${state.landingPaso === 1 ? landingFormPaso1() : landingFormPaso2()}
 </div>`;
 
 const landingPlanes = () => PLANES.map((p) => {
@@ -1667,6 +1687,17 @@ const sedeResumen = (s) => s.direccion ? `${esc(s.direccion)} · ${esc(s.ciudad 
  * state.sedes[i], ya que aquí no hay drawer intermedio: se edita todo en la misma tabla). */
 const yesNoFila = (i, campo, current) => `<div class="pymes-chips" style="flex-wrap:nowrap">${chip('Sí', `sedeRow:${i}:${campo}:1`, current === true)}${chip('No', `sedeRow:${i}:${campo}:0`, current === false)}</div>`;
 
+/** Campo de dirección con el buscador/ubicador de mapa integrado como ícono dentro del mismo
+ * input, en vez de un botón aparte: al confirmar un punto en el mapa (buscando, arrastrando el
+ * pin o haciendo clic), el valor de este campo pasa a ser las coordenadas de ese punto, porque la
+ * dirección "de Google Maps" a veces no coincide con el sitio real y las coordenadas sí sirven. */
+const campoDireccionMapa = (id, obj, extraAttrs, mapAction) => `<div style="position:relative">
+  <input id="${id}" class="sb-ui-input" style="min-width:190px;padding-right:38px" placeholder="Escriba para buscar o confirme en el mapa" value="${esc(obj.direccion)}" ${extraAttrs}>
+  <button type="button" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);width:30px;height:30px;border:none;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:999px" data-action="${mapAction}" title="${obj.ubicacion ? 'Ubicación confirmada · ver o mover el pin' : 'Buscar y ubicar en el mapa'}" aria-label="Ubicar en el mapa">
+    <span class="material-symbols-outlined" style="font-size:19px;color:${obj.ubicacion ? '#009056' : '#5B5B5B'}">${obj.ubicacion ? 'location_on' : 'search'}</span>
+  </button>
+</div>`;
+
 /** Tabla de alta de sedes: en vez de un botón "Agregar sede" que abre un drawer de a una,
  * cada fila es una sede editable en línea, para poder cargar varias de una sola vez. */
 const sedes = () => {
@@ -1687,15 +1718,12 @@ const sedes = () => {
         <tbody>
           ${state.sedes.map((s, i) => `<tr style="${i > 0 ? 'border-top:1px solid #F0F0F0' : ''}">
             <td style="${td}font-weight:700;font-size:13.5px;color:#1B1B1B">${i + 1}</td>
-            <td style="${td}"><input id="sedeDireccion-${i}" class="sb-ui-input" style="min-width:190px" placeholder="Ej. Cra 13 # 12-21" value="${esc(s.direccion)}" data-sede-row="${i}" data-sede-field="direccion"></td>
+            <td style="${td}">${campoDireccionMapa(`sedeDireccion-${i}`, s, `data-sede-row="${i}" data-sede-field="direccion"`, `abrirMapaSede:${i}`)}</td>
             <td style="${td}"><input id="sedeCiudad-${i}" class="sb-ui-input" style="min-width:130px" placeholder="Ej. Bogotá" value="${esc(s.ciudad)}" data-sede-row="${i}" data-sede-field="ciudad"></td>
             <td style="${td}"><select class="sb-ui-select sb-ui-select--block" style="min-width:170px" data-sede-row="${i}" data-sede-field="tipo">${TIPOS_INMUEBLE.map((t) => `<option ${s.tipo === t ? 'selected' : ''}>${t}</option>`).join('')}</select></td>
             <td style="${td}">${yesNoFila(i, 'propietario', s.propietario)}</td>
             <td style="${td}">${yesNoFila(i, 'primerPiso', s.primerPiso)}</td>
-            <td style="${td}"><div style="display:flex;gap:6px">
-              <button type="button" class="sb-ui-button ${s.ubicacion ? 'sb-ui-button--primary sb-ui-button--fill' : 'sb-ui-button--secondary sb-ui-button--stroke'} sb-ui-button--circle sb-ui-button--icon-only" data-action="abrirMapaSede:${i}" title="${s.ubicacion ? 'Ubicación confirmada en el mapa' : 'Ver y ajustar en el mapa'}" aria-label="Ver en el mapa"><span class="material-symbols-outlined" style="font-size:18px">${s.ubicacion ? 'location_on' : 'add_location'}</span></button>
-              ${state.sedes.length > 1 ? `<button type="button" class="sb-ui-button sb-ui-button--error sb-ui-button--stroke sb-ui-button--circle sb-ui-button--icon-only" data-action="delSede:${i}" title="Quitar sede" aria-label="Quitar sede"><span class="material-symbols-outlined" style="font-size:18px">delete</span></button>` : ''}
-            </div></td>
+            <td style="${td}">${state.sedes.length > 1 ? `<button type="button" class="sb-ui-button sb-ui-button--error sb-ui-button--stroke sb-ui-button--circle sb-ui-button--icon-only" data-action="delSede:${i}" title="Quitar sede" aria-label="Quitar sede"><span class="material-symbols-outlined" style="font-size:18px">delete</span></button>` : ''}</td>
           </tr>`).join('')}
         </tbody>
       </table>
@@ -1714,9 +1742,8 @@ const sedeDrawer = () => {
       <div style="font-weight:700;font-size:20px">${editando ? 'Editar sede' : 'Agregar sede'}</div>
       <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--circle sb-ui-button--icon-only" data-action="cerrarDrawerSede">×</button>
     </div>
-    <div><div style="font-weight:700;font-size:12.5px;margin-bottom:6px">Dirección</div><input id="sedeDireccion" class="sb-ui-input" placeholder="Ej. Cra 13 # 12-21" value="${esc(d.direccion)}" data-sede-field="direccion"></div>
+    <div><div style="font-weight:700;font-size:12.5px;margin-bottom:6px">Dirección</div>${campoDireccionMapa('sedeDireccion', d, 'data-sede-field="direccion"', 'abrirMapaSede:draft')}</div>
     <div><div style="font-weight:700;font-size:12.5px;margin-bottom:6px">Ciudad</div><input id="sedeCiudad" class="sb-ui-input" placeholder="Ej. Bogotá" value="${esc(d.ciudad)}" data-sede-field="ciudad"></div>
-    <button type="button" class="sb-ui-button ${d.ubicacion ? 'sb-ui-button--primary sb-ui-button--fill' : 'sb-ui-button--secondary sb-ui-button--stroke'} sb-ui-button--small sb-ui-button--icon-left" style="align-self:flex-start" data-action="abrirMapaSede:draft"><span class="material-symbols-outlined" style="font-size:18px">${d.ubicacion ? 'location_on' : 'add_location'}</span>${d.ubicacion ? 'Ubicación confirmada · ver en el mapa' : 'Ver y ajustar en el mapa'}</button>
     <div><div style="font-weight:700;font-size:12.5px;margin-bottom:6px">Tipo de inmueble</div><select id="sedeTipo" class="sb-ui-select sb-ui-select--block" data-sede-field="tipo">${TIPOS_INMUEBLE.map((t) => `<option ${d.tipo === t ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
     <div><div style="font-weight:700;font-size:12.5px;margin-bottom:8px">¿El negocio es propietario del inmueble?</div>${yesNoDraft('propietario', ['Sí'], ['No'], d.propietario)}</div>
     <div><div style="font-weight:700;font-size:12.5px;margin-bottom:8px">¿Está ubicado en primer piso?</div>${yesNoDraft('primerPiso', ['Sí'], ['No'], d.primerPiso)}</div>
@@ -1731,6 +1758,20 @@ const sedeDrawer = () => {
  * abre desde la tabla, o 'draft' cuando se abre desde el drawer de sede única (antes de guardar). */
 const mapaObjetivo = () => (state.mapaSedeIdx === 'draft' ? state.sedeDraft : state.sedes[state.mapaSedeIdx]);
 
+const fmtCoord = (lat, lng) => `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+const pareceCoordenadas = (texto) => /^-?\d{1,3}\.\d+,\s*-?\d{1,3}\.\d+$/.test(String(texto || '').trim());
+
+/** Confirma un punto del mapa (por búsqueda, arrastre del pin o clic): guarda las coordenadas Y
+ * también las escribe en el campo Dirección de la sede, reemplazando el texto escrito. La
+ * dirección "de Google Maps" a veces no coincide con el sitio real, así que lo que de verdad
+ * queda como dirección de la sede son las coordenadas del pin que el usuario confirmó a ojo. */
+const confirmarPin = (obj, lat, lng) => {
+  if (!obj) return;
+  obj.ubicacion = { lat, lng };
+  obj.direccion = fmtCoord(lat, lng);
+  state.mapaError = '';
+};
+
 /** Drawer con un mapa (Leaflet + OpenStreetMap) para confirmar o corregir a mano el punto exacto
  * de la sede: la dirección escrita a veces no coincide con lo que muestra Google Maps, así que
  * aquí se ve un pin sobre el mapa real y se puede arrastrar o hacer clic para reubicarlo. */
@@ -1740,7 +1781,7 @@ const mapaDrawer = () => {
   if (!obj) return '';
   return drawerShell(`
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
-      <div><div style="font-weight:700;font-size:20px">Ubicar en el mapa</div><div style="font-weight:400;font-size:12.5px;color:#5B5B5B;margin-top:2px">Busque la dirección y, si el pin no cae en el lugar correcto, arrástrelo o haga clic en el punto exacto.</div></div>
+      <div><div style="font-weight:700;font-size:20px">Ubicar en el mapa</div><div style="font-weight:400;font-size:12.5px;color:#5B5B5B;margin-top:2px">Busque la dirección y, si el pin no cae en el lugar correcto, arrástrelo o haga clic en el punto exacto. Al confirmar, el campo Dirección de la sede quedará con las coordenadas del pin, más confiables que la dirección de Google Maps.</div></div>
       <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--circle sb-ui-button--icon-only" data-action="cerrarDrawerMapa">×</button>
     </div>
     <div style="display:flex;gap:8px">
@@ -1771,8 +1812,7 @@ async function buscarDireccionEnMapa() {
     const res = await fetch(url, { headers: { 'Accept-Language': 'es' } });
     const data = await res.json();
     if (data && data[0]) {
-      obj.ubicacion = { lat: Number(data[0].lat), lng: Number(data[0].lon) };
-      state.mapaError = '';
+      confirmarPin(obj, Number(data[0].lat), Number(data[0].lon));
     } else {
       state.mapaError = 'No encontramos esa dirección; haga clic en el mapa o arrastre el pin al punto correcto.';
     }
@@ -2495,13 +2535,7 @@ function initMapaSiNecesario() {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'
   }).addTo(map);
   const marker = L.marker(centro, { draggable: true }).addTo(map);
-  const fijarPin = (lat, lng) => {
-    const o = mapaObjetivo();
-    if (!o) return;
-    o.ubicacion = { lat, lng };
-    state.mapaError = '';
-    render();
-  };
+  const fijarPin = (lat, lng) => { confirmarPin(mapaObjetivo(), lat, lng); render(); };
   marker.on('dragend', () => { const ll = marker.getLatLng(); fijarPin(ll.lat, ll.lng); });
   map.on('click', (e) => { marker.setLatLng(e.latlng); fijarPin(e.latlng.lat, e.latlng.lng); });
   mapaLeaflet = map;
@@ -2577,7 +2611,11 @@ document.body.addEventListener('click', (event) => {
     state.paso = currentRoute[Math.min(index + 1, currentRoute.length - 1)];
   } else if (action === 'back') {
     state.paso = currentRoute[Math.max(index - 1, 0)];
-  } else if (action.startsWith('actividad:')) { state.actividad = action.slice(10); state.actividadBusqueda = state.actividad; }
+  } else if (action === 'landingPaso2') {
+    if (!puedeSeguir()) { render(); return; }
+    state.landingPaso = 2;
+  } else if (action === 'landingPaso1') { state.landingPaso = 1; }
+  else if (action.startsWith('actividad:')) { state.actividad = action.slice(10); state.actividadBusqueda = state.actividad; }
   else if (action.startsWith('plan:')) { state.plan = action.slice(5); state.personalizando = false; state.paso = currentRoute[Math.min(index + 1, currentRoute.length - 1)]; }
   else if (action.startsWith('verCoberturas:')) state.modalPlan = action.slice(14);
   else if (action.startsWith('verSede:')) state.sedeActiva = Number(action.slice(8));
@@ -2615,7 +2653,7 @@ document.body.addEventListener('click', (event) => {
     const raw = action.slice(14);
     state.mapaSedeIdx = raw === 'draft' ? 'draft' : Number(raw);
     const obj = mapaObjetivo();
-    state.mapaBusqueda = obj ? [obj.direccion, obj.ciudad].filter(Boolean).join(', ') : '';
+    state.mapaBusqueda = obj && !pareceCoordenadas(obj.direccion) ? [obj.direccion, obj.ciudad].filter(Boolean).join(', ') : '';
     state.mapaError = '';
     state.drawerMapa = true;
     if (obj && !obj.ubicacion && state.mapaBusqueda.trim()) { state.mapaBuscando = true; buscarDireccionEnMapa(); }
