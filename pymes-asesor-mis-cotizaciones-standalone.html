@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Cotización digital del Seguro Pymes de Seguros Bolívar: Vida Pymes incluida en el paquete, varias sedes en tabla, coberturas con pestañas, y un flujo más corto: quedarse con el sugerido salta directo a fotos, y personalizar salta directo a ajustar coberturas.">
-  <title>Seguro Pymes (paquete, sedes en tabla, flujo corto) | Seguros Bolívar</title>
+  <meta name="description" content="Panel del asesor: lista de cotizaciones agrupadas por empresa, retome una en curso o compare varias cotizaciones de la misma empresa antes de continuar.">
+  <title>Mis cotizaciones (asesor) | Seguros Bolívar</title>
   <!-- Mapa (Leaflet + OpenStreetMap, sin llave de API) para confirmar/mover el pin de cada sede.
        A diferencia del resto de este archivo, esto SÍ necesita conexión a internet: los mosaicos
        del mapa y la búsqueda de direcciones se piden en vivo, no se pueden empaquetar offline. -->
@@ -234,7 +234,11 @@ button, input, select { font: inherit; }
 
     </div>
   </header>
-  <main id="app" class="pymes-app" aria-live="polite"></main>
+  <div id="gestorRoot"></div>
+  <div id="cotizadorWrap" style="display:none">
+    <div id="cotizadorTopBar"></div>
+    <main id="app" class="pymes-app" aria-live="polite"></main>
+  </div>
   <div id="modalRoot"></div>
   <div id="oliviaRoot"></div>
   <script>"use strict";(()=>{var ce=globalThis,de=ce.ShadowRoot&&(ce.ShadyCSS===void 0||ce.ShadyCSS.nativeShadow)&&"adoptedStyleSheets"in Document.prototype&&"replace"in CSSStyleSheet.prototype,Ee=Symbol(),We=new WeakMap,Z=class{constructor(e,t,i){if(this._$cssResult$=!0,i!==Ee)throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");this.cssText=e,this.t=t}get styleSheet(){let e=this.o,t=this.t;if(de&&e===void 0){let i=t!==void 0&&t.length===1;i&&(e=We.get(t)),e===void 0&&((this.o=e=new CSSStyleSheet).replaceSync(this.cssText),i&&We.set(t,e))}return e}toString(){return this.cssText}},Xe=s=>new Z(typeof s=="string"?s:s+"",void 0,Ee),he=(s,...e)=>{let t=s.length===1?s[0]:e.reduce((i,a,o)=>i+(r=>{if(r._$cssResult$===!0)return r.cssText;if(typeof r=="number")return r;throw Error("Value passed to 'css' function must be a 'css' function result: "+r+". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.")})(a)+s[o+1],s[0]);return new Z(t,s,Ee)},Je=(s,e)=>{if(de)s.adoptedStyleSheets=e.map(t=>t instanceof CSSStyleSheet?t:t.styleSheet);else for(let t of e){let i=document.createElement("style"),a=ce.litNonce;a!==void 0&&i.setAttribute("nonce",a),i.textContent=t.cssText,s.appendChild(i)}},Se=de?s=>s:s=>s instanceof CSSStyleSheet?(e=>{let t="";for(let i of e.cssRules)t+=i.cssText;return Xe(t)})(s):s;var{is:qt,defineProperty:Bt,getOwnPropertyDescriptor:Ht,getOwnPropertyNames:jt,getOwnPropertySymbols:Ft,getPrototypeOf:Yt}=Object,q=globalThis,Ke=q.trustedTypes,Vt=Ke?Ke.emptyScript:"",Wt=q.reactiveElementPolyfillSupport,Q=(s,e)=>s,$e={toAttribute(s,e){switch(e){case Boolean:s=s?Vt:null;break;case Object:case Array:s=s==null?s:JSON.stringify(s)}return s},fromAttribute(s,e){let t=s;switch(e){case Boolean:t=s!==null;break;case Number:t=s===null?null:Number(s);break;case Object:case Array:try{t=JSON.parse(s)}catch{t=null}}return t}},Ze=(s,e)=>!qt(s,e),Ge={attribute:!0,type:String,converter:$e,reflect:!1,useDefault:!1,hasChanged:Ze};Symbol.metadata??(Symbol.metadata=Symbol("metadata")),q.litPropertyMetadata??(q.litPropertyMetadata=new WeakMap);var O=class extends HTMLElement{static addInitializer(e){this._$Ei(),(this.l??(this.l=[])).push(e)}static get observedAttributes(){return this.finalize(),this._$Eh&&[...this._$Eh.keys()]}static createProperty(e,t=Ge){if(t.state&&(t.attribute=!1),this._$Ei(),this.prototype.hasOwnProperty(e)&&((t=Object.create(t)).wrapped=!0),this.elementProperties.set(e,t),!t.noAccessor){let i=Symbol(),a=this.getPropertyDescriptor(e,i,t);a!==void 0&&Bt(this.prototype,e,a)}}static getPropertyDescriptor(e,t,i){let{get:a,set:o}=Ht(this.prototype,e)??{get(){return this[t]},set(r){this[t]=r}};return{get:a,set(r){let c=a?.call(this);o?.call(this,r),this.requestUpdate(e,c,i)},configurable:!0,enumerable:!0}}static getPropertyOptions(e){return this.elementProperties.get(e)??Ge}static _$Ei(){if(this.hasOwnProperty(Q("elementProperties")))return;let e=Yt(this);e.finalize(),e.l!==void 0&&(this.l=[...e.l]),this.elementProperties=new Map(e.elementProperties)}static finalize(){if(this.hasOwnProperty(Q("finalized")))return;if(this.finalized=!0,this._$Ei(),this.hasOwnProperty(Q("properties"))){let t=this.properties,i=[...jt(t),...Ft(t)];for(let a of i)this.createProperty(a,t[a])}let e=this[Symbol.metadata];if(e!==null){let t=litPropertyMetadata.get(e);if(t!==void 0)for(let[i,a]of t)this.elementProperties.set(i,a)}this._$Eh=new Map;for(let[t,i]of this.elementProperties){let a=this._$Eu(t,i);a!==void 0&&this._$Eh.set(a,t)}this.elementStyles=this.finalizeStyles(this.styles)}static finalizeStyles(e){let t=[];if(Array.isArray(e)){let i=new Set(e.flat(1/0).reverse());for(let a of i)t.unshift(Se(a))}else e!==void 0&&t.push(Se(e));return t}static _$Eu(e,t){let i=t.attribute;return i===!1?void 0:typeof i=="string"?i:typeof e=="string"?e.toLowerCase():void 0}constructor(){super(),this._$Ep=void 0,this.isUpdatePending=!1,this.hasUpdated=!1,this._$Em=null,this._$Ev()}_$Ev(){this._$ES=new Promise(e=>this.enableUpdating=e),this._$AL=new Map,this._$E_(),this.requestUpdate(),this.constructor.l?.forEach(e=>e(this))}addController(e){(this._$EO??(this._$EO=new Set)).add(e),this.renderRoot!==void 0&&this.isConnected&&e.hostConnected?.()}removeController(e){this._$EO?.delete(e)}_$E_(){let e=new Map,t=this.constructor.elementProperties;for(let i of t.keys())this.hasOwnProperty(i)&&(e.set(i,this[i]),delete this[i]);e.size>0&&(this._$Ep=e)}createRenderRoot(){let e=this.shadowRoot??this.attachShadow(this.constructor.shadowRootOptions);return Je(e,this.constructor.elementStyles),e}connectedCallback(){this.renderRoot??(this.renderRoot=this.createRenderRoot()),this.enableUpdating(!0),this._$EO?.forEach(e=>e.hostConnected?.())}enableUpdating(e){}disconnectedCallback(){this._$EO?.forEach(e=>e.hostDisconnected?.())}attributeChangedCallback(e,t,i){this._$AK(e,i)}_$ET(e,t){let i=this.constructor.elementProperties.get(e),a=this.constructor._$Eu(e,i);if(a!==void 0&&i.reflect===!0){let o=(i.converter?.toAttribute!==void 0?i.converter:$e).toAttribute(t,i.type);this._$Em=e,o==null?this.removeAttribute(a):this.setAttribute(a,o),this._$Em=null}}_$AK(e,t){let i=this.constructor,a=i._$Eh.get(e);if(a!==void 0&&this._$Em!==a){let o=i.getPropertyOptions(a),r=typeof o.converter=="function"?{fromAttribute:o.converter}:o.converter?.fromAttribute!==void 0?o.converter:$e;this._$Em=a;let c=r.fromAttribute(t,o.type);this[a]=c??this._$Ej?.get(a)??c,this._$Em=null}}requestUpdate(e,t,i,a=!1,o){if(e!==void 0){let r=this.constructor;if(a===!1&&(o=this[e]),i??(i=r.getPropertyOptions(e)),!((i.hasChanged??Ze)(o,t)||i.useDefault&&i.reflect&&o===this._$Ej?.get(e)&&!this.hasAttribute(r._$Eu(e,i))))return;this.C(e,t,i)}this.isUpdatePending===!1&&(this._$ES=this._$EP())}C(e,t,{useDefault:i,reflect:a,wrapped:o},r){i&&!(this._$Ej??(this._$Ej=new Map)).has(e)&&(this._$Ej.set(e,r??t??this[e]),o!==!0||r!==void 0)||(this._$AL.has(e)||(this.hasUpdated||i||(t=void 0),this._$AL.set(e,t)),a===!0&&this._$Em!==e&&(this._$Eq??(this._$Eq=new Set)).add(e))}async _$EP(){this.isUpdatePending=!0;try{await this._$ES}catch(t){Promise.reject(t)}let e=this.scheduleUpdate();return e!=null&&await e,!this.isUpdatePending}scheduleUpdate(){return this.performUpdate()}performUpdate(){if(!this.isUpdatePending)return;if(!this.hasUpdated){if(this.renderRoot??(this.renderRoot=this.createRenderRoot()),this._$Ep){for(let[a,o]of this._$Ep)this[a]=o;this._$Ep=void 0}let i=this.constructor.elementProperties;if(i.size>0)for(let[a,o]of i){let{wrapped:r}=o,c=this[a];r!==!0||this._$AL.has(a)||c===void 0||this.C(a,void 0,o,c)}}let e=!1,t=this._$AL;try{e=this.shouldUpdate(t),e?(this.willUpdate(t),this._$EO?.forEach(i=>i.hostUpdate?.()),this.update(t)):this._$EM()}catch(i){throw e=!1,this._$EM(),i}e&&this._$AE(t)}willUpdate(e){}_$AE(e){this._$EO?.forEach(t=>t.hostUpdated?.()),this.hasUpdated||(this.hasUpdated=!0,this.firstUpdated(e)),this.updated(e)}_$EM(){this._$AL=new Map,this.isUpdatePending=!1}get updateComplete(){return this.getUpdateComplete()}getUpdateComplete(){return this._$ES}shouldUpdate(e){return!0}update(e){this._$Eq&&(this._$Eq=this._$Eq.forEach(t=>this._$ET(t,this[t]))),this._$EM()}updated(e){}firstUpdated(e){}};O.elementStyles=[],O.shadowRootOptions={mode:"open"},O[Q("elementProperties")]=new Map,O[Q("finalized")]=new Map,Wt?.({ReactiveElement:O}),(q.reactiveElementVersions??(q.reactiveElementVersions=[])).push("2.1.2");var te=globalThis,Qe=s=>s,ue=te.trustedTypes,et=ue?ue.createPolicy("lit-html",{createHTML:s=>s}):void 0,rt="$lit$",B=`lit$${Math.random().toFixed(9).slice(2)}$`,nt="?"+B,Xt=`<${nt}>`,Y=document,se=()=>Y.createComment(""),ie=s=>s===null||typeof s!="object"&&typeof s!="function",ze=Array.isArray,Jt=s=>ze(s)||typeof s?.[Symbol.iterator]=="function",Ce=`[ 	
@@ -1529,6 +1533,9 @@ const state = {
 const app = document.getElementById('app');
 const modalRoot = document.getElementById('modalRoot');
 const oliviaRoot = document.getElementById('oliviaRoot');
+const gestorRoot = document.getElementById('gestorRoot');
+const cotizadorWrap = document.getElementById('cotizadorWrap');
+const cotizadorTopBar = document.getElementById('cotizadorTopBar');
 const esc = (value) => String(value).replace(/[&<>"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[character]));
 const fmt = (value) => '$' + Math.round(value).toLocaleString('es-CO');
 const factorVentas = () => { const value = parseInt(String(state.ventas).replace(/\D/g, ''), 10) || 1200000000; return Math.max(0.5, Math.min(2.2, value / 1200000000)); };
@@ -2118,13 +2125,7 @@ const coberturas = () => {
    * radio de cada item se completan en pymes-digital.css con ese único ajuste. */
   const selectorSedes = state.sedes.length > 1 ? `<div style="display:flex;flex-direction:column;gap:8px">
     <div class="pymes-sede-tabs"><div class="sb-ui-tabs" role="tablist" aria-label="Sedes">${state.sedes.map((s, i) => `<button type="button" role="tab" aria-selected="${i === state.sedeActiva}" class="sb-ui-tabs__item${i === state.sedeActiva ? ' sb-ui-tabs__item--active' : ''}" data-action="verSede:${i}"><span class="material-symbols-outlined sb-ui-tabs__icon" style="font-size:18px">storefront</span><span class="sb-ui-tabs__title">Sede ${i + 1}</span></button>`).join('')}</div></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-      <div style="display:flex;align-items:center;gap:8px">
-        <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--circle sb-ui-button--icon-only" data-action="abrirDrawerSede:${state.sedeActiva}" title="Editar sede" aria-label="Editar sede"><span class="material-symbols-outlined" style="font-size:16px">edit</span></button>
-        <span style="font-weight:400;font-size:12.5px;color:#757575">${esc(sedeResumen(state.sedes[state.sedeActiva]))}</span>
-      </div>
-      <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--small sb-ui-button--icon-left" data-action="copiarConfigSedeActiva" title="Copia edificios, equipos electrónicos, maquinaria, mercancías, terceros, ciberseguridad y movilización de esta sede a las demás"><span class="material-symbols-outlined" style="font-size:18px">content_copy</span>Copiar esta configuración a las demás sedes</button>
-    </div>
+    <div style="font-weight:400;font-size:12.5px;color:#757575">${esc(sedeResumen(state.sedes[state.sedeActiva]))}</div>
   </div>` : '';
   return `<div style="display:flex;flex-direction:column;gap:14px">
     ${selectorSedes}
@@ -2667,6 +2668,7 @@ document.body.addEventListener('focusout', (event) => {
 document.body.addEventListener('click', (event) => {
   const action = event.target.closest('[data-action]')?.dataset.action;
   if (!action) return;
+  if (action.startsWith('g:')) return; /** acciones de "Mis cotizaciones"; ver el otro listener más abajo. */
   const sede = state.sedes[state.sedeActiva];
   const currentRoute = ruta();
   const index = currentRoute.indexOf(state.paso);
@@ -2751,20 +2753,6 @@ document.body.addEventListener('click', (event) => {
     sede.mov.limite = Math.max(10000000, Math.min(100000000, sede.mov.limite + (action.endsWith(':1') ? 1 : -1) * 5000000));
   }
   else if (action === 'restaurarTodo') CLAVES.forEach((clave) => { sede.valores[clave] = sugerido(sede, clave); });
-  /** Copia edificios/electrónicos/maquinaria/mercancías/terceros, ciberseguridad y movilización de
-   * la sede activa a las demás; no toca dirección, ciudad, tipo de inmueble ni el pin del mapa,
-   * porque eso sí es propio de cada sede. Si otra sede es arrendada, edificios queda en 0 igual que
-   * al guardarla desde el drawer, para no dejar un valor que no aplica. */
-  else if (action === 'copiarConfigSedeActiva') {
-    const activa = state.sedes[state.sedeActiva];
-    state.sedes.forEach((s, i) => {
-      if (i === state.sedeActiva) return;
-      s.valores = { ...activa.valores };
-      if (s.propietario === false) s.valores.edificios = 0;
-      s.ciber = { ...activa.ciber };
-      s.mov = { ...activa.mov };
-    });
-  }
   else if (action === 'abrirDrawerBenefNuevo') { state.benefEditIdx = -1; state.benefNombre = ''; state.benefParentesco = 'Cónyuge'; state.benefPct = Math.max(0, 100 - totalBenef()); state.drawerBenef = true; }
   else if (action.startsWith('editarBenef:')) { const i = Number(action.slice(12)); const b = state.beneficiarios[i]; state.benefEditIdx = i; state.benefNombre = b.nombre; state.benefParentesco = b.parentesco; state.benefPct = b.pct; state.drawerBenef = true; }
   else if (action === 'cerrarDrawerBenef') state.drawerBenef = false;
@@ -2809,7 +2797,249 @@ document.body.addEventListener('keydown', (event) => {
   if (event.target.id === 'oliviaInput' && event.key === 'Enter') { event.preventDefault(); enviarOlivia(); }
 });
 
-render();
+/* ============================================================================================
+ * "MIS COTIZACIONES": punto de entrada del asesor. Lista las cotizaciones agrupadas por empresa,
+ * deja retomar una en curso, y arma un comparativo cuando una misma empresa tiene varias. Vive en
+ * el mismo documento que el cotizador de arriba (sin iframe, para que el archivo siga siendo un
+ * único HTML autocontenido): "Continuar cotización" precarga el state real del cotizador y lo
+ * arranca en el paso donde se dejó; "Salir de la cotización" vuelve al detalle y guarda un
+ * snapshot de la prima/paso alcanzados.
+ * ============================================================================================ */
+
+const ESTADOS_COT = { borrador: 'Borrador', cotizado: 'Cotizada', pendiente_firma: 'Pendiente de firma', emitido: 'Emitida' };
+const FILTROS_COT = [['todas', 'Todas'], ['borrador', 'Borradores'], ['cotizado', 'Cotizadas'], ['pendiente_firma', 'Pendientes de firma'], ['emitido', 'Emitidas']];
+
+/** Cada cotización trae un snapshot ya calculado de sus coberturas y su prima, solo para poder
+ * pintar el listado y el comparativo sin reconstruir el state completo de esa cotización; al
+ * "continuar", precargarCotizacion() sí arma un state real y usable para seguir cotizando. */
+let COTIZACIONES = [
+  { id: 1, empresa: 'Panadería La Espiga SAS', cliente: 'Andrés Ramírez Peña', producto: 'Seguro Pymes', estado: 'cotizado', fecha: '2026-09-10', paso: 'resumen',
+    snapshot: { edificios: 300000000, electronicos: 60000000, maquinaria: 80000000, mercancias: 100000000, terceros: 200000000, ciber: false, movMercancias: false, vidaPymes: false, periodicidad: 'anual', prima: 1850000 } },
+  { id: 2, empresa: 'Panadería La Espiga SAS', cliente: 'Andrés Ramírez Peña', producto: 'Seguro Pymes + Vida Pymes', estado: 'cotizado', fecha: '2026-09-13', paso: 'resumen',
+    snapshot: { edificios: 400000000, electronicos: 80000000, maquinaria: 80000000, mercancias: 120000000, terceros: 300000000, ciber: true, movMercancias: false, vidaPymes: 100000000, periodicidad: 'anual', prima: 2430000 } },
+  { id: 3, empresa: 'Panadería La Espiga SAS', cliente: 'Andrés Ramírez Peña', producto: 'Seguro Pymes + Vida Pymes', estado: 'pendiente_firma', fecha: '2026-09-15', paso: 'pago',
+    snapshot: { edificios: 400000000, electronicos: 80000000, maquinaria: 80000000, mercancias: 120000000, terceros: 300000000, ciber: true, movMercancias: true, vidaPymes: 150000000, periodicidad: 'anual', prima: 2690000 } },
+  { id: 4, empresa: 'Ferretería El Tornillo Ltda', cliente: 'María Fernanda Ruiz', producto: 'Seguro Pymes', estado: 'borrador', fecha: '2026-09-18', paso: 'coberturas',
+    snapshot: { edificios: 250000000, electronicos: 50000000, maquinaria: 40000000, mercancias: 90000000, terceros: 200000000, ciber: false, movMercancias: false, vidaPymes: false, periodicidad: 'anual', prima: 980000 } },
+  { id: 5, empresa: 'Consultorio Odontológico Sonrisas', cliente: 'Carlos Andrade', producto: 'Seguro Pymes', estado: 'emitido', fecha: '2026-08-28', paso: 'emision',
+    snapshot: { edificios: 180000000, electronicos: 70000000, maquinaria: 20000000, mercancias: 40000000, terceros: 200000000, ciber: false, movMercancias: false, vidaPymes: false, periodicidad: 'anual', prima: 1120000 } }
+];
+
+const gestorState = { vista: 'listado', filtro: 'todas', empresaActiva: null, cotizacionId: null };
+
+const fmtFechaCot = (iso) => new Date(iso + 'T00:00:00').toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
+const badgeCot = (estado) => {
+  const colores = { borrador: ['#F5F5F5', '#5B5B5B'], cotizado: ['#E5F4EE', '#006B40'], pendiente_firma: ['#FFF8BC', '#7A6100'], emitido: ['#E5F4EE', '#006B40'] };
+  const [bg, fg] = colores[estado] || colores.borrador;
+  return `<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:${bg};color:${fg};font-weight:600;font-size:12px;white-space:nowrap">${ESTADOS_COT[estado]}</span>`;
+};
+
+const agruparPorEmpresa = () => {
+  const items = COTIZACIONES.filter((c) => gestorState.filtro === 'todas' || c.estado === gestorState.filtro);
+  const grupos = [];
+  items.forEach((c) => {
+    let g = grupos.find((x) => x.empresa === c.empresa);
+    if (!g) { g = { empresa: c.empresa, cliente: c.cliente, items: [] }; grupos.push(g); }
+    g.items.push(c);
+  });
+  grupos.forEach((g) => g.items.sort((a, b) => b.fecha.localeCompare(a.fecha)));
+  grupos.sort((a, b) => b.items[0].fecha.localeCompare(a.items[0].fecha));
+  return grupos;
+};
+
+const gestorListado = () => {
+  const grupos = agruparPorEmpresa();
+  return `<div style="max-width:1100px;margin:0 auto;padding:32px 24px;display:flex;flex-direction:column;gap:20px">
+    <div><h1 style="margin:0;font-weight:700;font-size:26px;color:#1B1B1B">Mis cotizaciones</h1><p style="margin:6px 0 0;font-weight:400;font-size:14px;color:#5B5B5B">Cree cotizaciones para sus clientes, continúe las que dejó en curso y compare las que ya tienen varias versiones para la misma empresa.</p></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">${FILTROS_COT.map(([k, l]) => chip(l, 'g:filtro:' + k, gestorState.filtro === k)).join('')}</div>
+    <button type="button" class="sb-ui-button sb-ui-button--primary sb-ui-button--fill sb-ui-button--icon-left" style="align-self:flex-start" data-action="g:nueva"><span class="material-symbols-outlined" style="font-size:20px">add</span>Generar cotización</button>
+    ${grupos.length ? grupos.map((g) => `<div style="background:#fff;border:1px solid #E1E1E1;border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <div><div style="font-weight:700;font-size:17px;color:#1B1B1B">${esc(g.empresa)}</div><div style="font-weight:400;font-size:12.5px;color:#5B5B5B">${esc(g.cliente)} · ${g.items.length} cotización${g.items.length === 1 ? '' : 'es'}</div></div>
+        ${g.items.length > 1 ? `<button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--small sb-ui-button--icon-left" data-action="g:comparar:${encodeURIComponent(g.empresa)}"><span class="material-symbols-outlined" style="font-size:18px">table_rows</span>Comparar cotizaciones</button>` : ''}
+      </div>
+      <div style="display:flex;flex-direction:column">${g.items.map((c, i) => `<button type="button" style="all:unset;cursor:pointer;display:flex;align-items:center;gap:14px;padding:12px 4px;width:100%;box-sizing:border-box;${i > 0 ? 'border-top:1px solid #F0F0F0' : ''}" data-action="g:abrir:${c.id}">
+        <div style="flex:1;min-width:0"><div style="font-weight:700;font-size:13.5px;color:#1B1B1B">${esc(c.producto)}</div><div style="font-weight:400;font-size:12px;color:#9B9B9B">${fmtFechaCot(c.fecha)}</div></div>
+        ${badgeCot(c.estado)}
+        <div style="font-weight:700;font-size:14px;color:#1B1B1B;white-space:nowrap">${fmt(c.snapshot.prima)}</div>
+        <span class="material-symbols-outlined" style="color:#9B9B9B">chevron_right</span>
+      </button>`).join('')}</div>
+    </div>`).join('') : `<div style="background:#fff;border:1px dashed #C2C7CF;border-radius:24px;padding:40px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center">
+      <span class="material-symbols-outlined" style="font-size:32px;color:#9B9B9B">inbox</span>
+      <div style="font-weight:700;font-size:15px">No hay cotizaciones en este filtro</div>
+      <div style="font-weight:400;font-size:13px;color:#5B5B5B">Las cotizaciones que cree para sus clientes aparecerán aquí.</div>
+    </div>`}
+  </div>`;
+};
+
+const gestorDetalle = () => {
+  const c = COTIZACIONES.find((x) => x.id === gestorState.cotizacionId);
+  if (!c) return gestorListado();
+  const puedeContinuar = c.estado === 'borrador' || c.estado === 'cotizado';
+  return `<div style="max-width:900px;margin:0 auto;padding:32px 24px;display:flex;flex-direction:column;gap:16px">
+    <button type="button" class="pymes-link-volver" style="align-self:flex-start" data-action="g:listado"><span class="material-symbols-outlined" style="font-size:20px">chevron_left</span>Mis cotizaciones</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <div><h1 style="margin:0;font-weight:700;font-size:22px;color:#1B1B1B">${esc(c.empresa)}</h1><p style="margin:4px 0 0;font-weight:400;font-size:13.5px;color:#5B5B5B">${esc(c.cliente)} · ${esc(c.producto)}</p></div>
+      ${badgeCot(c.estado)}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+      <div style="background:#fff;border:1px solid #E1E1E1;border-radius:20px;padding:16px"><div style="font-weight:400;font-size:12px;color:#9B9B9B">Última actividad</div><div style="font-weight:700;font-size:15px;margin-top:4px;color:#1B1B1B">${fmtFechaCot(c.fecha)}</div></div>
+      <div style="background:#fff;border:1px solid #E1E1E1;border-radius:20px;padding:16px"><div style="font-weight:400;font-size:12px;color:#9B9B9B">Paso alcanzado</div><div style="font-weight:700;font-size:15px;margin-top:4px;color:#1B1B1B">${esc(TITULOS[c.paso] || c.paso)}</div></div>
+      <div style="background:#fff;border:1px solid #E1E1E1;border-radius:20px;padding:16px"><div style="font-weight:400;font-size:12px;color:#9B9B9B">Prima estimada</div><div style="font-weight:700;font-size:15px;margin-top:4px;color:#006B40">${fmt(c.snapshot.prima)} ${c.snapshot.periodicidad}</div></div>
+    </div>
+    <div style="background:#fff;border:1px solid #E1E1E1;border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:12px">
+      <div style="font-weight:700;font-size:15px">Continuar con el cliente</div>
+      <div style="font-weight:400;font-size:13px;color:#5B5B5B;line-height:1.5">Retome la cotización en el mismo cotizador que usa el cliente, en el paso donde quedó.</div>
+      <button type="button" class="sb-ui-button sb-ui-button--primary sb-ui-button--fill sb-ui-button--block" data-action="g:continuar:${c.id}">${puedeContinuar ? 'Continuar cotización' : 'Ver cotización'}</button>
+    </div>
+  </div>`;
+};
+
+const FILAS_COMPARATIVO = [
+  ['edificios', 'Edificios', (s) => (s.edificios ? fmt(s.edificios) : '—')],
+  ['electronicos', 'Equipos electrónicos', (s) => (s.electronicos ? fmt(s.electronicos) : '—')],
+  ['maquinaria', 'Maquinaria', (s) => (s.maquinaria ? fmt(s.maquinaria) : '—')],
+  ['mercancias', 'Mercancías fijas', (s) => (s.mercancias ? fmt(s.mercancias) : '—')],
+  ['terceros', 'Daños a terceros', (s) => (s.terceros ? fmt(s.terceros) : '—')]
+];
+const iconoSiNo = (on) => `<span class="material-symbols-outlined" style="font-size:20px;color:${on ? '#006B40' : '#C2C7CF'}">${on ? 'check_circle' : 'cancel'}</span>`;
+
+/** Estructura tomada como referencia de un comparador de seguros (columnas = cada cotización,
+ * filas = coberturas + precio al final), pero con nuestro propio sistema de diseño: tarjetas,
+ * chips, sb-ui-button y los colores de marca en vez de la grilla original. */
+const gestorComparativo = () => {
+  const empresa = decodeURIComponent(gestorState.empresaActiva || '');
+  const items = COTIZACIONES.filter((c) => c.empresa === empresa).sort((a, b) => a.fecha.localeCompare(b.fecha));
+  if (!items.length) return gestorListado();
+  const th = 'text-align:left;padding:12px 16px;border-bottom:2px solid #E1E1E1;background:#fff;';
+  const td = 'padding:14px 16px;';
+  return `<div style="max-width:1200px;margin:0 auto;padding:32px 24px;display:flex;flex-direction:column;gap:16px">
+    <button type="button" class="pymes-link-volver" style="align-self:flex-start" data-action="g:listado"><span class="material-symbols-outlined" style="font-size:20px">chevron_left</span>Mis cotizaciones</button>
+    <div><h1 style="margin:0;font-weight:700;font-size:22px;color:#1B1B1B">Comparativo · ${esc(empresa)}</h1><p style="margin:4px 0 0;font-weight:400;font-size:13.5px;color:#5B5B5B">${items.length} cotizaciones para la misma empresa. Cada columna es una cotización; elija con cuál continuar.</p></div>
+    <div style="overflow-x:auto;background:#fff;border:1px solid #E1E1E1;border-radius:20px">
+      <table style="border-collapse:collapse;width:100%;min-width:${260 + items.length * 220}px">
+        <thead><tr>
+          <th style="${th}position:sticky;left:0;z-index:1">&nbsp;</th>
+          ${items.map((c) => `<th style="${th}min-width:200px">
+            <div style="font-weight:700;font-size:13.5px;color:#1B1B1B">${esc(c.producto)}</div>
+            <div style="font-weight:400;font-size:11.5px;color:#9B9B9B;margin-top:2px">${fmtFechaCot(c.fecha)}</div>
+            <div style="margin-top:6px">${badgeCot(c.estado)}</div>
+          </th>`).join('')}
+        </tr></thead>
+        <tbody>
+          ${FILAS_COMPARATIVO.map(([, label, format], ri) => `<tr style="${ri > 0 ? 'border-top:1px solid #F0F0F0' : ''}">
+            <td style="${td}font-weight:700;font-size:13px;color:#1B1B1B;white-space:nowrap;position:sticky;left:0;background:#fff">${label}</td>
+            ${items.map((c) => `<td style="${td}font-weight:400;font-size:13px;color:#414141">${format(c.snapshot)}</td>`).join('')}
+          </tr>`).join('')}
+          <tr style="border-top:1px solid #F0F0F0">
+            <td style="${td}font-weight:700;font-size:13px;color:#1B1B1B;white-space:nowrap;position:sticky;left:0;background:#fff">Ciberseguridad Pymes</td>
+            ${items.map((c) => `<td style="${td}">${iconoSiNo(c.snapshot.ciber)}</td>`).join('')}
+          </tr>
+          <tr style="border-top:1px solid #F0F0F0">
+            <td style="${td}font-weight:700;font-size:13px;color:#1B1B1B;white-space:nowrap;position:sticky;left:0;background:#fff">Movilización de mercancías</td>
+            ${items.map((c) => `<td style="${td}">${iconoSiNo(c.snapshot.movMercancias)}</td>`).join('')}
+          </tr>
+          <tr style="border-top:1px solid #F0F0F0">
+            <td style="${td}font-weight:700;font-size:13px;color:#1B1B1B;white-space:nowrap;position:sticky;left:0;background:#fff">Vida Pymes</td>
+            ${items.map((c) => `<td style="${td}">${c.snapshot.vidaPymes ? `<span style="font-weight:700;color:#006B40">${fmt(c.snapshot.vidaPymes)}</span>` : iconoSiNo(false)}</td>`).join('')}
+          </tr>
+          <tr style="border-top:2px solid #E1E1E1;background:#FAFAFA">
+            <td style="${td}font-weight:700;font-size:14px;color:#1B1B1B;white-space:nowrap;position:sticky;left:0;background:#FAFAFA">Prima total</td>
+            ${items.map((c) => `<td style="${td}font-weight:700;font-size:16px;color:#006B40">${fmt(c.snapshot.prima)} <span style="font-weight:400;font-size:11.5px;color:#9B9B9B">${c.snapshot.periodicidad}</span></td>`).join('')}
+          </tr>
+          <tr>
+            <td style="${td}background:#FAFAFA"></td>
+            ${items.map((c) => `<td style="${td}background:#FAFAFA"><button type="button" class="sb-ui-button sb-ui-button--primary sb-ui-button--fill sb-ui-button--small sb-ui-button--block" data-action="g:continuar:${c.id}">${c.estado === 'borrador' || c.estado === 'cotizado' ? 'Continuar' : 'Ver'}</button></td>`).join('')}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+};
+
+const gestorTopBar = () => {
+  const c = COTIZACIONES.find((x) => x.id === gestorState.cotizacionId);
+  return `<div style="position:sticky;top:0;z-index:16;background:#1B1B1B;padding:10px 24px;display:flex;align-items:center;gap:14px">
+    <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--small sb-ui-button--icon-left" data-action="g:salir"><span class="material-symbols-outlined" style="font-size:18px">chevron_left</span>Salir de la cotización</button>
+    <div style="flex:1;min-width:0;color:#fff;font-weight:700;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c ? esc(c.empresa) + ' · ' + esc(c.cliente) : 'Nueva cotización'}</div>
+    <span style="font-weight:600;font-size:11.5px;color:rgba(255,255,255,.7);background:rgba(255,255,255,.12);padding:4px 10px;border-radius:999px;white-space:nowrap">Sesión del asesor</span>
+  </div>`;
+};
+
+/** Al continuar una cotización, se "precarga" el state real del cotizador con lo mínimo para que
+ * el paso donde se dejó tenga sentido (nombre, contacto, negocio, sede) y arranca justo ahí; no
+ * reconstruye cada cobertura ajustada tal cual quedó, ya que el snapshot es solo para el listado
+ * y el comparativo. */
+function precargarCotizacion(c) {
+  state.nombre = c.cliente;
+  state.correo = c.cliente.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z]+/g, '.').replace(/^\.|\.$/g, '') + '@correo.com';
+  state.celular = '300 000 0000';
+  state.numDoc = '123456789';
+  state.autoriza = true;
+  state.landingPaso = 2;
+  state.actividad = 'Comercio al por mayor';
+  state.actividadBusqueda = state.actividad;
+  state.ventas = '1200000000';
+  state.multiSede = false;
+  if (!state.sedes[0] || !state.sedes[0].direccion) {
+    state.sedes[0] = Object.assign(nuevaSede(), { direccion: 'Cra 13 # 45-20', ciudad: 'Bogotá', propietario: true, primerPiso: true });
+  }
+  state.plan = 'sugerido';
+  state.paso = RUTA.includes(c.paso) ? c.paso : 'landing';
+}
+
+function renderTodo() {
+  const enCotizador = gestorState.vista === 'cotizador';
+  gestorRoot.style.display = enCotizador ? 'none' : '';
+  cotizadorWrap.style.display = enCotizador ? '' : 'none';
+  if (enCotizador) {
+    cotizadorTopBar.innerHTML = gestorTopBar();
+    render();
+  } else {
+    gestorRoot.innerHTML = gestorState.vista === 'detalle' ? gestorDetalle() : gestorState.vista === 'comparativo' ? gestorComparativo() : gestorListado();
+    modalRoot.innerHTML = '';
+    oliviaRoot.innerHTML = '';
+  }
+}
+
+/** Delegado aparte (en vez de sumar más ramas al if/else-if del cotizador) para no tener que
+ * tocar ese bloque ya probado: las acciones de este panel siempre empiezan con "g:". */
+document.body.addEventListener('click', (event) => {
+  const action = event.target.closest('[data-action]')?.dataset.action;
+  if (!action || !action.startsWith('g:')) return;
+  const partes = action.slice(2);
+  if (partes === 'listado') gestorState.vista = 'listado';
+  else if (partes.startsWith('filtro:')) gestorState.filtro = partes.slice(7);
+  else if (partes.startsWith('abrir:')) { gestorState.cotizacionId = Number(partes.slice(6)); gestorState.vista = 'detalle'; }
+  else if (partes.startsWith('comparar:')) { gestorState.empresaActiva = partes.slice(9); gestorState.vista = 'comparativo'; }
+  else if (partes.startsWith('continuar:')) {
+    const id = Number(partes.slice(10));
+    const c = COTIZACIONES.find((x) => x.id === id);
+    if (c) { gestorState.cotizacionId = id; precargarCotizacion(c); gestorState.vista = 'cotizador'; }
+  }
+  else if (partes === 'salir') {
+    const c = COTIZACIONES.find((x) => x.id === gestorState.cotizacionId);
+    if (c && (c.estado === 'borrador' || c.estado === 'cotizado')) {
+      c.snapshot.prima = Math.round(aPeriodo(primaTotal()));
+      c.snapshot.periodicidad = state.periodicidad;
+      c.paso = state.paso;
+      c.fecha = new Date().toISOString().slice(0, 10);
+    }
+    gestorState.vista = 'detalle';
+  }
+  else if (partes === 'nueva') {
+    const id = COTIZACIONES.reduce((max, x) => Math.max(max, x.id), 0) + 1;
+    const hoy = new Date().toISOString().slice(0, 10);
+    COTIZACIONES.push({ id, empresa: 'Nueva empresa', cliente: 'Cliente nuevo', producto: 'Seguro Pymes', estado: 'borrador', fecha: hoy, paso: 'landing',
+      snapshot: { edificios: 0, electronicos: 0, maquinaria: 0, mercancias: 0, terceros: 0, ciber: false, movMercancias: false, vidaPymes: false, periodicidad: 'anual', prima: 0 } });
+    Object.assign(state, { paso: 'landing', landingPaso: 1, nombre: '', correo: '', celular: '', numDoc: '', autoriza: false, actividad: '', actividadBusqueda: '', ventas: '', multiSede: null, sedes: [nuevaSede()], plan: 'sugerido', vidaOn: true, beneficiarios: [] });
+    gestorState.cotizacionId = id;
+    gestorState.vista = 'cotizador';
+  }
+  renderTodo();
+});
+
+renderTodo();
 </script>
 </body>
 </html>
