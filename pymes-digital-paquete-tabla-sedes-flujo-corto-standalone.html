@@ -2073,7 +2073,7 @@ const coberturas = () => {
     const value = sede.valores[clave] || 0;
     const sug = sugerido(sede, clave);
     const igual = value === sug;
-    const fila = `display:flex;flex-direction:column;gap:12px;padding:18px 0;${i > 0 ? 'border-top:1px solid #E1E1E1;' : ''}`;
+    const fila = `display:flex;flex-direction:column;gap:14px;padding:20px 0;${i > 0 ? 'border-top:1px solid #E1E1E1;' : ''}`;
     if (bloqueada) return `<div style="${fila}"><div style="font-weight:700;font-size:14px;color:#1B1B1B">${ETIQUETAS[clave]}</div><div style="font-weight:400;font-size:12.5px;color:#757575">No aplica: el inmueble de esta sede es arrendado.</div></div>`;
     const apoyo = igual
       ? `<div style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:12.5px;color:#757575"><span class="material-symbols-outlined" style="font-size:16px;color:#006B40">check_small</span>Valor sugerido para su negocio</div>`
@@ -2110,10 +2110,10 @@ const coberturas = () => {
   return `<div style="display:flex;flex-direction:column;gap:14px">
     ${selectorSedes}
     <div class="pymes-coberturas-grid">
-      <div style="background:#fff;border:1px solid #E1E1E1;border-radius:24px;padding:20px 24px 22px;display:flex;flex-direction:column;gap:4px">
-        <div style="display:flex;flex-direction:column;gap:4px;padding-bottom:2px"><div style="font-weight:700;font-size:17px">Coberturas principales</div><div style="font-weight:400;font-size:12.5px;color:#757575">Ajuste el valor con − y + o escríbalo directamente.</div></div>
-        <div style="display:flex;flex-direction:column;border-top:1px solid #E1E1E1;margin-top:10px">${principales}</div>
-        <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--small sb-ui-button--icon-left" style="align-self:flex-start;margin-top:6px" data-action="restaurarTodo"><span class="material-symbols-outlined" style="font-size:18px">restart_alt</span>Restaurar todos los sugeridos</button>
+      <div style="background:#fff;border:1px solid #E1E1E1;border-radius:24px;padding:20px 24px 22px;display:flex;flex-direction:column;gap:18px">
+        <div style="display:flex;flex-direction:column;gap:4px"><div style="font-weight:700;font-size:17px">Coberturas principales</div><div style="font-weight:400;font-size:12.5px;color:#757575">Ajuste el valor con − y + o escríbalo directamente.</div></div>
+        <div style="display:flex;flex-direction:column">${principales}</div>
+        <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--small sb-ui-button--icon-left" style="align-self:flex-start" data-action="restaurarTodo"><span class="material-symbols-outlined" style="font-size:18px">restart_alt</span>Restaurar todos los sugeridos</button>
       </div>
       <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
         <div style="background:#fff;border:1px solid #E1E1E1;border-radius:24px;padding:14px 18px;display:flex;flex-direction:column;gap:10px">
@@ -2194,7 +2194,7 @@ const vidaPaquete = () => {
       </div>
     </div>
     <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:4px;border-top:1px solid #E1E1E1"><span style="font-weight:700;font-size:14px">Prima Vida Pymes${vidaEstimada() ? ' <span style="font-weight:400;font-size:12px;color:#9B9B9B">(estimada)</span>' : ''}</span><span style="font-weight:700;font-size:19px;color:#006B40">${fmt(aPeriodo(primaVida()))} ${state.periodicidad}</span></div>
-    <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--text sb-ui-button--small sb-ui-button--icon-right" data-action="abrirDrawerVida">Ver coberturas incluidas<span class="material-symbols-outlined" style="font-size:18px">chevron_right</span></button>
+    <button type="button" class="pymes-option" style="text-align:left;background:#FFF8BC;border-color:#FFF8BC" data-action="abrirDrawerVida"><span style="flex:1;font-weight:600;font-size:13px;color:#414141">Ver coberturas incluidas</span><span class="material-symbols-outlined" style="font-size:20px;color:#414141">chevron_right</span></button>
   </div>`;
 };
 
