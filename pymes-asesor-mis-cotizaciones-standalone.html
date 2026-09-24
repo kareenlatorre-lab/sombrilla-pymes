@@ -3039,6 +3039,36 @@ document.body.addEventListener('click', (event) => {
   renderTodo();
 });
 
+/** Punto de entrada configurable por URL: sin esto, cualquier "URL de inicio" que una herramienta
+ * de test de usabilidad (p. ej. Useberry) intente usar para arrancar en una pantalla puntual
+ * terminaba mostrando siempre el listado, porque todo el estado vive en memoria y arranca de cero
+ * en cada carga. Con ?vista=... se puede apuntar directo a una pantalla del prototipo:
+ *   ?vista=detalle&id=2                        -> detalle de esa cotización
+ *   ?vista=comparativo&empresa=Panader%C3%ADa...-> comparativo de esa empresa
+ *   ?vista=cotizador&id=3                      -> retoma esa cotización en el paso donde quedó
+ *   ?vista=cotizador&id=3&paso=coberturas      -> retoma esa cotización pero forzando el paso
+ *   ?vista=cotizador                           -> cotización nueva, arranca en la landing
+ * Sin parámetros (o con uno inválido) se comporta como siempre: arranca en el listado. */
+(function inicializarDesdeUrl() {
+  const params = new URLSearchParams(location.search);
+  const vista = params.get('vista');
+  const id = Number(params.get('id'));
+  const empresaParam = params.get('empresa');
+  const pasoParam = params.get('paso');
+  if (vista === 'detalle' && id && COTIZACIONES.some((c) => c.id === id)) {
+    gestorState.cotizacionId = id;
+    gestorState.vista = 'detalle';
+  } else if (vista === 'comparativo' && empresaParam && COTIZACIONES.some((c) => c.empresa === empresaParam)) {
+    gestorState.empresaActiva = encodeURIComponent(empresaParam);
+    gestorState.vista = 'comparativo';
+  } else if (vista === 'cotizador') {
+    const c = COTIZACIONES.find((x) => x.id === id);
+    if (c) { gestorState.cotizacionId = id; precargarCotizacion(c); } else { gestorState.cotizacionId = null; }
+    if (pasoParam && RUTA.includes(pasoParam)) state.paso = pasoParam;
+    gestorState.vista = 'cotizador';
+  }
+})();
+
 renderTodo();
 </script>
 </body>

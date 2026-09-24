@@ -2809,6 +2809,12 @@ document.body.addEventListener('keydown', (event) => {
   if (event.target.id === 'oliviaInput' && event.key === 'Enter') { event.preventDefault(); enviarOlivia(); }
 });
 
+/** Permite arrancar directo en un paso puntual vía ?paso=..., para pruebas de usabilidad (p. ej.
+ * Useberry) que necesitan una URL de inicio distinta a la landing. Ej.: ...standalone.html?paso=negocio
+ * Sin el parámetro (o con uno que no exista en RUTA) arranca como siempre, en la landing. */
+const pasoInicial = new URLSearchParams(location.search).get('paso');
+if (pasoInicial && RUTA.includes(pasoInicial)) state.paso = pasoInicial;
+
 render();
 </script>
 </body>
