@@ -2811,9 +2811,134 @@ document.body.addEventListener('keydown', (event) => {
 
 /** Permite arrancar directo en un paso puntual vía ?paso=..., para pruebas de usabilidad (p. ej.
  * Useberry) que necesitan una URL de inicio distinta a la landing. Ej.: ...standalone.html?paso=negocio
- * Sin el parámetro (o con uno que no exista en RUTA) arranca como siempre, en la landing. */
-const pasoInicial = new URLSearchParams(location.search).get('paso');
-if (pasoInicial && RUTA.includes(pasoInicial)) state.paso = pasoInicial;
+ * También acepta el hash (#/coberturas) para reentrar a la misma pantalla al recargar.
+ * Sin parámetro (o con uno que no exista en RUTA) arranca como siempre, en la landing. */
+const pasoPorHash = (location.hash || '').replace(/^#\//, '');
+const pasoInicial = new URLSearchParams(location.search).get('paso') || pasoPorHash;
+
+/** Cuando el flujo arranca en un paso intermedio, los pasos anteriores nunca se completaron, así que
+ * su estado queda vacío. Eso rompe la navegación de dos formas:
+ *   1) ruta() filtra 'sedes' solo si multiSede===true (y arranca en null): si se entra directo a un
+ *      paso posterior, 'sedes' desaparece de la ruta y los índices se corren; peor aún, si se entra
+ *      justo en 'sedes', indexOf devuelve -1 y "Continuar" cae en currentRoute[0] === 'landing'.
+ *   2) puedeSeguir() de cada paso valida datos que no existen, dejando el botón bloqueado.
+ * Para que la prueba pueda "continuar normalmente", sembramos datos válidos de todos los pasos
+ * previos al paso de arranque. No toca nada si se arranca en landing. */
+const sembrarEstadoHasta = (paso) => {
+  const objetivo = RUTA.indexOf(paso);
+  if (objetivo <= 0) return; // landing o desconocido: nada que sembrar
+
+  const completo = (hasta) => RUTA.indexOf(hasta) < objetivo;
+
+  // landing: identificación del cliente
+  if (completo('negocio')) {
+    state.consultado = true; state.encontrado = true;
+    state.tipoDoc = 'CC'; state.numDoc = '1015399642';
+    state.nombre = 'Andrés Ramírez Peña';
+    state.correo = 'andres.ramirez@andina.com.co';
+    state.celular = '314 578 9001';
+    state.autoriza = true; state.landingPaso = 1;
+  }
+
+  // negocio: actividad + decisión de sedes
+  if (completo('sedes') || (paso !== 'sedes' && completo('plan'))) {
+    state.actividad = 'Comercio al por menor';
+    state.actividadBusqueda = state.actividad;
+    state.ventas = '1.200.000.000';
+  }
+
+  /** 'sedes' solo forma parte de la ruta cuando multiSede===true. Si el arranque ES en 'sedes',
+   * activamos multiSede para que el paso exista en la ruta y "Continuar" avance a 'plan'. Para
+   * arranques posteriores dejamos una sola sede (multiSede=false) ya completa, que es el camino
+   * más corto y coherente con el flujo. */
+  const sedeLista = () => {
+    const s = state.sedes[0] || nuevaSede();
+    s.direccion = 'Calle 100 # 15-20';
+    s.ciudad = 'Bogotá';
+    s.propietario = true;
+    s.primerPiso = true;
+    s.ubicacion = { lat: 4.6837, lng: -74.0466 };
+    state.sedes = [s];
+    state.sedeActiva = 0;
+  };
+
+  if (paso === 'sedes') {
+    state.multiSede = true;
+    sedeLista();
+  } else if (completo('sedes') || completo('plan')) {
+    state.multiSede = false;
+    sedeLista();
+  }
+
+  // plan
+  if (completo('coberturas')) { state.plan = 'sugerido'; state.personalizando = false; }
+
+  /** coberturas: con las opcionales por defecto (todas off) el único requisito de puedeSeguir es
+   * que Vida Pymes tenga fecha de nacimiento (viene incluida y activada). Se siembra al arrancar
+   * EN 'coberturas' o después, para que "Continuar" no quede bloqueado por Vida. */
+  if (objetivo >= RUTA.indexOf('coberturas')) {
+    state.vidaOn = true;
+    state.nacimiento = '15/03/1985';
+    state.vas = 100000000;
+  }
+
+  // fotos: las tres obligatorias
+  if (completo('beneficiarios')) {
+    state.fotos.entrada = true; state.fotos.trabajo = true; state.fotos.almacenamiento = true;
+  }
+
+  // beneficiarios: reparto 100 %
+  if (completo('resumen')) {
+    state.beneficiarios = [{ nombre: 'María Ramírez', parentesco: 'Cónyuge', pct: 100 }];
+  }
+
+  // resumen: declaración aceptada
+  if (completo('validacion')) state.declaracion = true;
+
+  // validacion: OTP validado
+  if (completo('pago')) state.otpValidado = true;
+
+  // pago: medio seleccionado
+  if (completo('emision')) state.medioPago = 'PSE';
+};
+
+/** Con ?listo=1 (o &listo=1) además dejamos completo el PROPIO paso de arranque, de modo que
+ * "Continuar" avance de inmediato sin pedir interacción. Útil para tasks de Useberry que solo
+ * evalúan la navegación de una pantalla a la siguiente, no el llenado del formulario de esa
+ * pantalla. Sin el parámetro, el paso de arranque se muestra vacío/natural para probarlo. */
+const completarPasoActual = (paso) => {
+  switch (paso) {
+    case 'negocio':
+      state.actividad = 'Comercio al por menor'; state.actividadBusqueda = state.actividad;
+      state.ventas = '1.200.000.000'; state.multiSede = false;
+      { const s = state.sedes[0] || nuevaSede(); s.direccion = 'Calle 100 # 15-20'; s.ciudad = 'Bogotá'; s.propietario = true; s.primerPiso = true; state.sedes = [s]; }
+      break;
+    case 'sedes': {
+      const s = state.sedes[0] || nuevaSede(); s.direccion = 'Calle 100 # 15-20'; s.ciudad = 'Bogotá'; s.propietario = true; s.primerPiso = true; state.sedes = [s];
+      break;
+    }
+    case 'coberturas':
+      state.vidaOn = true; state.nacimiento = '15/03/1985';
+      break;
+    case 'fotos':
+      state.fotos.entrada = true; state.fotos.trabajo = true; state.fotos.almacenamiento = true;
+      break;
+    case 'beneficiarios':
+      state.beneficiarios = [{ nombre: 'María Ramírez', parentesco: 'Cónyuge', pct: 100 }];
+      break;
+    case 'resumen': state.declaracion = true; break;
+    case 'validacion': state.otpValidado = true; state.otp = '481203'; break;
+    case 'pago': state.medioPago = 'PSE'; break;
+    default: break;
+  }
+};
+
+if (pasoInicial && RUTA.includes(pasoInicial)) {
+  sembrarEstadoHasta(pasoInicial);
+  state.paso = pasoInicial;
+  const listo = new URLSearchParams(location.search).get('listo');
+  if (listo === '1' || listo === 'true') completarPasoActual(pasoInicial);
+}
 
 render();
 </script>
