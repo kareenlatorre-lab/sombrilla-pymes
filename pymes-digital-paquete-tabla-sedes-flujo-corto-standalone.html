@@ -2565,11 +2565,49 @@ const render = () => {
       if (log) log.scrollTop = log.scrollHeight;
     }
     initMapaSiNecesario();
+    persistirEstado();
   } finally {
     renderizando = false;
   }
 };
 window.__cerrarOverlays = () => { state.modalPlan = null; state.drawerVida = false; state.drawerBenef = false; state.drawerSede = false; state.drawerMapa = false; render(); };
+
+/** Persistencia de estado para entornos que recargan el prototipo entre pantallas (p. ej. Useberry
+ * embebe el standalone en un iframe y puede recargarlo al pasar de una task a la siguiente). Sin
+ * esto, el `state` vive solo en memoria: cualquier recarga lo pierde y el flujo vuelve al inicio
+ * marcado por la URL, dando la sensación de que "se sale". Guardamos en sessionStorage (se limpia
+ * al cerrar la pestaña, no ensucia sesiones futuras del prototipo) y rehidratamos al cargar. */
+const STORAGE_KEY = 'pymes-digital-flujo-corto:v1';
+const persistirEstado = () => {
+  try {
+    // No persistimos overlays/drawers efímeros: al recargar deben empezar cerrados.
+    const { modalPlan, drawerVida, drawerBenef, drawerSede, drawerMapa, oliviaAbierta, mapaBuscando, mapaError, ...persistible } = state;
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(persistible));
+  } catch (e) { /* sessionStorage puede no estar disponible (modo restringido del iframe): degradar sin romper. */ }
+};
+
+/** Rehidrata `state` desde sessionStorage de forma defensiva: solo copia claves que ya existen en
+ * el `state` base y respeta sus tipos, para que un storage manipulado o de una versión previa no
+ * inyecte campos inesperados ni rompa el render (input no confiable => allowlist por clave). */
+const rehidratarEstado = () => {
+  try {
+    const crudo = sessionStorage.getItem(STORAGE_KEY);
+    if (!crudo) return false;
+    const datos = JSON.parse(crudo);
+    if (!datos || typeof datos !== 'object' || Array.isArray(datos)) return false;
+    if (typeof datos.paso !== 'string' || !RUTA.includes(datos.paso)) return false;
+    Object.keys(state).forEach((clave) => {
+      if (!(clave in datos)) return;
+      const actual = state[clave];
+      const nuevo = datos[clave];
+      const mismoTipoBasico = typeof actual === typeof nuevo && Array.isArray(actual) === Array.isArray(nuevo);
+      // null es válido para campos que arrancan en null (p. ej. multiSede); permitimos null explícito.
+      if (mismoTipoBasico || nuevo === null || actual === null) state[clave] = nuevo;
+    });
+    return true;
+  } catch (e) { return false; }
+};
+window.__reiniciarFlujo = () => { try { sessionStorage.removeItem(STORAGE_KEY); } catch (e) {} location.href = location.pathname; };
 
 /** Instancia de Leaflet activa (si hay una), para poder destruirla antes de crear otra: cada
  * render() reemplaza el <div id="mapaPymes"> por uno nuevo (innerHTML completo), así que el mapa
@@ -2933,11 +2971,28 @@ const completarPasoActual = (paso) => {
   }
 };
 
-if (pasoInicial && RUTA.includes(pasoInicial)) {
+/** Orden de arranque, pensado para que en Useberry (o cualquier host que recargue el iframe) el
+ * flujo no "se salga":
+ *   1) Si la URL trae ?paso= (una task fija esa pantalla como inicio), manda la URL: sembramos ese
+ *      paso desde cero, ignorando cualquier estado guardado de una corrida anterior. Así cada task
+ *      arranca limpia en su pantalla.
+ *   2) Si NO hay ?paso= pero sí hay estado guardado, rehidratamos y retomamos donde iba el usuario
+ *      (esto es lo que evita "salirse" al recargar entre pantallas de una misma sesión).
+ *   3) Si hay solo hash (#/paso) sin estado guardado, lo tratamos como paso inicial (reentrada).
+ *   4) Sin nada de lo anterior, arranca en landing como siempre. */
+const pasoPorQuery = new URLSearchParams(location.search).get('paso');
+
+if (pasoPorQuery && RUTA.includes(pasoPorQuery)) {
+  try { sessionStorage.removeItem(STORAGE_KEY); } catch (e) {}
+  sembrarEstadoHasta(pasoPorQuery);
+  state.paso = pasoPorQuery;
+  const listo = new URLSearchParams(location.search).get('listo');
+  if (listo === '1' || listo === 'true') completarPasoActual(pasoPorQuery);
+} else if (rehidratarEstado()) {
+  // state.paso ya quedó restaurado desde sessionStorage: retomamos donde iba.
+} else if (pasoInicial && RUTA.includes(pasoInicial)) {
   sembrarEstadoHasta(pasoInicial);
   state.paso = pasoInicial;
-  const listo = new URLSearchParams(location.search).get('listo');
-  if (listo === '1' || listo === 'true') completarPasoActual(pasoInicial);
 }
 
 render();
