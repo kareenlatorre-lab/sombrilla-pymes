@@ -2886,9 +2886,10 @@ const sembrarEstadoHasta = (paso) => {
   }
 
   /** 'sedes' solo forma parte de la ruta cuando multiSede===true. Si el arranque ES en 'sedes',
-   * activamos multiSede para que el paso exista en la ruta y "Continuar" avance a 'plan'. Para
-   * arranques posteriores dejamos una sola sede (multiSede=false) ya completa, que es el camino
-   * más corto y coherente con el flujo. */
+   * activamos multiSede para que el paso exista en la ruta (y "Continuar" avance a 'plan') PERO
+   * dejamos la sede VACÍA: ese paso es justo lo que debe llenar el usuario en la prueba, así que
+   * no lo pre-rellenamos. Para arranques posteriores a 'sedes' sí dejamos una sola sede
+   * (multiSede=false) ya completa, porque ese paso quedó "atrás" y necesita datos coherentes. */
   const sedeLista = () => {
     const s = state.sedes[0] || nuevaSede();
     s.direccion = 'Calle 100 # 15-20';
@@ -2901,8 +2902,7 @@ const sembrarEstadoHasta = (paso) => {
   };
 
   if (paso === 'sedes') {
-    state.multiSede = true;
-    sedeLista();
+    state.multiSede = true; // sede vacía: el usuario la llena
   } else if (completo('sedes') || completo('plan')) {
     state.multiSede = false;
     sedeLista();
@@ -2912,9 +2912,10 @@ const sembrarEstadoHasta = (paso) => {
   if (completo('coberturas')) { state.plan = 'sugerido'; state.personalizando = false; }
 
   /** coberturas: con las opcionales por defecto (todas off) el único requisito de puedeSeguir es
-   * que Vida Pymes tenga fecha de nacimiento (viene incluida y activada). Se siembra al arrancar
-   * EN 'coberturas' o después, para que "Continuar" no quede bloqueado por Vida. */
-  if (objetivo >= RUTA.indexOf('coberturas')) {
+   * que Vida Pymes tenga fecha de nacimiento (viene incluida y activada). Solo la sembramos cuando
+   * 'coberturas' quedó ATRÁS respecto al paso de arranque; si el arranque ES en 'coberturas',
+   * dejamos la fecha vacía para que el usuario la ingrese (es parte de lo que debe llenar ahí). */
+  if (completo('coberturas')) {
     state.vidaOn = true;
     state.nacimiento = '15/03/1985';
     state.vas = 100000000;
