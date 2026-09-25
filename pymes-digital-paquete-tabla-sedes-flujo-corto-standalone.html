@@ -156,10 +156,24 @@ button, input, select { font: inherit; }
 .pymes-olivia-fab { position: fixed; right: 28px; bottom: 28px; width: 56px; height: 56px; border-radius: 999px; background: #009056; color: #fff; border: none; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,.22); cursor: pointer; z-index: 45; }
 .pymes-olivia-fab .material-symbols-outlined { font-size: 26px; }
 .pymes-olivia-fab:hover { background: #006b40; }
-.pymes-olivia-tip { position: fixed; right: 28px; bottom: 96px; max-width: 200px; background: #fff; border: 1px solid #E1E1E1; border-radius: 16px; padding: 12px 34px 12px 14px; box-shadow: 0 8px 20px rgba(0,0,0,.16); z-index: 45; font-size: 13px; line-height: 1.4; color: #303030; }
+.pymes-acc { background: #fff; border: 1px solid #E1E1E1; border-radius: 16px; overflow: hidden; }
+.pymes-acc__head { all: unset; box-sizing: border-box; width: 100%; display: flex; align-items: center; gap: 14px; padding: 12px 16px; cursor: pointer; }
+.pymes-acc__head::-webkit-details-marker { display: none; }
+.pymes-acc__head:focus-visible { outline: 2px solid #009056; outline-offset: -2px; }
+.pymes-acc[open] .pymes-acc__head { background: #F5F5F5; }
+.pymes-acc__icon { flex: none; width: 40px; height: 40px; border-radius: 50%; background: #E5F4EE; color: #006B40; display: flex; align-items: center; justify-content: center; }
+.pymes-acc--no .pymes-acc__icon { background: #F5F5F5; color: #5B5B5B; }
+.pymes-acc[open].pymes-acc--no .pymes-acc__icon { background: #E1E1E1; }
+.pymes-acc__icon .material-symbols-outlined { font-size: 22px; }
+.pymes-acc__title { flex: 1; font-weight: 700; font-size: 15px; line-height: 1.3; color: #1B1B1B; }
+.pymes-acc__chev { color: #5B5B5B; transition: transform .15s; }
+.pymes-acc[open] .pymes-acc__chev { transform: rotate(180deg); }
+.pymes-acc__body { padding: 12px 16px 16px 70px; font-size: 14px; line-height: 1.5; color: #414141; }
+.pymes-acc + .pymes-acc { margin-top: 12px; }
+.pymes-olivia-fab--sobre-cta { bottom: 96px; }
+.pymes-olivia-tip.pymes-olivia-tip--sobre-cta { bottom: 164px; }
+.pymes-olivia-tip { position: fixed; right: 28px; bottom: 96px; max-width: 200px; background: #fff; border: 1px solid #E1E1E1; border-radius: 16px; padding: 12px 14px; box-shadow: 0 8px 20px rgba(0,0,0,.16); z-index: 45; font-size: 13px; line-height: 1.4; color: #303030; }
 .pymes-olivia-tip::after { content: ''; position: absolute; right: 22px; bottom: -7px; width: 12px; height: 12px; background: #fff; border-right: 1px solid #E1E1E1; border-bottom: 1px solid #E1E1E1; transform: rotate(45deg); }
-.pymes-olivia-tip__cerrar { position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border: none; background: transparent; border-radius: 999px; color: #5B5B5B; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
-.pymes-olivia-tip__cerrar:hover { background: #F0F0F0; }
 .pymes-olivia-panel { position: fixed; right: 24px; bottom: 24px; width: min(380px, calc(100vw - 32px)); height: min(560px, calc(100vh - 100px)); background: #fff; border: 1px solid #e1e1e1; border-radius: 20px; box-shadow: 0 16px 40px rgba(0,0,0,.2); display: grid; grid-template-rows: auto 1fr auto; grid-template-columns: minmax(0, 1fr); z-index: 45; overflow: hidden; }
 .pymes-olivia-panel__header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #e1e1e1; flex: none; min-width: 0; }
 .pymes-olivia-panel__body { padding: 12px 16px; overflow: hidden; display: flex; flex-direction: column; min-height: 0; min-width: 0; }
@@ -1517,17 +1531,16 @@ const state = {
   tipoDoc: 'CC', numDoc: '', nombre: '', correo: '', celular: '',
   landingPaso: 1, claveAsesor: '', correoAsesor: '',
   actividadBusqueda: '', actividad: '', ventas: '',
-  multiSede: null, sedes: [nuevaSede()], sedeActiva: 0,
-  plan: 'sugerido', periodicidad: 'anual', personalizando: false, comparativoPlanes: null, personalizandoPlanIdx: null, planSedeActiva: 0,
+  multiSede: null, sedes: [nuevaSede()], sedeActiva: 0, fotoSedeActiva: 0, numCotizacion: 'COT-2026-' + String(Math.floor(1000000 + Math.random() * 9000000)),
+  plan: 'sugerido', periodicidad: 'anual', personalizando: false, comparativoPlanes: null,
   opcionales: { dinero: false, muebles: false, roboEmpleados: false, ciber: false, movMercancias: false },
-  fotos: { entrada: false, trabajo: false, almacenamiento: false, general: false },
-  vidaOn: true, vas: 100000000, nacimiento: '', beneficiarios: [],
+    vidaOn: true, vas: 100000000, nacimiento: '', beneficiarios: [],
   benefNombre: '', benefParentesco: 'Cónyuge', benefPct: 100, benefIdx: -1,
   medioPago: '', otp: '', otpValidado: false, declaracion: false, autoriza: false, modalPlan: null, drawerVida: false, drawerBenef: false, benefEditIdx: -1,
   drawerSede: false, sedeEditIdx: -1, sedeDraft: nuevaSede(),
   drawerMapa: false, mapaSedeIdx: null, mapaBusqueda: '', mapaError: '', mapaBuscando: false,
   incluirCorreoPrincipal: true, correosExtra: [], nuevoCorreoExtra: '', mostrarAgregarCorreo: false,
-  oliviaAbierta: false, oliviaTipCerrado: false, oliviaTexto: '',
+  oliviaAbierta: false, oliviaTexto: '',
   oliviaLog: [{ from: 'olivia', text: '¡Hola! Soy OLIVIA. Pregúnteme sobre coberturas, exclusiones o el clausulado del Seguro Pymes y Vida Pymes.' }]
 };
 
@@ -1592,7 +1605,7 @@ const landingFormPaso1 = () => `
     ${selectField('tipoDoc', 'Tipo de documento', state.tipoDoc, [['CC', 'Cédula de ciudadanía'], ['CE', 'Cédula de extranjería'], ['NIT', 'NIT'], ['PA', 'Pasaporte']])}
     ${inputField('numDoc', 'Número de documento', state.numDoc, 'Ej. 1.020.445.778')}
   </div>
-  ${state.consultado ? `<div style="display:flex;align-items:flex-start;gap:9px;padding:11px 13px;background:#E5F4EE;border-radius:12px"><span class="material-symbols-outlined" style="font-size:19px;color:#006B40">check_small</span><span style="font-weight:400;font-size:12.5px;line-height:1.4;color:#414141">${state.encontrado ? 'Encontramos sus datos y los completamos por usted. Revíselos y edite lo que necesite.' : 'No encontramos datos asociados a este documento. Complete la información a continuación.'}</span></div>` : ''}
+  ${state.consultado ? `<div style="display:flex;align-items:flex-start;gap:9px;padding:11px 13px;background:${state.encontrado ? '#E5F4EE' : '#FFF8BC'};border-radius:12px"><span class="material-symbols-outlined" style="font-size:19px;color:${state.encontrado ? '#006B40' : '#7A6100'}">${state.encontrado ? 'check_small' : 'info'}</span><span style="font-weight:400;font-size:12.5px;line-height:1.4;color:#414141">${state.encontrado ? 'Encontramos sus datos y los completamos por usted. Revíselos y edite lo que necesite.' : 'No encontramos datos asociados a este documento. Complete la información a continuación.'}</span></div>` : ''}
   ${inputField('nombre', '¿Cuál es su nombre?', state.nombre, 'Ej. Juan Pérez')}
   ${inputField('correo', 'Correo electrónico', state.correo, 'Ej. nombre@correo.com', 'email')}
   ${inputField('celular', 'Número de celular', state.celular, 'Ej. 314 578 9001', 'tel')}
@@ -1618,23 +1631,6 @@ const landingForm = () => `<div style="flex:1 1 380px;max-width:440px;background
   ${state.landingPaso === 1 ? landingFormPaso1() : landingFormPaso2()}
 </div>`;
 
-const landingPlanes = () => PLANES.map((p) => {
-  const mult = PLAN_MULT_LANDING[p.id];
-  let base = 0;
-  CLAVES.forEach((k) => { base += BASE[k] * TASA[k]; });
-  base = base * mult * 1.19;
-  const destacado = p.id === 'medio';
-  const borde = destacado ? '2px solid #009056' : '1px solid #E1E1E1';
-  return `<div style="flex:1 1 300px;display:flex;flex-direction:column;gap:14px;background:#fff;border:${borde};border-radius:24px;padding:18px">
-    <div><div style="font-weight:700;font-size:22px">${p.nombre}</div><div style="font-weight:400;font-size:13.5px;color:#5B5B5B;margin-top:3px">${p.nivel}</div></div>
-    <div><div style="font-weight:400;font-size:12px;color:#9B9B9B">Desde</div><div style="font-weight:700;font-size:26px;line-height:1;color:#1B1B1B;margin-top:3px">${fmt(base / 12 * 1.06)} / mes</div><div style="font-weight:400;font-size:12.5px;color:#5B5B5B;margin-top:4px">${fmt(base)} al año para una sede</div></div>
-    <div style="height:1px;background:#E1E1E1"></div>
-    <div style="display:flex;flex-direction:column;gap:9px;flex:1">
-      ${p.items.map(([icon, txt]) => `<div style="display:flex;gap:9px;align-items:flex-start"><span class="material-symbols-outlined" style="font-size:18px;color:${icon === 'check_small' ? '#006B40' : '#9B9B9B'}">${icon}</span><span style="font-weight:400;font-size:13.5px;line-height:1.4;color:#414141">${txt}</span></div>`).join('')}
-    </div>
-    <button type="button" class="pymes-option" style="text-align:left;background:#FFF8BC;border-color:#FFF8BC" data-action="verCoberturas:${p.id}"><span style="flex:1;font-weight:600;font-size:13px;color:#414141">Consultar todas las coberturas</span><span class="material-symbols-outlined" style="font-size:20px;color:#414141">chevron_right</span></button>
-  </div>`;
-}).join('');
 
 const landing = () => `<div style="background:#009056;padding:56px 72px">
   <div style="max-width:1280px;margin:0 auto;display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start">
@@ -1650,8 +1646,6 @@ const landing = () => `<div style="background:#009056;padding:56px 72px">
 </div>
 <div style="padding:56px 72px;background:#F5F5F5">
   <div style="max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:24px">
-    <div><div style="font-weight:700;font-size:32px;line-height:1.3">Elija un plan y empiece a estar protegido</div><div style="font-weight:400;font-size:16px;line-height:1.5;color:#5B5B5B;margin-top:6px;max-width:640px">Los tres planes cubren las mismas cinco coberturas principales. Cambian los límites y lo que viene incluido de fábrica.</div></div>
-    <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:stretch">${landingPlanes()}</div>
     <div style="display:flex;flex-direction:column;gap:24px">
       <div style="font-weight:700;font-size:32px;line-height:1.3">Coberturas que puede contratar</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px">
@@ -1661,7 +1655,7 @@ const landing = () => `<div style="background:#009056;padding:56px 72px">
           <div style="font-weight:400;font-size:16px;line-height:1.5;color:#2E3033">${c.desc}</div>
         </div>`).join('')}
       </div>
-      <div style="font-weight:400;font-size:12.5px;line-height:1.45;color:#9B9B9B">Vida Pymes se ofrece como producto complementario después de tener su cotización lista.</div>
+      <div style="font-weight:400;font-size:12.5px;line-height:1.45;color:#757575">Vida Pymes se ofrece como producto complementario después de tener su cotización lista.</div>
     </div>
   </div>
 </div>`;
@@ -1672,7 +1666,7 @@ const negocio = () => `<div style="background:#FAFAFA;border:1px solid #E1E1E1;b
     <div><label class="sb-ui-input-label" for="actividadBusqueda">Busque su actividad</label><div style="position:relative"><span class="material-symbols-outlined" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:18px;color:#5B5B5B;pointer-events:none;z-index:1">search</span><input id="actividadBusqueda" class="sb-ui-input" style="padding-left:42px" type="text" value="${esc(state.actividadBusqueda)}" placeholder="Ej. Restaurante" data-model="actividadBusqueda"></div></div>
     ${state.actividadBusqueda && state.actividadBusqueda !== state.actividad ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">${ACTIVIDADES.filter((activity) => activity.toLowerCase().includes(state.actividadBusqueda.toLowerCase())).map((activity) => chip(activity, `actividad:${activity}`, false)).join('')}</div>` : ''}
     ${state.actividad ? `<div style="display:flex;align-items:center;gap:8px;margin-top:10px;padding:8px 12px;background:#E5F4EE;border-radius:999px;width:fit-content"><span class="material-symbols-outlined" style="font-size:18px;color:#006B40">check_small</span><span style="font-weight:600;font-size:13px;color:#006B40">${esc(state.actividad)}</span></div>` : ''}
-    <div style="font-weight:400;font-size:12.5px;color:#9B9B9B;margin-top:8px">Con la actividad ajustamos las coberturas recomendadas y las fotos que necesitamos.</div>
+    <div style="font-weight:400;font-size:12.5px;color:#757575;margin-top:8px">Con la actividad ajustamos las coberturas recomendadas y las fotos que necesitamos.</div>
   </div>
   <div style="height:1px;background:#E1E1E1"></div>
   <div>
@@ -1761,7 +1755,7 @@ const sedes = () => {
         </tbody>
       </table>
     </div>
-    <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--icon-left" style="align-self:flex-start" data-action="addSedeRow"><span class="material-symbols-outlined" style="font-size:20px">add_business</span>Agregar otra sede</button>
+    <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--icon-left" style="align-self:flex-start" data-action="addSedeRow"><span class="material-symbols-outlined" style="font-size:20px">add_business</span>${state.sedes.length ? 'Agregar otra sede' : 'Agregar sede'}</button>
   </div>`;
 };
 
@@ -1794,14 +1788,14 @@ const mapaObjetivo = () => (state.mapaSedeIdx === 'draft' ? state.sedeDraft : st
 const fmtCoord = (lat, lng) => `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
 const pareceCoordenadas = (texto) => /^-?\d{1,3}\.\d+,\s*-?\d{1,3}\.\d+$/.test(String(texto || '').trim());
 
-/** Confirma un punto del mapa (por búsqueda, arrastre del pin o clic): guarda las coordenadas Y
- * también las escribe en el campo Dirección de la sede, reemplazando el texto escrito. La
- * dirección "de Google Maps" a veces no coincide con el sitio real, así que lo que de verdad
- * queda como dirección de la sede son las coordenadas del pin que el usuario confirmó a ojo. */
-const confirmarPin = (obj, lat, lng) => {
+/** Confirma un punto del mapa (por búsqueda, arrastre del pin o clic): guarda las coordenadas como
+ * dato aparte (obj.ubicacion) y NO toca la dirección que el usuario escribió, para que la póliza y el
+ * resumen siempre muestren una dirección legible. Solo si el campo está vacío (o tiene coordenadas
+ * de una versión anterior) se completa con el texto buscado o con una descripción del pin. */
+const confirmarPin = (obj, lat, lng, textoBuscado) => {
   if (!obj) return;
   obj.ubicacion = { lat, lng };
-  obj.direccion = fmtCoord(lat, lng);
+  if (!String(obj.direccion || '').trim() || pareceCoordenadas(obj.direccion)) obj.direccion = textoBuscado || 'Ubicación marcada en el mapa';
   state.mapaError = '';
 };
 
@@ -1824,7 +1818,7 @@ const mapaDrawer = () => {
     <div id="mapaPymes" style="width:100%;height:280px;border-radius:16px;overflow:hidden;border:1px solid #E1E1E1;background:#EEE"></div>
     ${state.mapaBuscando ? '<div style="font-weight:400;font-size:12px;color:#5B5B5B">Buscando dirección…</div>' : ''}
     ${state.mapaError ? `<div style="font-weight:600;font-size:12.5px;color:#B3261E">${esc(state.mapaError)}</div>` : ''}
-    ${obj.ubicacion ? `<div style="display:flex;align-items:center;gap:6px;font-weight:400;font-size:12px;color:#5B5B5B"><span class="material-symbols-outlined" style="font-size:16px;color:#006B40">check_small</span>Pin confirmado (${obj.ubicacion.lat.toFixed(5)}, ${obj.ubicacion.lng.toFixed(5)})</div>` : '<div style="font-weight:400;font-size:12px;color:#9B9B9B">Aún no hay un pin confirmado para esta sede.</div>'}
+    ${obj.ubicacion ? `<div style="display:flex;align-items:center;gap:6px;font-weight:400;font-size:12px;color:#5B5B5B"><span class="material-symbols-outlined" style="font-size:16px;color:#006B40">check_small</span>Pin confirmado (${obj.ubicacion.lat.toFixed(5)}, ${obj.ubicacion.lng.toFixed(5)})</div>` : '<div style="font-weight:400;font-size:12px;color:#757575">Aún no hay un pin confirmado para esta sede.</div>'}
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:auto">
       <button type="button" class="sb-ui-button sb-ui-button--primary sb-ui-button--fill" data-action="cerrarDrawerMapa" ${obj.ubicacion ? '' : 'disabled'}>Confirmar ubicación</button>
     </div>
@@ -1845,7 +1839,7 @@ async function buscarDireccionEnMapa() {
     const res = await fetch(url, { headers: { 'Accept-Language': 'es' } });
     const data = await res.json();
     if (data && data[0]) {
-      confirmarPin(obj, Number(data[0].lat), Number(data[0].lon));
+      confirmarPin(obj, Number(data[0].lat), Number(data[0].lon), query);
     } else {
       state.mapaError = 'No encontramos esa dirección; haga clic en el mapa o arrastre el pin al punto correcto.';
     }
@@ -1859,25 +1853,24 @@ async function buscarDireccionEnMapa() {
 
 const PLANES = [
   { id: 'basico', nombre: 'Plan Básico', nivel: 'Protección esencial', items: [
-    ['check_small', 'Edificios y mercancías fijas', 'Cubre el inmueble donde opera su negocio y las mercancías fijas almacenadas en él, ante daños por incendio, terremoto y otros eventos súbitos.'],
-    ['check_small', 'Daños a terceros hasta $200 M', 'Responde por lesiones o daños que su operación pueda causar a clientes, visitantes o vecinos, hasta $200.000.000 por evento.'],
-    ['info', 'Sin equipos electrónicos ampliados', 'Este plan no incluye la cobertura ampliada de equipos electrónicos; puede contratarla por separado si la necesita.'],
-    ['info', 'Sin coberturas opcionales incluidas', 'No incluye ciberseguridad, movilización de mercancías, dinero, muebles ni robo de empleados; puede activarlas como opcionales.']
+    ['check_small', 'Edificios y mercancías fijas', 'Cubre el inmueble donde opera su negocio y las mercancías fijas almacenadas en él, ante daños por incendio, terremoto y otros eventos súbitos.', 'home_work'],
+    ['check_small', 'Daños a terceros hasta $200 M', 'Responde por lesiones o daños que su operación pueda causar a clientes, visitantes o vecinos, hasta $200.000.000 por evento.', 'groups'],
+    ['info', 'Sin equipos electrónicos ampliados', 'Este plan no incluye la cobertura ampliada de equipos electrónicos; puede contratarla por separado si la necesita.', 'devices'],
+    ['info', 'Sin coberturas opcionales incluidas', 'No incluye ciberseguridad, movilización de mercancías, dinero, muebles ni robo de empleados; puede activarlas como opcionales.', 'playlist_add']
   ] },
   { id: 'medio', nombre: 'Plan Medio', nivel: 'El más elegido por comercios', items: [
-    ['check_small', 'Todo lo del Plan Básico', 'Incluye edificios, mercancías fijas y daños a terceros del Plan Básico, con límites ampliados.'],
-    ['check_small', 'Equipos electrónicos y maquinaria', 'Cubre computadores, datáfonos, maquinaria y herramienta fija ante daño o pérdida súbita.'],
-    ['check_small', 'Daños a terceros hasta $500 M', 'Responde por lesiones o daños que su operación pueda causar a terceros, hasta $500.000.000 por evento.'],
-    ['info', 'Ciberseguridad se activa aparte', 'La protección contra ataques e interrupción digital no viene incluida; puede agregarla como cobertura opcional.']
+    ['check_small', 'Todo lo del Plan Básico', 'Incluye edificios, mercancías fijas y daños a terceros del Plan Básico, con límites ampliados.', 'layers'],
+    ['check_small', 'Equipos electrónicos y maquinaria', 'Cubre computadores, datáfonos, maquinaria y herramienta fija ante daño o pérdida súbita.', 'devices'],
+    ['check_small', 'Daños a terceros hasta $500 M', 'Responde por lesiones o daños que su operación pueda causar a terceros, hasta $500.000.000 por evento.', 'groups'],
+    ['info', 'Ciberseguridad se activa aparte', 'La protección contra ataques e interrupción digital no viene incluida; puede agregarla como cobertura opcional.', 'shield_lock']
   ] },
   { id: 'premium', nombre: 'Plan Premium', nivel: 'Protección ampliada', items: [
-    ['check_small', 'Todo lo del Plan Medio', 'Incluye edificios, equipos electrónicos, maquinaria y daños a terceros del Plan Medio, con los límites más altos.'],
-    ['check_small', 'Límites máximos habilitados', 'Accede a los valores asegurados más altos disponibles para cada cobertura principal.'],
-    ['check_small', 'Dinero y robo de empleados incluidos', 'Cubre el efectivo en caja fuerte y en tránsito interno, y las pérdidas por infidelidad de personal de confianza.'],
-    ['check_small', 'Asistencia prioritaria 24/7', 'Línea de atención prioritaria para reportar siniestros y resolver dudas en cualquier momento.']
+    ['check_small', 'Todo lo del Plan Medio', 'Incluye edificios, equipos electrónicos, maquinaria y daños a terceros del Plan Medio, con los límites más altos.', 'layers'],
+    ['check_small', 'Límites máximos habilitados', 'Accede a los valores asegurados más altos disponibles para cada cobertura principal.', 'trending_up'],
+    ['check_small', 'Dinero y robo de empleados incluidos', 'Cubre el efectivo en caja fuerte y en tránsito interno, y las pérdidas por infidelidad de personal de confianza.', 'payments'],
+    ['check_small', 'Asistencia prioritaria 24/7', 'Línea de atención prioritaria para reportar siniestros y resolver dudas en cualquier momento.', 'support_agent']
   ] }
 ];
-const PLAN_MULT_LANDING = { basico: 0.85, medio: 1, premium: 1.28 };
 const LANDING_SELLOS = ['Cotización en línea en cinco minutos', 'Fotos solo después de ver su precio', 'Todas las sedes en una sola póliza'];
 const LANDING_COBERTURAS = [
   { icon: 'apartment', label: 'Edificios', desc: 'El inmueble donde opera, si es propietario.' },
@@ -1909,7 +1902,7 @@ const periodPrecios = (interactivo = false, horizontal = false) => {
       <div style="font-weight:400;font-size:11px;letter-spacing:.03em;text-transform:uppercase;color:#5B5B5B">Total mensual (IVA incluido)</div>
       <div style="font-weight:700;font-size:28px;line-height:1.15;color:#1B1B1B;margin-top:2px">${fmt(totalMensual)}</div>
       <div style="font-weight:400;font-size:12.5px;color:#5B5B5B;margin-top:6px">o ${fmt(totalAnual)} al año (IVA incluido)</div>
-      ${vidaEstimada() ? '<div style="font-weight:400;font-size:11.5px;color:#9B9B9B;margin-top:4px;max-width:240px">Incluye Vida Pymes con valor estimado; se confirma con la fecha de nacimiento del asegurado.</div>' : ''}
+      ${vidaEstimada() ? '<div style="font-weight:400;font-size:11.5px;color:#757575;margin-top:4px;max-width:240px">Incluye Vida Pymes con valor estimado; se confirma con la fecha de nacimiento del asegurado.</div>' : ''}
     </div>`;
   }
   const tarjeta = (valor, etiqueta, key) => {
@@ -1925,7 +1918,16 @@ const periodPrecios = (interactivo = false, horizontal = false) => {
   </div>`;
 };
 
-const accordionList = (items) => `<div style="display:flex;flex-direction:column">
+const accordionList = (items, tarjetas = false) => tarjetas ? `<div style="display:flex;flex-direction:column">
+  ${items.map(([estado, txt, desc, icono], i) => `<details class="pymes-acc${estado === 'info' ? ' pymes-acc--no' : ''}" ${i === 0 ? 'open' : ''}>
+    <summary class="pymes-acc__head">
+      <span class="pymes-acc__icon"><span class="material-symbols-outlined">${icono || (estado === 'info' ? 'info' : 'check_small')}</span></span>
+      <span class="pymes-acc__title">${txt}</span>
+      <span class="material-symbols-outlined pymes-acc__chev">expand_more</span>
+    </summary>
+    <div class="pymes-acc__body">${desc}</div>
+  </details>`).join('')}
+</div>` : `<div style="display:flex;flex-direction:column">
   ${items.map(([icon, txt, desc], i) => {
     const incluido = icon !== 'info';
     return `<details class="sb-ui-accordion" ${i === 0 ? 'open' : ''} style="${i > 0 ? 'border-top:1px solid #E1E1E1' : ''}">
@@ -1953,7 +1955,7 @@ const coberturasModal = () => {
       <div><div style="font-weight:700;font-size:14px;color:#5B5B5B">Todo lo que debe conocer del</div><div style="font-weight:700;font-size:26px;line-height:1.2;margin-top:2px">${p.nombre}</div></div>
       <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--circle sb-ui-button--icon-only" data-action="cerrarModal">×</button>
     </div>
-    ${accordionList(p.items)}
+    ${accordionList(p.items, true)}
   `);
 };
 
@@ -1967,7 +1969,7 @@ const vidaDrawer = () => {
     <div>
       <div style="font-weight:700;font-size:14px;margin-bottom:9px">Valor asegurado</div>
       ${stepper(state.vas, 'data-vas', 'vas:-1', 'vas:1')}
-      <div style="font-weight:400;font-size:12.5px;color:#9B9B9B;margin-top:8px">Entre ${fmt(VAS_MIN)} y ${fmt(VAS_MAX)}.</div>
+      <div style="font-weight:400;font-size:12.5px;color:#757575;margin-top:8px">Entre ${fmt(VAS_MIN)} y ${fmt(VAS_MAX)}.</div>
     </div>
     <div>${inputField('nacimiento', 'Fecha de nacimiento del asegurado', state.nacimiento, 'DD/MM/AAAA')}</div>
     <div>
@@ -1980,7 +1982,7 @@ const vidaDrawer = () => {
       <button type="button" class="sb-ui-button sb-ui-button--primary sb-ui-button--fill" data-action="confirmarVida" ${edad() ? '' : 'disabled'}>${state.vidaOn ? 'Guardar cambios' : 'Agregar a mi compra'}</button>
       ${state.vidaOn ? '<button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke" data-action="quitarVida">Quitar</button>' : ''}
     </div>
-    ${!edad() ? '<div style="font-weight:400;font-size:12px;color:#9B9B9B">Indique la fecha de nacimiento para ver la prima y poder continuar.</div>' : ''}
+    ${!edad() ? '<div style="font-weight:400;font-size:12px;color:#757575">Indique la fecha de nacimiento para ver la prima y poder continuar.</div>' : ''}
   `);
 };
 
@@ -1988,7 +1990,10 @@ const overlays = () => coberturasModal() + vidaDrawer() + benefDrawer() + sedeDr
 
 /** OLIVIA es un panel flotante disponible en todo el flujo, para resolver dudas sobre coberturas
  * sin interrumpir la cotización en curso. */
-const oliviaFab = () => `${state.oliviaTipCerrado ? '' : `<div class="pymes-olivia-tip" role="note"><strong>¿Tiene los datos a la mano?</strong> OLIVIA los completa por usted.<button type="button" class="pymes-olivia-tip__cerrar" data-action="cerrarOliviaTip" aria-label="Cerrar aviso"><span class="material-symbols-outlined" style="font-size:16px">close</span></button></div>`}<button type="button" class="pymes-olivia-fab" data-action="toggleOlivia" title="Preguntar a OLIVIA" aria-label="Abrir OLIVIA"><span class="material-symbols-outlined">auto_awesome</span></button>`;
+/** true cuando hay barra fija de "Continuar" abajo: el botón de OLIVIA se sube por encima de ella y
+ * el contenido reserva espacio al final (ver render), así ningún control queda tapado por el FAB. */
+let ctaVisibleOlivia = false;
+const oliviaFab = () => `<div class="pymes-olivia-tip${ctaVisibleOlivia ? ' pymes-olivia-tip--sobre-cta' : ''}" role="note"><strong>¿Tiene los datos a la mano?</strong> OLIVIA los completa por usted.</div><button type="button" class="pymes-olivia-fab${ctaVisibleOlivia ? ' pymes-olivia-fab--sobre-cta' : ''}" data-action="toggleOlivia" title="Preguntar a OLIVIA" aria-label="Abrir OLIVIA"><span class="material-symbols-outlined">auto_awesome</span></button>`;
 
 const oliviaPanel = () => `<div class="pymes-olivia-panel">
   <div class="pymes-olivia-panel__header">
@@ -2004,7 +2009,7 @@ const oliviaPanel = () => `<div class="pymes-olivia-panel">
       <input type="text" id="oliviaInput" placeholder="Escriba su pregunta..." data-model="oliviaTexto" value="${esc(state.oliviaTexto)}">
       <button type="button" class="sb-ui-button sb-ui-button--primary sb-ui-button--fill sb-ui-button--circle sb-ui-button--icon-only" data-action="oliviaEnviar"><span class="material-symbols-outlined" style="font-size:18px">arrow_upward</span></button>
     </div>
-    <div style="font-weight:400;font-size:10.5px;color:#9B9B9B;margin-top:6px;text-align:center">OLIVIA puede cometer errores. Verifique el clausulado oficial.</div>
+    <div style="font-weight:400;font-size:10.5px;color:#757575;margin-top:6px;text-align:center">OLIVIA puede cometer errores. Verifique el clausulado oficial.</div>
   </div>
 </div>`;
 
@@ -2042,9 +2047,7 @@ const calcularPrimaPlan = (cfg) => {
 };
 
 /** Arma las 3 columnas del comparativo a partir del perfil real del negocio (todas las sedes,
- * ventas) una sola vez por cotización. Cada plan guarda por sede sus valores y su foto inicial
- * ("sugeridos") para poder restaurarla: "Volver al sugerido" por campo y "Restaurar sugeridos"
- * comparan contra la base de ESTE plan en ESA sede. */
+ * ventas) una sola vez por cotización. Cada plan guarda por sede sus valores de cobertura. */
 const crearComparativoPlanes = () => {
   const escalar = (sede, mult) => {
     const v = {};
@@ -2054,7 +2057,7 @@ const crearComparativoPlanes = () => {
   const vasPremium = Math.round(Math.min(VAS_MAX, state.vas * 1.5) / VAS_STEP) * VAS_STEP;
   const armar = (id, nombre, nivel, sugeridoFlag, mult, opcionales, vidaOn, vas) => ({
     id, nombre, nivel, sugerido: sugeridoFlag, opcionales, vidaOn, vas,
-    sedes: state.sedes.map((sede) => { const v = escalar(sede, mult); return { valores: { ...v }, sugeridos: { ...v } }; })
+    sedes: state.sedes.map((sede) => ({ valores: escalar(sede, mult) }))
   });
   return [
     armar('basico', 'Plan Básico', 'Protección esencial', false, 0.7, { dinero: false, muebles: false, roboEmpleados: false, ciber: false, movMercancias: false }, false, state.vas),
@@ -2063,14 +2066,31 @@ const crearComparativoPlanes = () => {
   ];
 };
 
-/** Sede que se está editando dentro de un plan (tabs de personalizarPlanCandidato). */
-const sedePlanActiva = (cfg) => Math.min(state.planSedeActiva, cfg.sedes.length - 1);
+/** Vuelca el plan elegido a las sedes reales y al resto del estado: desde ahí el cotizador sigue con
+ * su modelo de siempre (primaPymes()/primaVida()). state.plan queda en 'sugerido' (multiplicador 1)
+ * porque los valores ya vienen escalados por plan. */
+const aplicarPlanElegido = (cfg) => {
+  state.sedes.forEach((sedeReal, k) => { CLAVES.forEach((clave) => { sedeReal.valores[clave] = cfg.sedes[k].valores[clave]; }); });
+  state.opcionales = { ...cfg.opcionales };
+  state.vidaOn = cfg.vidaOn;
+  state.vas = cfg.vas;
+  state.plan = 'sugerido';
+};
+
+/** "Elegir y continuar" acepta el plan tal cual y va directo a Fotos. Solo pasa antes por "Ajuste
+ * sus coberturas y valores" si falta un dato obligatorio que ahí se captura: la fecha de nacimiento
+ * del asegurado de Vida Pymes o la pregunta de interrupciones de Ciberseguridad. */
+const pasoTrasElegirPlan = () => {
+  const faltaVida = state.vidaOn && !edad();
+  const faltaCiber = state.opcionales.ciber && state.sedes.some((sede) => sede.ciber.interrupciones === null);
+  return (faltaVida || faltaCiber) ? 'coberturas' : 'fotos';
+};
 
 /** Tarjeta de una columna del comparativo: solo un RESUMEN de lectura (precio, coberturas y
- * valores), sin controles editables adentro — la edición vive aparte, en personalizarPlanCandidato().
- * "Personalizar" es un ícono de lápiz en la esquina superior derecha (no un botón de ancho completo)
- * para que nunca quede pegado a "Elegir y continuar": son dos jerarquías distintas (editar vs. elegir),
- * no dos botones iguales uno sobre otro. Lleva aria-label y title porque es un botón solo-ícono, así
+ * valores), sin controles editables adentro. "Elegir y continuar" acepta el plan tal cual; el
+ * lápiz de la esquina lo carga en "Ajuste sus coberturas y valores" (la única pantalla de
+ * personalización) para editarlo. Es un ícono y no un botón de ancho completo para que nunca quede
+ * pegado a "Elegir y continuar": son dos jerarquías distintas (editar vs. elegir). Lleva aria-label y title porque es un botón solo-ícono, así
  * su acción queda clara igual que si tuviera texto. La descarga es una sola para los 3 planes juntos
  * (ver plan()), no por tarjeta — así se descarga el comparativo, no cada cotización por separado.
  * Estilo tomado exactamente de la tarjeta de planes de Seguros Bolívar en tienda (Figma
@@ -2100,117 +2120,31 @@ const tarjetaPlanComparativo = (cfg, i) => {
   const btnPersonalizarFondo = sug ? 'rgba(255,255,255,.15)' : '#fff';
   const btnPersonalizarIcono = sug ? '#fff' : '#1B1B1B';
   return `<div style="flex:1 1 280px;min-width:266px;max-width:340px;display:flex;flex-direction:column;background:#fff;border:1px solid #E1E1E1;border-radius:24px;overflow:hidden;position:relative">
-    <button type="button" aria-label="Personalizar ${esc(cfg.nombre)}" title="Personalizar este plan" style="position:absolute;top:16px;right:16px;width:34px;height:34px;border-radius:50%;border:1.5px solid ${btnPersonalizarBorde};background:${btnPersonalizarFondo};color:${btnPersonalizarIcono};display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0" data-action="planAbrirPersonalizar:${i}"><span class="material-symbols-outlined" style="font-size:18px">edit</span></button>
+    <button type="button" aria-label="Personalizar ${esc(cfg.nombre)}" title="Personalizar este plan: ajustar sus coberturas y valores" style="position:absolute;top:16px;right:16px;width:34px;height:34px;border-radius:50%;border:1.5px solid ${btnPersonalizarBorde};background:${btnPersonalizarFondo};color:${btnPersonalizarIcono};display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0" data-action="planAbrirPersonalizar:${i}"><span class="material-symbols-outlined" style="font-size:18px">edit</span></button>
     <div style="background:${sug ? '#009056' : '#fff'};padding:20px 18px;display:flex;flex-direction:column;gap:14px">
-      ${sug ? `<span style="align-self:flex-start;background:#FFDC5D;color:#282828;font-weight:600;font-size:12px;padding:4px 12px;border-radius:999px">Sugerido</span>` : ''}
+      ${sug ? `<span style="align-self:flex-start;background:#FFDC5D;color:#282828;font-weight:600;font-size:12px;padding:4px 12px;border-radius:999px">Sugerido</span>` : `<span aria-hidden="true" style="align-self:flex-start;visibility:hidden;font-weight:600;font-size:12px;padding:4px 12px">Sugerido</span>`}
       <div style="max-width:calc(100% - 44px)"><div style="font-weight:700;font-size:19px;color:${headerTexto}">${cfg.nombre}</div><div style="font-weight:400;font-size:12.5px;color:${headerSuave};margin-top:2px">${cfg.nivel}</div></div>
       <div><div style="font-weight:700;font-size:27px;line-height:1;color:${headerTexto}">${fmt(mensual)}<span style="font-weight:400;font-size:14px">/mes</span></div><div style="font-weight:400;font-size:12.5px;color:${headerSuave};margin-top:4px">o ${fmt(anual)}/año (IVA incluido)</div></div>
       <button type="button" style="border:none;border-radius:999px;background:#FFE16F;color:#05794A;font-weight:700;font-size:14px;padding:12px 16px;cursor:pointer;width:100%" data-action="planElegir:${i}">Elegir y continuar</button>
     </div>
-    <div style="padding:18px;display:flex;flex-direction:column;gap:14px">
+    <div style="padding:18px;display:flex;flex-direction:column;gap:14px;flex:1">
       <div style="display:flex;flex-direction:column">
         ${cfg.sedes.length > 1 ? `<div style="font-weight:400;font-size:12px;color:#757575;padding-bottom:8px">Suma de ${cfg.sedes.length} sedes</div>` : ''}
         ${resumenClaves}
-        ${opcionalesActivas.length ? `<div style="padding:10px 0;border-top:1px solid ${colorDivisor};font-weight:400;font-size:12px;color:${colorSuave}">+ ${esc(opcionalesActivas.join(', '))}</div>` : ''}
-        ${cfg.vidaOn ? `<div style="padding:10px 0;border-top:1px solid ${colorDivisor};display:flex;justify-content:space-between;gap:10px"><span style="font-weight:400;font-size:12.5px;color:${colorSuave}">Vida Pymes</span><span style="font-weight:700;font-size:12.5px;color:${colorCheck}">${fmt(cfg.vas)}</span></div>` : ''}
+        <div style="padding:10px 0;border-top:1px solid ${colorDivisor};font-weight:400;font-size:12px;line-height:1.4;color:${colorSuave};min-height:2.8em;box-sizing:content-box">${opcionalesActivas.length ? '+ ' + esc(opcionalesActivas.join(', ')) : 'Sin coberturas opcionales'}</div>
+        <div style="padding:10px 0;border-top:1px solid ${colorDivisor};display:flex;justify-content:space-between;gap:10px"><span style="font-weight:400;font-size:12.5px;color:${colorSuave}">Vida Pymes</span><span style="font-weight:${cfg.vidaOn ? 700 : 400};font-size:12.5px;color:${cfg.vidaOn ? colorCheck : colorSuave}">${cfg.vidaOn ? fmt(cfg.vas) : 'No incluida'}</span></div>
       </div>
-      <button type="button" style="border:none;border-radius:16px;background:#FFF6D4;color:#303030;font-weight:400;font-size:14px;padding:14px 16px;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px" data-action="verCoberturas:${cfg.id}">Ver el detalle completo<span class="material-symbols-outlined" style="font-size:18px;color:#038450">chevron_right</span></button>
+      <button type="button" style="border:none;border-radius:16px;background:#FFF6D4;color:#303030;font-weight:400;font-size:14px;padding:14px 16px;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto" data-action="verCoberturas:${cfg.id}">Ver el detalle completo<span class="material-symbols-outlined" style="font-size:18px;color:#038450">chevron_right</span></button>
     </div>
   </div>`;
 };
 
-/** Pantalla dedicada para personalizar UN plan del comparativo: mismo patrón visual que "Ajuste
- * sus coberturas y valores" (divisores, no cajas grises anidadas) para que se sienta parte del
- * mismo sistema en vez de un widget aparte. "Volver al comparativo" guarda solo por estar en el
- * mismo objeto cfg (nada que confirmar aparte) y regresa a ver las 3 tarjetas ya actualizadas. */
-const personalizarPlanCandidato = (cfg, i) => {
-  /** Mismo patrón de restauración que "Ajuste sus coberturas y valores": un chip "Volver al
-   * sugerido" por campo cuando el valor se editó (comparado contra cfg.sugeridos, la foto inicial
-   * de ESTE plan), y un botón "Restaurar sugeridos" general para los 3 campos a la vez. */
-  const ks = sedePlanActiva(cfg);
-  const sedeCfg = cfg.sedes[ks];
-  const sedeReal = state.sedes[ks];
-  const principales = CLAVES.map((clave, k) => {
-    if (clave === 'edificios' && sedeReal.propietario === false) return `<div style="display:flex;flex-direction:column;gap:14px;padding:20px 0;${k > 0 ? 'border-top:1px solid #E1E1E1;' : ''}"><div style="font-weight:700;font-size:14px;color:#1B1B1B">${ETIQUETAS[clave]}</div><div style="font-weight:400;font-size:12.5px;color:#757575">No aplica: el inmueble de esta sede es arrendado.</div></div>`;
-    const value = sedeCfg.valores[clave] || 0;
-    const sug = sedeCfg.sugeridos[clave];
-    const igual = value === sug;
-    const apoyo = igual
-      ? `<div style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:12.5px;color:#757575"><span class="material-symbols-outlined" style="font-size:16px;color:#006B40">check_small</span>Valor sugerido para este plan</div>`
-      : `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap"><span style="font-weight:400;font-size:12.5px;color:#757575">Sugerido: ${fmt(sug)}</span><button type="button" class="sb-ui-chip sb-ui-chip--sm sb-ui-chip--clickable sb-ui-chip--soft sb-ui-chip--primary" style="font-size:12px;font-weight:500" data-action="planSugerirCampo:${i}:${clave}">Volver al sugerido</button></div>`;
-    return `<div style="display:flex;flex-direction:column;gap:14px;padding:20px 0;${k > 0 ? 'border-top:1px solid #E1E1E1;' : ''}">
-      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
-        <span style="font-weight:700;font-size:14px;color:#1B1B1B">${ETIQUETAS[clave]}</span>
-        <span style="font-weight:400;font-size:12px;color:#757575">máx. ${fmt(MAX[clave])}</span>
-      </div>
-      ${stepper(value, `data-plan-cover="${i}:${clave}"`, `planCover:${i}:${clave}:-1`, `planCover:${i}:${clave}:1`, !igual)}
-      ${apoyo}
-    </div>`;
-  }).join('');
-  const opcionales = Object.keys(OPC).map((clave) => {
-    const on = cfg.opcionales[clave];
-    return `<button type="button" class="pymes-option ${on ? 'is-selected' : ''}" data-action="planOpc:${i}:${clave}" style="text-align:left;width:100%">
-      <span style="flex:1"><span style="display:block;font-weight:700;font-size:13.5px;color:#1B1B1B">${OPC[clave].label}</span><span style="display:block;font-weight:400;font-size:12.5px;line-height:1.4;color:#5B5B5B;margin-top:2px">${OPC[clave].desc}</span></span>
-      <span class="material-symbols-outlined" style="font-size:20px;color:${on ? '#006B40' : '#C2C7CF'}">${on ? 'check_circle' : 'radio_button_unchecked'}</span>
-    </button>`;
-  }).join('');
-  /** Vida Pymes con el mismo patrón explícito de vidaPaquete(): un botón de basurero para quitarla
-   * (no un chip que hay que entender que también sirve para incluir) y, cuando no está, una tarjeta
-   * aparte que explica que se puede volver a incluir — más claro que un solo chip que hace las dos
-   * cosas según su estado. */
-  const vidaCard = !cfg.vidaOn
-    ? `<div style="background:#fff;border:1px solid #E1E1E1;border-radius:24px;padding:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-        <div style="display:flex;gap:12px;align-items:center"><span style="flex:none;width:38px;height:38px;border-radius:999px;background:#E1E1E1;display:flex;align-items:center;justify-content:center"><span class="material-symbols-outlined" style="font-size:20px;color:#5B5B5B">favorite</span></span><div><div style="font-weight:700;font-size:15px">Vida Pymes no está en este plan</div><div style="font-weight:400;font-size:12.5px;color:#5B5B5B;margin-top:2px">Protección para usted o un empleado clave.</div></div></div>
-        <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--small sb-ui-button--icon-left" data-action="planVida:${i}"><span class="material-symbols-outlined" style="font-size:18px">add</span>Volver a incluirla</button>
-      </div>`
-    : `<div style="background:#fff;border:1px solid #FFE16F;border-radius:24px;padding:14px 18px;display:flex;flex-direction:column;gap:12px">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-          <div style="display:flex;gap:10px;align-items:center"><span style="flex:none;width:34px;height:34px;border-radius:999px;background:#FFE16F;display:flex;align-items:center;justify-content:center"><span class="material-symbols-outlined" style="font-size:18px;color:#038450">favorite</span></span><div style="font-weight:700;font-size:15px">Vida Pymes <span style="font-weight:600;font-size:11px;color:#006B40;background:#E5F4EE;border-radius:999px;padding:3px 9px;margin-left:4px">Incluida</span></div></div>
-          <button type="button" class="sb-ui-button sb-ui-button--error sb-ui-button--stroke sb-ui-button--circle sb-ui-button--icon-only" data-action="planVida:${i}" title="Quitar Vida Pymes de este plan" aria-label="Quitar Vida Pymes de este plan"><span class="material-symbols-outlined" style="font-size:20px">delete</span></button>
-        </div>
-        <div><div style="font-weight:700;font-size:13px;margin-bottom:8px">Valor asegurado</div>${stepper(cfg.vas, `data-plan-vas="${i}"`, `planVas:${i}:-1`, `planVas:${i}:1`)}<div style="font-weight:400;font-size:12px;color:#9B9B9B;margin-top:6px">Entre ${fmt(VAS_MIN)} y ${fmt(VAS_MAX)}.</div></div>
-      </div>`;
-  const selectorSedesPlan = state.sedes.length > 1 ? `<div class="pymes-sede-tabs"><div class="sb-ui-tabs" role="tablist" aria-label="Sedes">${state.sedes.map((s, k) => `<button type="button" role="tab" aria-selected="${k === ks}" class="sb-ui-tabs__item${k === ks ? ' sb-ui-tabs__item--active' : ''}" data-action="planVerSede:${k}"><span class="material-symbols-outlined sb-ui-tabs__icon" style="font-size:18px">${iconoTipoSede(s.tipo)}</span><span class="sb-ui-tabs__title">${esc(etiquetaSede(s, k))}</span></button>`).join('')}</div></div>` : '';
-  return `<div style="display:flex;flex-direction:column;gap:14px">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-      <div style="font-weight:700;font-size:19px;color:#006B40">${fmt(aPeriodo(calcularPrimaPlan(cfg)))} ${state.periodicidad === 'mensual' ? '/ mes' : '/ año'}</div>
-    </div>
-    <div><div style="font-weight:700;font-size:20px">${cfg.nombre}</div><div style="font-weight:400;font-size:13px;color:#5B5B5B;margin-top:2px">${cfg.nivel}${cfg.sugerido ? ' · Sugerido' : ''}</div></div>
-    ${selectorSedesPlan}
-    ${state.sedes.length > 1 ? `<div style="font-weight:400;font-size:12.5px;color:#757575">Es un solo plan para todo el negocio: cada sede tiene sus valores de cobertura; las opcionales y Vida Pymes aplican al plan completo. ${esc(sedeResumen(sedeReal))}</div>` : ''}
-    <div class="pymes-coberturas-grid">
-      <div style="background:#fff;border:1px solid #E1E1E1;border-radius:24px;padding:20px 24px 22px;display:flex;flex-direction:column;gap:18px">
-        <div style="display:flex;flex-direction:column;gap:4px"><div style="font-weight:700;font-size:17px">Coberturas principales</div><div style="font-weight:400;font-size:12.5px;color:#757575">Ajuste el valor con − y + o escríbalo directamente.</div></div>
-        <div style="display:flex;flex-direction:column">${principales}</div>
-        <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--small sb-ui-button--icon-left" style="align-self:flex-start" data-action="planRestaurarTodo:${i}"><span class="material-symbols-outlined" style="font-size:18px">restart_alt</span>Restaurar sugeridos</button>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
-        <div style="background:#fff;border:1px solid #E1E1E1;border-radius:24px;padding:14px 18px;display:flex;flex-direction:column;gap:10px">
-          <div style="font-weight:700;font-size:17px">Coberturas opcionales</div>
-          <div style="display:flex;flex-direction:column;gap:10px">${opcionales}</div>
-        </div>
-        ${vidaCard}
-      </div>
-    </div>
-    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
-      <button type="button" style="border:none;border-radius:999px;background:#FFE16F;color:#006B40;font-weight:700;font-size:14px;padding:12px 22px;cursor:pointer" data-action="planElegir:${i}">Elegir y continuar</button>    </div>
-  </div>`;
-};
-
-/** Reemplaza el paquete único + "Personalizar mi plan": ahora se sugieren 3 planes de una vez (uno
- * marcado "Sugerido"). Las tarjetas son solo un resumen para comparar de un vistazo; "Personalizar"
- * lleva a una pantalla aparte (mismo patrón visual que "Ajuste sus coberturas y valores") para
- * editar con espacio, y "Volver al comparativo" regresa a las 3 tarjetas ya actualizadas. Elegir
- * cualquiera (incluida la sugerida, editada o no) lleva a "Ajuste sus coberturas y valores" para
- * afinar el resto del detalle por sede. La descarga es del comparativo completo (los 3 planes
- * juntos), no de cada cotización por separado. */
+/** Comparativo de 3 planes (uno marcado "Sugerido"): las tarjetas son solo un resumen para comparar
+ * de un vistazo. "Elegir y continuar" acepta el plan tal cual (directo a Fotos, salvo que falte un
+ * dato obligatorio) y el lápiz lo carga en "Ajuste sus coberturas y valores", la única pantalla de
+ * personalización. La descarga es del comparativo completo (los 3 planes juntos). */
 const plan = () => {
   if (!state.comparativoPlanes || state.comparativoPlanes[0].sedes.length !== state.sedes.length) state.comparativoPlanes = crearComparativoPlanes();
-  if (state.personalizandoPlanIdx !== null) {
-    const cfg = state.comparativoPlanes[state.personalizandoPlanIdx];
-    if (cfg) return personalizarPlanCandidato(cfg, state.personalizandoPlanIdx);
-    state.personalizandoPlanIdx = null;
-  }
   return `<div style="display:flex;flex-direction:column;gap:16px">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
       <div style="font-weight:400;font-size:13.5px;line-height:1.5;color:#5B5B5B;max-width:640px">Compare los tres planes de un vistazo. Si quiere ajustar alguno, entre a personalizarlo con más detalle.</div>
@@ -2240,7 +2174,7 @@ const ciberCampos = (sede) => `<div style="display:flex;flex-direction:column;ga
   <div>
     <div style="font-weight:700;font-size:13px;margin-bottom:8px">Monto a asegurar</div>
     ${stepper(sede.ciber.monto, 'data-ciber="monto"', 'ciber:monto:-1', 'ciber:monto:1')}
-    <div style="font-weight:400;font-size:12px;color:#9B9B9B;margin-top:6px">Entre $20.000.000 y $200.000.000.</div>
+    <div style="font-weight:400;font-size:12px;color:#757575;margin-top:6px">Entre $20.000.000 y $200.000.000.</div>
   </div>
 </div>`;
 
@@ -2253,7 +2187,7 @@ const movmercCampos = (sede) => `<div style="display:flex;flex-direction:column;
   <div>
     <div style="font-weight:700;font-size:13px;margin-bottom:8px">Límite por despacho</div>
     ${stepper(sede.mov.limite, 'data-mov="limite"', 'mov:limite:-1', 'mov:limite:1')}
-    <div style="font-weight:400;font-size:12px;color:#9B9B9B;margin-top:6px">Entre $10.000.000 y $100.000.000.</div>
+    <div style="font-weight:400;font-size:12px;color:#757575;margin-top:6px">Entre $10.000.000 y $100.000.000.</div>
   </div>
 </div>`;
 
@@ -2328,19 +2262,32 @@ const coberturas = () => {
 
 const FOTOS = [['entrada', 'Entrada principal', 'Fachada y acceso de clientes', false], ['trabajo', 'Área de trabajo', 'Donde ocurre la operación diaria', false], ['almacenamiento', 'Área de almacenamiento', 'Bodega, estantería o depósito', false], ['general', 'Vista general del espacio', 'Opcional, pero ayuda al análisis', true]];
 const INSTRUCCIONES_FOTO = ['Use buena iluminación natural si es posible.', 'Capture desde el piso hasta el techo.', 'Asegúrese de que la foto esté nítida y clara.', 'Tome solo una foto por área.'];
-const fotos = () => `<div style="background:#E5F4EE;border-radius:24px;padding:16px;display:flex;flex-direction:column;gap:12px;max-width:820px">
+/** Las fotos son por sede (cada sede guarda las suyas): con varias sedes, tabs iguales a las de
+ * Coberturas y Plan, y el avance de cada sede visible en su tab. */
+const fotosDe = (sede) => (sede.fotos = sede.fotos || { entrada: false, trabajo: false, almacenamiento: false, general: false });
+const fotosSedeCompletas = (sede) => { const f = fotosDe(sede); return !!(f.entrada && f.trabajo && f.almacenamiento); };
+const fotos = () => {
+const fsIdx = Math.min(state.fotoSedeActiva, state.sedes.length - 1);
+const fotosSede = fotosDe(state.sedes[fsIdx]);
+const completas = state.sedes.filter(fotosSedeCompletas).length;
+const selectorFotos = state.sedes.length > 1 ? `<div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
+  <div class="pymes-sede-tabs"><div class="sb-ui-tabs" role="tablist" aria-label="Sedes">${state.sedes.map((s, k) => `<button type="button" role="tab" aria-selected="${k === fsIdx}" class="sb-ui-tabs__item${k === fsIdx ? ' sb-ui-tabs__item--active' : ''}" data-action="verSedeFoto:${k}"><span class="material-symbols-outlined sb-ui-tabs__icon" style="font-size:18px">${iconoTipoSede(s.tipo)}</span><span class="sb-ui-tabs__title">${esc(etiquetaSede(s, k))}</span>${fotosSedeCompletas(s) ? '<span class="material-symbols-outlined" style="font-size:16px;color:#006B40" aria-label="Fotos completas">check_circle</span>' : ''}</button>`).join('')}</div></div>
+  <div style="font-weight:400;font-size:12.5px;color:#757575">Fotos de ${esc(sedeResumen(state.sedes[fsIdx]))}. ${completas} de ${state.sedes.length} sedes con las fotos obligatorias completas.</div>
+</div>` : '';
+return `<div style="background:#E5F4EE;border-radius:24px;padding:16px;display:flex;flex-direction:column;gap:12px;max-width:820px">
   <div style="font-weight:700;font-size:16px;line-height:1.4;color:#1B1B1B">Ahora necesitamos algunas fotos de su negocio. Esto nos ayuda a entenderlo mejor y a ofrecerle la cobertura ideal.</div>
   <div style="display:flex;flex-direction:column;gap:7px">${INSTRUCCIONES_FOTO.map((txt) => `<div style="display:flex;gap:9px;align-items:flex-start"><span class="material-symbols-outlined" style="font-size:18px;color:#006B40">check_small</span><span style="font-weight:400;font-size:13.5px;line-height:1.4;color:#414141">${txt}</span></div>`).join('')}</div>
 </div>
 <div style="font-weight:400;font-size:13.5px;line-height:1.5;color:#5B5B5B;max-width:700px;margin-top:14px">Las fotos deben mostrar el estado actual del negocio según la actividad que nos indicó al inicio: ${esc(state.actividad || 'su negocio')}.</div>
+${selectorFotos}
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;max-width:1000px;margin-top:14px">
   ${FOTOS.map(([key, label, hint, opcional]) => {
-    const c = state.fotos[key];
+    const c = fotosSede[key];
     const borde = c ? '#B3F2D4' : '#E1E1E1';
     const wellBg = c ? '#E5F4EE' : '#FAFAFA';
     const wellBorde = c ? '1px solid #B3F2D4' : '1px dashed #9B9B9B';
     const icon = c ? 'check_small' : 'photo_camera';
-    const iconColor = c ? '#038450' : '#9B9B9B';
+    const iconColor = c ? '#038450' : '#757575';
     const estado = c ? 'Foto cargada' : (opcional ? 'Opcional' : 'Pendiente');
     const btnCls = c ? 'sb-ui-button--secondary sb-ui-button--stroke' : 'sb-ui-button--primary sb-ui-button--fill';
     const btnLabel = c ? 'Reemplazar foto' : 'Cargar foto';
@@ -2362,6 +2309,7 @@ const fotos = () => `<div style="background:#E5F4EE;border-radius:24px;padding:1
     </div>`;
   }).join('')}
 </div>`;
+};
 
 const opcionalesActivasTxt = () => {
   const activas = Object.keys(OPC).filter((k) => state.opcionales[k]);
@@ -2386,14 +2334,14 @@ const vidaPaquete = () => {
       <div>
         <div style="font-weight:700;font-size:14px;margin-bottom:9px">Valor asegurado</div>
         ${stepper(state.vas, 'data-vas', 'vas:-1', 'vas:1')}
-        <div style="font-weight:400;font-size:12px;color:#9B9B9B;margin-top:6px">Entre ${fmt(VAS_MIN)} y ${fmt(VAS_MAX)}.</div>
+        <div style="font-weight:400;font-size:12px;color:#757575;margin-top:6px">Entre ${fmt(VAS_MIN)} y ${fmt(VAS_MAX)}.</div>
       </div>
       <div>
         ${inputField('nacimiento', 'Fecha de nacimiento del asegurado', state.nacimiento, 'DD/MM/AAAA')}
         <div style="font-weight:400;font-size:12px;color:${fechaInvalida ? '#B3261E' : '#9B9B9B'};margin-top:6px">${fechaInvalida ? 'Esa fecha no es válida: escríbala como DD/MM/AAAA y confirme que el asegurado tenga entre 18 y 99 años.' : 'Puede ser usted o el empleado que quiere proteger. La necesitamos para calcular el valor final.'}</div>
       </div>
     </div>
-    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:4px;border-top:1px solid #E1E1E1"><span style="font-weight:700;font-size:14px">Prima Vida Pymes${vidaEstimada() ? ' <span style="font-weight:400;font-size:12px;color:#9B9B9B">(estimada)</span>' : ''}</span><span style="font-weight:700;font-size:19px;color:#006B40">${fmt(aPeriodo(primaVida()))} ${state.periodicidad}</span></div>
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:4px;border-top:1px solid #E1E1E1"><span style="font-weight:700;font-size:14px">Prima Vida Pymes${vidaEstimada() ? ' <span style="font-weight:400;font-size:12px;color:#757575">(estimada)</span>' : ''}</span><span style="font-weight:700;font-size:19px;color:#006B40">${fmt(aPeriodo(primaVida()))} ${state.periodicidad}</span></div>
     <button type="button" class="pymes-option" style="text-align:left;background:#FFF8BC;border-color:#FFF8BC" data-action="abrirDrawerVida"><span style="flex:1;font-weight:600;font-size:13px;color:#414141">Ver coberturas incluidas</span><span class="material-symbols-outlined" style="font-size:20px;color:#414141">chevron_right</span></button>
   </div>`;
 };
@@ -2435,7 +2383,7 @@ const PARENTESCOS = [['Cónyuge', 'Cónyuge'], ['Hijo o hija', 'Hijo o hija'], [
 const progressBar = (pct) => `<div>
   <div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><span style="font-weight:700;font-size:14px">Total asignado</span><span style="font-weight:700;font-size:14px">${pct}%</span></div>
   <div style="height:8px;border-radius:999px;background:#E1E1E1;overflow:hidden;margin-top:6px"><div style="height:100%;width:${Math.min(100, pct)}%;background:${pct >= 100 ? '#009056' : '#FFE16F'};border-radius:999px"></div></div>
-  ${pct < 100 ? `<div style="display:flex;align-items:center;gap:6px;margin-top:6px;font-weight:400;font-size:12.5px;color:#5B5B5B"><span class="material-symbols-outlined" style="font-size:16px;color:#9B9B9B">info</span>Falta ${100 - pct}% por asignar.</div>` : ''}
+  ${pct < 100 ? `<div style="display:flex;align-items:center;gap:6px;margin-top:6px;font-weight:400;font-size:12.5px;color:#5B5B5B"><span class="material-symbols-outlined" style="font-size:16px;color:#757575">info</span>Falta ${100 - pct}% por asignar.</div>` : ''}
 </div>`;
 
 const beneficiarios = () => {
@@ -2500,7 +2448,7 @@ const cotizacionCard = () => {
     ${state.correo ? `<label class="sb-ui-checkbox">
       <input type="checkbox" class="sb-ui-checkbox__input" data-incluir-correo-principal ${state.incluirCorreoPrincipal ? 'checked' : ''}>
       <span class="sb-ui-checkbox__box"></span>
-      <span class="sb-ui-checkbox__label">${esc(state.correo)} <span style="color:#9B9B9B">(el que dio al inicio)</span></span>
+      <span class="sb-ui-checkbox__label">${esc(state.correo)} <span style="color:#757575">(el que dio al inicio)</span></span>
     </label>` : ''}
     ${state.correosExtra.map((c, i) => `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;background:#F5F5F5;border-radius:12px">
       <span style="font-weight:400;font-size:13.5px;color:#1B1B1B">${esc(c)}</span>
@@ -2515,13 +2463,18 @@ const cotizacionCard = () => {
       <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--icon-left" data-action="descargarCotizacion"><span class="material-symbols-outlined" style="font-size:20px">download</span>Descargar cotización</button>
       <button type="button" class="sb-ui-button sb-ui-button--primary sb-ui-button--fill sb-ui-button--icon-left" data-action="enviarCotizacion" ${destinos.length ? '' : 'disabled'}><span class="material-symbols-outlined" style="font-size:20px">send</span>Enviar por correo</button>
     </div>
-    ${!destinos.length ? '<div style="font-weight:400;font-size:12px;color:#9B9B9B">Marque el correo del inicio o agregue uno para poder enviarla.</div>' : ''}
+    ${!destinos.length ? '<div style="font-weight:400;font-size:12px;color:#757575">Marque el correo del inicio o agregue uno para poder enviarla.</div>' : ''}
   </div>`;
 };
+/** Número de referencia de la cotización, visible antes de pagar para poder verificar la transacción
+ * si algo falla en el camino (la póliza recién aparece después, en Emisión). */
+const chipCotizacion = () => `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:#5B5B5B"><span class="material-symbols-outlined" style="font-size:18px;color:#006B40">tag</span>Número de cotización <strong style="color:#1B1B1B">${esc(state.numCotizacion)}</strong></div>`;
+
 const resumen = () => {
   const sede = state.sedes[0];
   const opcionalesActivas = Object.keys(OPC).filter((k) => state.opcionales[k]);
   return `<div style="display:flex;flex-direction:column;gap:16px;max-width:900px">
+  ${chipCotizacion()}
   <div style="background:#fff;border:1px solid #B3F2D4;border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:14px">
     <div style="display:flex;align-items:center;gap:10px"><span class="material-symbols-outlined" style="font-size:22px;color:#006B40">verified_user</span><div style="font-weight:700;font-size:18px">Resumen de su plan</div></div>
     ${row('Valor del seguro', fmt(aPeriodo(primaPymes())) + ' ' + state.periodicidad)}
@@ -2573,20 +2526,20 @@ const validacion = () => `<div style="background:#FAFAFA;border:1px solid #E1E1E
   ${inputField('otp', 'Código de validación', state.otp, '481203')}
   <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
     <button type="button" class="sb-ui-button sb-ui-button--primary sb-ui-button--fill" data-action="validarOtp">${state.otpValidado ? 'Código validado' : 'Validar código'}</button>
-    ${state.otpValidado ? '' : '<span style="font-weight:400;font-size:12.5px;color:#9B9B9B">Ingrese el código 481203</span>'}
+    ${state.otpValidado ? '' : '<span style="font-weight:400;font-size:12.5px;color:#757575">Ingrese el código 481203</span>'}
   </div>
   ${state.otpValidado ? '<div class="sb-ui-alert sb-ui-alert--success">Identidad validada.</div>' : ''}
 </div>`;
 
 const MEDIOS = [['pse', 'PSE', 'Débito desde su banco', 'account_balance'], ['tarjeta', 'Tarjeta de crédito', 'Visa, Mastercard o Amex', 'credit_card'], ['debito', 'Débito automático', 'Desde su cuenta cada periodo', 'sync']];
-const pago = () => `<div style="display:flex;gap:20px;flex-wrap:wrap;align-items:stretch">
+const pago = () => `<div style="display:flex;flex-direction:column;gap:14px">${chipCotizacion()}<div style="display:flex;gap:20px;flex-wrap:wrap;align-items:stretch">
   <div style="flex:1 1 320px;background:#fff;border:1px solid #E1E1E1;border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:14px">
     <div style="font-weight:700;font-size:17px">Medio de pago</div>
     ${MEDIOS.map(([id, label, desc, icon]) => {
       const sel = state.medioPago === id;
       return `<button type="button" class="pymes-option ${sel ? 'is-selected' : ''}" style="text-align:left;width:100%" data-action="pago:${id}"><span class="material-symbols-outlined" style="font-size:22px;color:#006B40">${icon}</span><span style="flex:1"><span style="display:block;font-weight:700;font-size:14px">${label}</span><span style="display:block;font-weight:400;font-size:12.5px;color:#5B5B5B">${desc}</span></span><span class="material-symbols-outlined" style="font-size:20px;color:${sel ? '#006B40' : '#C2C7CF'}">${sel ? 'radio_button_checked' : 'radio_button_unchecked'}</span></button>`;
     }).join('')}
-    <div style="font-weight:400;font-size:12.5px;line-height:1.45;color:#9B9B9B">Simulación de pasarela. Ningún dato bancario se guarda en este prototipo.</div>
+    <div style="font-weight:400;font-size:12.5px;line-height:1.45;color:#757575">Simulación de pasarela. Ningún dato bancario se guarda en este prototipo.</div>
   </div>
   <div style="flex:1 1 280px;max-width:340px;background:#FAFAFA;border:1px solid #E1E1E1;border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:14px">
     <div style="font-weight:700;font-size:15px">¿Cómo quiere pagar?</div>
@@ -2606,7 +2559,7 @@ const emision = () => `<div style="display:flex;flex-direction:column;gap:16px;m
   <div style="background:#fff;border:1px solid #E1E1E1;border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:14px">
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px">
       <div><div style="font-weight:400;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:#5B5B5B">Número de póliza</div><div style="font-weight:700;font-size:20px;margin-top:3px">PYM-2026-0148772</div></div>
-      <div><div style="font-weight:400;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:#5B5B5B">Vigencia</div><div style="font-weight:700;font-size:16px;margin-top:5px">9 sep 2026 — 9 sep 2027</div></div>
+      <div><div style="font-weight:400;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:#5B5B5B">Vigencia</div><div style="font-weight:700;font-size:16px;margin-top:5px">9 de septiembre de 2026 — 9 de septiembre de 2027</div></div>
       <div><div style="font-weight:400;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:#5B5B5B">Valor pagado</div><div style="font-weight:700;font-size:16px;color:#006B40;margin-top:5px">${primaTxt()}</div></div>
     </div>
     <div style="height:1px;background:#E1E1E1"></div>
@@ -2630,7 +2583,7 @@ const ruta = () => RUTA.filter((step) => {
 });
 
 const totalBenef = () => state.beneficiarios.reduce((sum, b) => sum + (+b.pct || 0), 0);
-const fotosMinimas = () => state.fotos.entrada && state.fotos.trabajo && state.fotos.almacenamiento;
+const fotosMinimas = () => state.sedes.length > 0 && state.sedes.every(fotosSedeCompletas);
 const puedeSeguir = () => ({
   landing: !!state.nombre && !!state.correo && !!state.celular && String(state.numDoc).replace(/\D/g, '').length >= 5 && state.autoriza,
   negocio: !!state.actividad && state.multiSede !== null && (state.multiSede === true || (state.sedes[0] && state.sedes[0].direccion && state.sedes[0].ciudad && state.sedes[0].propietario !== null && state.sedes[0].primerPiso !== null)),
@@ -2644,7 +2597,7 @@ const puedeSeguir = () => ({
 const ayuda = () => ({
   landing: 'Complete documento, nombre, correo, celular y autorice el uso de sus datos.', negocio: 'Elija una actividad, indique si asegura una o varias sedes y complete los datos de la sede.',
   sedes: 'Complete la dirección, ciudad y las preguntas de cada sede.', coberturas: [(state.opcionales.ciber && !state.sedes.every((sede) => sede.ciber.interrupciones !== null)) ? 'Responda la pregunta de interrupciones de Ciberseguridad Pymes.' : '', (state.vidaOn && !edad()) ? 'Ingrese la fecha de nacimiento del asegurado de Vida Pymes (o quítela del paquete) para ver el valor final.' : ''].filter(Boolean).join(' '),
-  fotos: 'Cargue las tres fotos obligatorias.', beneficiarios: 'El total debe sumar 100 %.',
+  fotos: state.sedes.length > 1 ? 'Cargue las tres fotos obligatorias de cada sede.' : 'Cargue las tres fotos obligatorias.', beneficiarios: 'El total debe sumar 100%.',
   resumenCompra: 'Ingrese la fecha de nacimiento del asegurado de Vida Pymes (o quítela del paquete) para ver el valor final y continuar.',
   resumen: 'Confirme la declaración.', validacion: 'Valide el código 481203.', pago: 'Seleccione un medio de pago.'
 }[state.paso] || '');
@@ -2679,7 +2632,7 @@ const stepperFases = () => {
       } else if (activo) {
         circulo = `<div style="width:62px;height:62px;flex:none;position:relative"><div style="position:absolute;inset:0;border-radius:50%;background:#FFF6D9"></div><div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:48px;height:48px;border-radius:50%;background:#FFE16F;display:flex;align-items:center;justify-content:center"><span style="font-size:20px;font-weight:700;color:#009056">${i + 1}</span></div></div>`;
       } else {
-        circulo = `<div style="width:62px;height:62px;flex:none;display:flex;align-items:center;justify-content:center"><div style="width:54px;height:54px;border-radius:50%;background:#fff;border:2px solid #B9B9B9;display:flex;align-items:center;justify-content:center"><span style="font-size:20px;color:#9B9B9B">${i + 1}</span></div></div>`;
+        circulo = `<div style="width:62px;height:62px;flex:none;display:flex;align-items:center;justify-content:center"><div style="width:54px;height:54px;border-radius:50%;background:#fff;border:2px solid #B9B9B9;display:flex;align-items:center;justify-content:center"><span style="font-size:20px;color:#757575">${i + 1}</span></div></div>`;
       }
       const etiqueta = `<p style="margin:0;flex:1;font-weight:${activo ? 700 : 400};font-size:14px;line-height:1.4;color:${activo ? '#1B1B1B' : '#757575'}">${esc(f.titulo)}</p>`;
       const fila = `<div style="display:flex;align-items:center;gap:8px;height:54px;width:100%">${circulo}${etiqueta}</div>`;
@@ -2712,6 +2665,7 @@ let renderizando = false;
 
 const render = () => {
   renderizando = true;
+  ctaVisibleOlivia = false;
   try {
     /** Sincroniza la URL con la pantalla actual (solo hash, sin reload) para que herramientas
      * externas de testing de usabilidad (p. ej. Useberry) puedan detectar el cambio de pantalla
@@ -2725,13 +2679,13 @@ const render = () => {
     const nextLabel = state.paso === 'pago' ? `Pagar ${primaTxt()}` : (state.paso === 'resumen' ? 'Confirmar y validar' : 'Continuar');
     const bloqueado = !puedeSeguir();
     const conRail = CON_RAIL.includes(state.paso);
-    const personalizandoAhora = state.paso === 'plan' && state.personalizandoPlanIdx !== null;
     const conCta = state.paso !== 'emision' && !SIN_CTA_PROPIA.includes(state.paso);
-    const cuerpo = `<div style="display:flex;flex-direction:column;gap:24px;padding:32px 0 ${conCta ? '102px' : '32px'} 0">
-      ${index > 0 ? `<button type="button" class="pymes-link-volver" data-action="${personalizandoAhora ? 'planCerrarPersonalizar' : 'back'}"><span class="material-symbols-outlined" style="font-size:20px">chevron_left</span>${personalizandoAhora ? 'Volver al comparativo' : 'Volver'}</button>` : ''}
+    ctaVisibleOlivia = conCta;
+    const cuerpo = `<div style="display:flex;flex-direction:column;gap:24px;padding:32px 0 ${conCta ? '176px' : '112px'} 0">
+      ${index > 0 && state.paso !== 'emision' ? `<button type="button" class="pymes-link-volver" data-action="back"><span class="material-symbols-outlined" style="font-size:20px">chevron_left</span>Volver</button>` : ''}
       <div style="display:flex;flex-direction:column;gap:8px">
         <div><h1 style="margin:0 0 4px;font-weight:700;font-size:22px;line-height:1.25;letter-spacing:-.01em;color:#1B1B1B">${esc(TITULOS[state.paso])}</h1><p style="margin:0;max-width:680px;font-weight:400;font-size:13.5px;line-height:1.4;color:#5B5B5B">${esc(BAJADAS[state.paso] || '')}</p></div>
-        ${conRail ? `<div style="background:#fff;border:1px solid #E1E1E1;border-radius:16px;padding:14px 20px;margin-top:6px">${periodPrecios(false, true)}</div>` : ''}
+        ${conRail ? `<div aria-live="polite" aria-atomic="true" style="background:#fff;border:1px solid #E1E1E1;border-radius:16px;padding:14px 20px;margin-top:6px">${periodPrecios(false, true)}</div>` : ''}
       </div>
       ${VISTAS[state.paso]()}
     </div>`;
@@ -2852,15 +2806,6 @@ document.body.addEventListener('input', (event) => {
   if (target.dataset.ciber === 'monto') sede.ciber.monto = Number(target.value.replace(/\D/g, '')) || 0;
   if (target.dataset.mov === 'limite') sede.mov.limite = Number(target.value.replace(/\D/g, '')) || 0;
   if (target.hasAttribute('data-vas')) state.vas = Number(target.value.replace(/\D/g, '')) || 0;
-  if (target.dataset.planCover) {
-    const [i, clave] = target.dataset.planCover.split(':');
-    const cfg = state.comparativoPlanes && state.comparativoPlanes[Number(i)];
-    if (cfg) cfg.sedes[sedePlanActiva(cfg)].valores[clave] = Number(target.value.replace(/\D/g, '')) || 0;
-  }
-  if (target.dataset.planVas !== undefined) {
-    const cfg = state.comparativoPlanes && state.comparativoPlanes[Number(target.dataset.planVas)];
-    if (cfg) cfg.vas = Number(target.value.replace(/\D/g, '')) || 0;
-  }
   if (target.hasAttribute('data-declaracion')) { state.declaracion = target.checked; render(); }
   if (target.hasAttribute('data-autoriza')) { state.autoriza = target.checked; render(); }
   if (target.hasAttribute('data-incluir-correo-principal')) { state.incluirCorreoPrincipal = target.checked; render(); }
@@ -2873,16 +2818,7 @@ document.body.addEventListener('change', (event) => {
   if (target.dataset.ciber === 'monto') sede.ciber.monto = Math.max(20000000, Math.min(200000000, sede.ciber.monto || 0));
   if (target.dataset.mov === 'limite') sede.mov.limite = Math.max(10000000, Math.min(100000000, sede.mov.limite || 0));
   if (target.hasAttribute('data-vas')) state.vas = Math.max(VAS_MIN, Math.min(VAS_MAX, state.vas));
-  if (target.dataset.planCover) {
-    const [i, clave] = target.dataset.planCover.split(':');
-    const cfg = state.comparativoPlanes && state.comparativoPlanes[Number(i)];
-    if (cfg) { const sv = cfg.sedes[sedePlanActiva(cfg)].valores; sv[clave] = Math.max(0, Math.min(MAX[clave], sv[clave] || 0)); }
-  }
-  if (target.dataset.planVas !== undefined) {
-    const cfg = state.comparativoPlanes && state.comparativoPlanes[Number(target.dataset.planVas)];
-    if (cfg) cfg.vas = Math.max(VAS_MIN, Math.min(VAS_MAX, cfg.vas || 0));
-  }
-  if (target.dataset.cover || target.dataset.ciber === 'monto' || target.dataset.mov === 'limite' || target.hasAttribute('data-vas') || target.dataset.planCover || target.dataset.planVas !== undefined) render();
+  if (target.dataset.cover || target.dataset.ciber === 'monto' || target.dataset.mov === 'limite' || target.hasAttribute('data-vas')) render();
 });
 /** Simula la consulta de datos del cliente por número de documento, como en el prototipo original. */
 document.body.addEventListener('focusout', (event) => {
@@ -2912,7 +2848,7 @@ document.body.addEventListener('click', (event) => {
     if (!puedeSeguir()) { render(); return; }
     state.paso = currentRoute[Math.min(index + 1, currentRoute.length - 1)];
   } else if (action === 'back') {
-    if (state.paso === 'plan') state.personalizandoPlanIdx = null;
+    if (state.paso === 'emision') return;
     state.paso = currentRoute[Math.max(index - 1, 0)];
   } else if (action === 'landingPaso2') {
     if (!puedeSeguir()) { render(); return; }
@@ -2926,39 +2862,8 @@ document.body.addEventListener('click', (event) => {
   /** Comparativo de 3 planes (pantalla "plan"): cada acción trae el índice de la columna
    * (0/1/2 sobre state.comparativoPlanes). */
   else if (action.startsWith('planAbrirPersonalizar:')) {
-    const i = Number(action.slice(22));
-    const cfg = state.comparativoPlanes[i];
-    if (cfg) { state.personalizandoPlanIdx = i; state.planSedeActiva = 0; }
-  }
-  else if (action === 'planCerrarPersonalizar') state.personalizandoPlanIdx = null;
-  else if (action.startsWith('planVerSede:')) state.planSedeActiva = Number(action.slice(12));
-  else if (/^planCover:\d+:.+:-?1$/.test(action)) {
-    const [, i, clave, dir] = action.match(/^planCover:(\d+):(.+):(-?1)$/);
-    const cfg = state.comparativoPlanes[Number(i)];
-    if (cfg) { const sv = cfg.sedes[sedePlanActiva(cfg)].valores; sv[clave] = Math.max(0, Math.min(MAX[clave], (sv[clave] || 0) + Number(dir) * STEP[clave])); }
-  }
-  else if (/^planOpc:\d+:.+$/.test(action)) {
-    const [, i, clave] = action.match(/^planOpc:(\d+):(.+)$/);
-    const cfg = state.comparativoPlanes[Number(i)];
-    if (cfg) cfg.opcionales[clave] = !cfg.opcionales[clave];
-  }
-  else if (/^planVida:\d+$/.test(action)) {
-    const cfg = state.comparativoPlanes[Number(action.slice(9))];
-    if (cfg) cfg.vidaOn = !cfg.vidaOn;
-  }
-  else if (/^planVas:\d+:-?1$/.test(action)) {
-    const [, i, dir] = action.match(/^planVas:(\d+):(-?1)$/);
-    const cfg = state.comparativoPlanes[Number(i)];
-    if (cfg) cfg.vas = Math.max(VAS_MIN, Math.min(VAS_MAX, cfg.vas + Number(dir) * VAS_STEP));
-  }
-  else if (/^planSugerirCampo:\d+:.+$/.test(action)) {
-    const [, i, clave] = action.match(/^planSugerirCampo:(\d+):(.+)$/);
-    const cfg = state.comparativoPlanes[Number(i)];
-    if (cfg) { const s = cfg.sedes[sedePlanActiva(cfg)]; s.valores[clave] = s.sugeridos[clave]; }
-  }
-  else if (/^planRestaurarTodo:\d+$/.test(action)) {
-    const cfg = state.comparativoPlanes[Number(action.slice(18))];
-    if (cfg) { const s = cfg.sedes[sedePlanActiva(cfg)]; CLAVES.forEach((clave) => { s.valores[clave] = s.sugeridos[clave]; }); }
+    const cfg = state.comparativoPlanes[Number(action.slice(22))];
+    if (cfg) { aplicarPlanElegido(cfg); state.sedeActiva = 0; state.paso = 'coberturas'; }
   }
   else if (action === 'descargarComparativoPlanes') {
     const resumen = state.comparativoPlanes.map((c) => `${c.nombre}: ${fmt(aPeriodo(calcularPrimaPlan(c)))} ${state.periodicidad}`).join(' · ');
@@ -2967,15 +2872,7 @@ document.body.addEventListener('click', (event) => {
   }
   else if (action.startsWith('planElegir:')) {
     const cfg = state.comparativoPlanes[Number(action.slice(11))];
-    if (cfg) {
-      state.sedes.forEach((sedeReal, k) => { CLAVES.forEach((clave) => { sedeReal.valores[clave] = cfg.sedes[k].valores[clave]; }); });
-      state.opcionales = { ...cfg.opcionales };
-      state.vidaOn = cfg.vidaOn;
-      state.vas = cfg.vas;
-      state.plan = 'sugerido';
-      state.personalizandoPlanIdx = null;
-      state.paso = 'coberturas';
-    }
+    if (cfg) { aplicarPlanElegido(cfg); state.paso = pasoTrasElegirPlan(); }
   }
   else if (action.startsWith('multi:')) {
     state.multiSede = action.endsWith('1');
@@ -3015,7 +2912,8 @@ document.body.addEventListener('click', (event) => {
   else if (action.startsWith('ciberPlan:')) sede.ciber.plan = action.slice(10);
   else if (action.startsWith('mov:') && !action.startsWith('mov:limite:')) sede.mov.frecuencia = action.slice(4);
   else if (action.startsWith('opc:')) state.opcionales[action.slice(4)] = !state.opcionales[action.slice(4)];
-  else if (action.startsWith('foto:')) state.fotos[action.slice(5)] = !state.fotos[action.slice(5)];
+  else if (action.startsWith('foto:')) { const fs = fotosDe(state.sedes[Math.min(state.fotoSedeActiva, state.sedes.length - 1)]); fs[action.slice(5)] = !fs[action.slice(5)]; }
+  else if (action.startsWith('verSedeFoto:')) state.fotoSedeActiva = Number(action.slice(12));
   else if (action === 'abrirDrawerVida') state.drawerVida = true;
   else if (action === 'cerrarDrawerVida') state.drawerVida = false;
   else if (action === 'confirmarVida') { if (edad()) { state.vidaOn = true; state.drawerVida = false; } }
@@ -3082,8 +2980,7 @@ document.body.addEventListener('click', (event) => {
     if (destinos.length) window.alert('Simulación: enviaríamos la cotización a ' + destinos.join(', ') + '.');
     return;
   }
-  else if (action === 'toggleOlivia') { state.oliviaAbierta = !state.oliviaAbierta; state.oliviaTipCerrado = true; }
-  else if (action === 'cerrarOliviaTip') state.oliviaTipCerrado = true;
+  else if (action === 'toggleOlivia') state.oliviaAbierta = !state.oliviaAbierta;
   else if (action.startsWith('oliviaChip:')) {
     const pregunta = decodeURIComponent(action.slice(11));
     state.oliviaLog.push({ from: 'cliente', text: pregunta });
@@ -3200,7 +3097,7 @@ const sembrarEstadoHasta = (paso) => {
 
   // fotos: las tres obligatorias
   if (completo('beneficiarios')) {
-    state.fotos.entrada = true; state.fotos.trabajo = true; state.fotos.almacenamiento = true;
+    state.sedes.forEach((s) => { const f = fotosDe(s); f.entrada = true; f.trabajo = true; f.almacenamiento = true; });
   }
 
   // beneficiarios: reparto 100 %
@@ -3237,7 +3134,7 @@ const completarPasoActual = (paso) => {
       state.vidaOn = true; state.nacimiento = '15/03/1985';
       break;
     case 'fotos':
-      state.fotos.entrada = true; state.fotos.trabajo = true; state.fotos.almacenamiento = true;
+      state.sedes.forEach((s) => { const f = fotosDe(s); f.entrada = true; f.trabajo = true; f.almacenamiento = true; });
       break;
     case 'beneficiarios':
       state.beneficiarios = [{ nombre: 'María Ramírez', parentesco: 'Cónyuge', pct: 100 }];
