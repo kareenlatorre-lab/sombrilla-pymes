@@ -156,6 +156,10 @@ button, input, select { font: inherit; }
 .pymes-olivia-fab { position: fixed; right: 28px; bottom: 28px; width: 56px; height: 56px; border-radius: 999px; background: #009056; color: #fff; border: none; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,.22); cursor: pointer; z-index: 45; }
 .pymes-olivia-fab .material-symbols-outlined { font-size: 26px; }
 .pymes-olivia-fab:hover { background: #006b40; }
+.pymes-olivia-tip { position: fixed; right: 28px; bottom: 96px; max-width: 200px; background: #fff; border: 1px solid #E1E1E1; border-radius: 16px; padding: 12px 34px 12px 14px; box-shadow: 0 8px 20px rgba(0,0,0,.16); z-index: 45; font-size: 13px; line-height: 1.4; color: #303030; }
+.pymes-olivia-tip::after { content: ''; position: absolute; right: 22px; bottom: -7px; width: 12px; height: 12px; background: #fff; border-right: 1px solid #E1E1E1; border-bottom: 1px solid #E1E1E1; transform: rotate(45deg); }
+.pymes-olivia-tip__cerrar { position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border: none; background: transparent; border-radius: 999px; color: #5B5B5B; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
+.pymes-olivia-tip__cerrar:hover { background: #F0F0F0; }
 .pymes-olivia-panel { position: fixed; right: 24px; bottom: 24px; width: min(380px, calc(100vw - 32px)); height: min(560px, calc(100vh - 100px)); background: #fff; border: 1px solid #e1e1e1; border-radius: 20px; box-shadow: 0 16px 40px rgba(0,0,0,.2); display: grid; grid-template-rows: auto 1fr auto; grid-template-columns: minmax(0, 1fr); z-index: 45; overflow: hidden; }
 .pymes-olivia-panel__header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #e1e1e1; flex: none; min-width: 0; }
 .pymes-olivia-panel__body { padding: 12px 16px; overflow: hidden; display: flex; flex-direction: column; min-height: 0; min-width: 0; }
@@ -1449,6 +1453,7 @@ button, input, select { font: inherit; }
   `;T([b({type:String,reflect:!0})],A.prototype,"type",2);T([b({type:String,reflect:!0})],A.prototype,"position",2);T([b({type:String,reflect:!0})],A.prototype,"size",2);T([b({type:String})],A.prototype,"title",2);T([b({type:String})],A.prototype,"message",2);T([b({type:Boolean,reflect:!0})],A.prototype,"visible",2);T([b({type:Boolean,attribute:"show-close"})],A.prototype,"showClose",2);T([b({type:Number,attribute:"auto-dismiss"})],A.prototype,"autoDismiss",2);T([b({type:Boolean,attribute:"show-progress"})],A.prototype,"showProgress",2);T([b({type:Boolean})],A.prototype,"clickable",2);T([N()],A.prototype,"_progressWidth",2);A=T([we("sb-ui-toast")],A);var Qs={adapt(s){let e=s;return{data:e.data,total:e.total}}},ei={adapt(s){let e=s;return{data:e.content,total:e.totalElements}}},ti={adapt(s){let e=s;return{data:e.edges.map(t=>t.node),total:e.pageInfo.total}}},si={adapt(s){let e=s;return{data:e.data,total:e.meta.total}}};if(typeof window<"u"){let s=window;s.SbUiTable={...s.SbUiTable,defaultAdapter:Qs,springPageAdapter:ei,graphqlAdapter:ti,laravelAdapter:si}}typeof window<"u"&&(window.showToast=Hs,window.showSuccess=js,window.showInfo=Vs,window.showWarning=Ys,window.showError=Fs,window.hideToast=Ws,window.hideAllToasts=Js,window.removeToast=Xs,window.removeAllToasts=Ks);})();
 //# sourceMappingURL=sb-ui-seguros-bolivar.min.js.map
 
+
 'use strict';
 
 /** Reglas de negocio replicadas del prototipo original Pymes. */
@@ -1494,7 +1499,7 @@ const TITULOS = { negocio: 'Cuéntenos de su negocio', sedes: 'Las sedes que qui
 const BAJADAS = {
   negocio: 'Con la actividad y las ventas de su negocio ajustamos las coberturas recomendadas.',
   sedes: 'Agregue cada sede que quiere asegurar; puede editarlas o quitarlas cuando quiera.',
-  plan: 'Compare los tres planes o quédese con el que le sugerimos para su negocio.',
+  plan: 'Compare los tres planes y elija el que más le convenga para su negocio.',
   coberturas: 'Ajuste el valor de cada cobertura, active las opcionales y personalice Vida Pymes, incluida en su paquete.',
   fotos: 'Estas fotos nos permiten confirmar su precio y emitir la póliza.',
   resumenCompra: 'Su paquete incluye Vida Pymes. Ajuste el valor asegurado, confirme la fecha de nacimiento del asegurado para ver el valor final, o quítela si no la necesita.',
@@ -1513,7 +1518,7 @@ const state = {
   landingPaso: 1, claveAsesor: '', correoAsesor: '',
   actividadBusqueda: '', actividad: '', ventas: '',
   multiSede: null, sedes: [nuevaSede()], sedeActiva: 0,
-  plan: 'sugerido', periodicidad: 'anual', personalizando: false,
+  plan: 'sugerido', periodicidad: 'anual', personalizando: false, comparativoPlanes: null, personalizandoPlanIdx: null, planSedeActiva: 0,
   opcionales: { dinero: false, muebles: false, roboEmpleados: false, ciber: false, movMercancias: false },
   fotos: { entrada: false, trabajo: false, almacenamiento: false, general: false },
   vidaOn: true, vas: 100000000, nacimiento: '', beneficiarios: [],
@@ -1522,7 +1527,7 @@ const state = {
   drawerSede: false, sedeEditIdx: -1, sedeDraft: nuevaSede(),
   drawerMapa: false, mapaSedeIdx: null, mapaBusqueda: '', mapaError: '', mapaBuscando: false,
   incluirCorreoPrincipal: true, correosExtra: [], nuevoCorreoExtra: '', mostrarAgregarCorreo: false,
-  oliviaAbierta: false, oliviaTexto: '',
+  oliviaAbierta: false, oliviaTipCerrado: false, oliviaTexto: '',
   oliviaLog: [{ from: 'olivia', text: '¡Hola! Soy OLIVIA. Pregúnteme sobre coberturas, exclusiones o el clausulado del Seguro Pymes y Vida Pymes.' }]
 };
 
@@ -1695,6 +1700,21 @@ const TIPOS_INMUEBLE = ['Local comercial', 'Bodega', 'Oficina', 'Planta de produ
 const yesNoDraft = (campo, si, no, current) => `<div class="pymes-chips">${chip(si[0], `sedeDraft:${campo}:1`, current === true)}${chip(no[0], `sedeDraft:${campo}:0`, current === false)}</div>`;
 
 const sedeResumen = (s) => s.direccion ? `${esc(s.direccion)} · ${esc(s.ciudad || 'sin ciudad')} · ${esc(s.tipo)}` : 'Sin datos registrados aún';
+
+/** Etiqueta de la pestaña de cada sede en la pantalla de coberturas: usa el tipo de inmueble para
+ * poder diferenciarlas (p. ej. "Local comercial" vs "Bodega"). Si hay dos o más sedes del mismo
+ * tipo, se numeran ("Bodega 1", "Bodega 2"); si no hay tipo, cae a "Sede N". */
+const etiquetaSede = (s, i) => {
+  const tipo = (s.tipo || '').trim();
+  if (!tipo) return `Sede ${i + 1}`;
+  const delMismoTipo = state.sedes.filter((x) => (x.tipo || '').trim() === tipo);
+  if (delMismoTipo.length <= 1) return tipo;
+  const orden = delMismoTipo.indexOf(s) + 1;
+  return `${tipo} ${orden}`;
+};
+
+const ICONO_TIPO_INMUEBLE = { 'Local comercial': 'storefront', 'Bodega': 'warehouse', 'Oficina': 'business_center', 'Planta de producción': 'factory', 'Consultorio': 'medical_services' };
+const iconoTipoSede = (tipo) => ICONO_TIPO_INMUEBLE[(tipo || '').trim()] || 'storefront';
 
 /** Chips Sí/No para una fila de la tabla de sedes (en vez de sedeDraft, escriben directo sobre
  * state.sedes[i], ya que aquí no hay drawer intermedio: se edita todo en la misma tabla). */
@@ -1968,7 +1988,7 @@ const overlays = () => coberturasModal() + vidaDrawer() + benefDrawer() + sedeDr
 
 /** OLIVIA es un panel flotante disponible en todo el flujo, para resolver dudas sobre coberturas
  * sin interrumpir la cotización en curso. */
-const oliviaFab = () => `<button type="button" class="pymes-olivia-fab" data-action="toggleOlivia" title="Preguntar a OLIVIA"><span class="material-symbols-outlined">auto_awesome</span></button>`;
+const oliviaFab = () => `${state.oliviaTipCerrado ? '' : `<div class="pymes-olivia-tip" role="note"><strong>¿Tiene los datos a la mano?</strong> OLIVIA los completa por usted.<button type="button" class="pymes-olivia-tip__cerrar" data-action="cerrarOliviaTip" aria-label="Cerrar aviso"><span class="material-symbols-outlined" style="font-size:16px">close</span></button></div>`}<button type="button" class="pymes-olivia-fab" data-action="toggleOlivia" title="Preguntar a OLIVIA" aria-label="Abrir OLIVIA"><span class="material-symbols-outlined">auto_awesome</span></button>`;
 
 const oliviaPanel = () => `<div class="pymes-olivia-panel">
   <div class="pymes-olivia-panel__header">
@@ -1999,45 +2019,206 @@ const enviarOlivia = () => {
   render();
 };
 
-const planSugerido = () => `<div style="background:#fff;border:1px solid #E1E1E1;border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:20px;max-width:880px">
-  <div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap">
-    <div style="flex:1;min-width:240px"><div style="font-weight:700;font-size:22px">Paquete sugerido para su negocio</div><div style="font-weight:400;font-size:14.5px;line-height:1.5;color:#5B5B5B;margin-top:6px">Lo armamos con su actividad (${esc(state.actividad || 'su negocio')}) y sus ventas anuales. Cubre lo que más se reclama en negocios como el suyo e incluye Vida Pymes para proteger a su familia o a un empleado clave.</div></div>
-    ${periodPrecios()}
-  </div>
-  <div style="height:1px;background:#E1E1E1"></div>
-  <div style="font-weight:700;font-size:15px">Coberturas incluidas y valores asegurados sugeridos</div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px">
-    ${CLAVES.map((k) => `<div style="display:flex;gap:10px;align-items:flex-start;padding:14px;background:#FAFAFA;border-radius:16px"><span class="material-symbols-outlined" style="font-size:20px;color:#006B40">check_small</span><div><div style="font-weight:700;font-size:13.5px">${ETIQUETAS[k]}</div><div style="font-weight:400;font-size:13px;color:#5B5B5B">${fmt(sugerido(state.sedes[0], k))}</div></div></div>`).join('')}
-    ${state.vidaOn ? `<div style="display:flex;gap:10px;align-items:flex-start;padding:14px;background:#FFF8BC;border-radius:16px"><span class="material-symbols-outlined" style="font-size:20px;color:#006B40">favorite</span><div><div style="font-weight:700;font-size:13.5px">Vida Pymes <span style="font-weight:600;font-size:11px;color:#006B40;background:#fff;border-radius:999px;padding:2px 8px;margin-left:4px">Incluida</span></div><div style="font-weight:400;font-size:13px;color:#5B5B5B">Valor asegurado ${fmt(state.vas)}</div></div></div>` : ''}
-  </div>
-  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px">
-    ${btn('Quedarme con el plan sugerido', 'quedarmeSugerido', 'primary')}
-    ${btn('Personalizar mi plan', 'personalizar', 'secondary')}
-  </div>
-</div>`;
+/** Fórmula de precio propia para el comparativo (independiente de primaPymes()/primaVida(), que
+ * siguen leyendo state.sedes tal cual). Es UN plan para todo el negocio, pero cada sede tiene sus
+ * propios valores de cobertura (cfg.sedes[k].valores); las coberturas opcionales y Vida Pymes se
+ * activan a nivel de plan. Los datos de Ciberseguridad y Movilización de cada sede se leen de la
+ * sede real, igual que primaPymes(), para que al "Elegir este plan" el precio coincida exacto. */
+const calcularPrimaPlan = (cfg) => {
+  let total = 0;
+  cfg.sedes.forEach((s, k) => {
+    const real = state.sedes[k];
+    CLAVES.forEach((clave) => { total += (s.valores[clave] || 0) * TASA[clave]; });
+    if (real && cfg.opcionales.ciber) total += (real.ciber.monto || 0) * (CIBER_PLAN[real.ciber.plan] || 0.0055) * (real.ciber.interrupciones === true ? 1.25 : 1);
+    if (real && cfg.opcionales.movMercancias) total += (real.mov.limite || 0) * 0.006;
+  });
+  Object.keys(OPC).forEach((clave) => { if (cfg.opcionales[clave]) total += OPC[clave].prima; });
+  total *= 1.19;
+  if (cfg.vidaOn) {
+    const years = edad() || EDAD_REFERENCIA;
+    total += cfg.vas * (0.0012 + Math.max(0, years - 30) * 0.00007) * 1.19;
+  }
+  return total;
+};
 
-const planes = () => `<div style="display:flex;gap:20px;flex-wrap:wrap;align-items:stretch">
-  ${PLANES.map((p) => {
-    const sel = state.plan === p.id;
-    const borde = sel ? '2px solid #009056' : '1px solid #E1E1E1';
-    const mult = PLAN_MULT_LANDING[p.id];
-    let base = 0;
-    CLAVES.forEach((k) => { base += BASE[k] * TASA[k]; });
-    base = base * mult * 1.19;
-    return `<div style="flex:1 1 260px;display:flex;flex-direction:column;gap:14px;background:#fff;border:${borde};border-radius:24px;padding:18px">
-      <div><div style="font-weight:700;font-size:20px">${p.nombre}</div><div style="font-weight:400;font-size:13px;color:#5B5B5B;margin-top:3px">${p.nivel}</div></div>
-      <div><div style="font-weight:700;font-size:26px;line-height:1;color:#1B1B1B">${fmt(aPeriodo(base))}</div><div style="font-weight:400;font-size:13px;color:#5B5B5B;margin-top:4px">${state.periodicidad === 'mensual' ? ' / mes' : ' / año'}</div>${state.vidaOn ? `<div style="font-weight:600;font-size:12px;color:#006B40;margin-top:4px">+ Vida Pymes incluida ${fmt(aPeriodo(primaVida()))}</div>` : ''}</div>
-      <div style="height:1px;background:#E1E1E1"></div>
-      <div style="display:flex;flex-direction:column;gap:9px;flex:1">
-        ${p.items.map(([icon, txt]) => `<div style="display:flex;gap:9px;align-items:flex-start"><span class="material-symbols-outlined" style="font-size:18px;color:${icon === 'check_small' ? '#006B40' : '#9B9B9B'}">${icon}</span><span style="font-weight:400;font-size:13.5px;line-height:1.4;color:#414141">${txt}</span></div>`).join('')}
+/** Arma las 3 columnas del comparativo a partir del perfil real del negocio (todas las sedes,
+ * ventas) una sola vez por cotización. Cada plan guarda por sede sus valores y su foto inicial
+ * ("sugeridos") para poder restaurarla: "Volver al sugerido" por campo y "Restaurar sugeridos"
+ * comparan contra la base de ESTE plan en ESA sede. */
+const crearComparativoPlanes = () => {
+  const escalar = (sede, mult) => {
+    const v = {};
+    CLAVES.forEach((clave) => { v[clave] = (clave === 'edificios' && sede.propietario === false) ? 0 : Math.round(sugerido(sede, clave) * mult / 5000000) * 5000000; });
+    return v;
+  };
+  const vasPremium = Math.round(Math.min(VAS_MAX, state.vas * 1.5) / VAS_STEP) * VAS_STEP;
+  const armar = (id, nombre, nivel, sugeridoFlag, mult, opcionales, vidaOn, vas) => ({
+    id, nombre, nivel, sugerido: sugeridoFlag, opcionales, vidaOn, vas,
+    sedes: state.sedes.map((sede) => { const v = escalar(sede, mult); return { valores: { ...v }, sugeridos: { ...v } }; })
+  });
+  return [
+    armar('basico', 'Plan Básico', 'Protección esencial', false, 0.7, { dinero: false, muebles: false, roboEmpleados: false, ciber: false, movMercancias: false }, false, state.vas),
+    armar('medio', 'Plan Medio', 'El más elegido por comercios', true, 1, { ...state.opcionales }, state.vidaOn, state.vas),
+    armar('premium', 'Plan Premium', 'Protección ampliada', false, 1.3, { dinero: true, muebles: true, roboEmpleados: true, ciber: true, movMercancias: true }, true, vasPremium)
+  ];
+};
+
+/** Sede que se está editando dentro de un plan (tabs de personalizarPlanCandidato). */
+const sedePlanActiva = (cfg) => Math.min(state.planSedeActiva, cfg.sedes.length - 1);
+
+/** Tarjeta de una columna del comparativo: solo un RESUMEN de lectura (precio, coberturas y
+ * valores), sin controles editables adentro — la edición vive aparte, en personalizarPlanCandidato().
+ * "Personalizar" es un ícono de lápiz en la esquina superior derecha (no un botón de ancho completo)
+ * para que nunca quede pegado a "Elegir y continuar": son dos jerarquías distintas (editar vs. elegir),
+ * no dos botones iguales uno sobre otro. Lleva aria-label y title porque es un botón solo-ícono, así
+ * su acción queda clara igual que si tuviera texto. La descarga es una sola para los 3 planes juntos
+ * (ver plan()), no por tarjeta — así se descarga el comparativo, no cada cotización por separado.
+ * Estilo tomado exactamente de la tarjeta de planes de Seguros Bolívar en tienda (Figma
+ * 7ny7ThsZU6vr8kbwVuKsUE, nodo 2001:5604) — solo el estilo, no su contenido de seguros. El verde
+ * sólido (#009056) va SOLO en la cabecera (título, precio y botón "Elegir"): el cuerpo con las
+ * coberturas y "Ver el detalle completo" es blanco en las 3 tarjetas por igual, igual que en el
+ * diseño original. "Ver el detalle completo" es un botón píldora (fondo crema #FFF6D4, texto oscuro,
+ * flecha a la derecha), no un link de texto — así también viene en Figma. Se arma con estilos en
+ * línea (no con variantes de sb-ui-button sin verificar) para no depender de nombres de variable CSS
+ * que no están confirmados en este bundle. */
+const tarjetaPlanComparativo = (cfg, i) => {
+  const anual = calcularPrimaPlan(cfg);
+  const mensual = anual / 12 * 1.06;
+  const sug = cfg.sugerido;
+  const headerTexto = sug ? '#fff' : '#282828';
+  const headerSuave = sug ? 'rgba(255,255,255,.9)' : '#414141';
+  const colorTexto = '#1B1B1B';
+  const colorSuave = '#5B5B5B';
+  const colorCheck = '#006B40';
+  const colorDivisor = '#F0F0F0';
+  const resumenClaves = CLAVES.map((clave) => `<div style="display:flex;align-items:flex-start;gap:8px;padding:10px 0;border-top:1px solid ${colorDivisor}">
+    <span class="material-symbols-outlined" style="font-size:16px;color:${colorCheck};margin-top:1px">check</span>
+    <div style="flex:1"><div style="font-weight:400;font-size:12.5px;color:${colorSuave}">${ETIQUETAS[clave]}</div><div style="font-weight:700;font-size:13px;color:${colorTexto}">${fmt(cfg.sedes.reduce((suma, s) => suma + (s.valores[clave] || 0), 0))}</div></div>
+  </div>`).join('');
+  const opcionalesActivas = Object.keys(OPC).filter((clave) => cfg.opcionales[clave]).map((clave) => OPC[clave].label);
+  const btnPersonalizarBorde = sug ? 'rgba(255,255,255,.7)' : '#C2C7CF';
+  const btnPersonalizarFondo = sug ? 'rgba(255,255,255,.15)' : '#fff';
+  const btnPersonalizarIcono = sug ? '#fff' : '#1B1B1B';
+  return `<div style="flex:1 1 280px;min-width:266px;max-width:340px;display:flex;flex-direction:column;background:#fff;border:1px solid #E1E1E1;border-radius:24px;overflow:hidden;position:relative">
+    <button type="button" aria-label="Personalizar ${esc(cfg.nombre)}" title="Personalizar este plan" style="position:absolute;top:16px;right:16px;width:34px;height:34px;border-radius:50%;border:1.5px solid ${btnPersonalizarBorde};background:${btnPersonalizarFondo};color:${btnPersonalizarIcono};display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0" data-action="planAbrirPersonalizar:${i}"><span class="material-symbols-outlined" style="font-size:18px">edit</span></button>
+    <div style="background:${sug ? '#009056' : '#fff'};padding:20px 18px;display:flex;flex-direction:column;gap:14px">
+      ${sug ? `<span style="align-self:flex-start;background:#FFDC5D;color:#282828;font-weight:600;font-size:12px;padding:4px 12px;border-radius:999px">Sugerido</span>` : ''}
+      <div style="max-width:calc(100% - 44px)"><div style="font-weight:700;font-size:19px;color:${headerTexto}">${cfg.nombre}</div><div style="font-weight:400;font-size:12.5px;color:${headerSuave};margin-top:2px">${cfg.nivel}</div></div>
+      <div><div style="font-weight:700;font-size:27px;line-height:1;color:${headerTexto}">${fmt(mensual)}<span style="font-weight:400;font-size:14px">/mes</span></div><div style="font-weight:400;font-size:12.5px;color:${headerSuave};margin-top:4px">o ${fmt(anual)}/año (IVA incluido)</div></div>
+      <button type="button" style="border:none;border-radius:999px;background:#FFE16F;color:#05794A;font-weight:700;font-size:14px;padding:12px 16px;cursor:pointer;width:100%" data-action="planElegir:${i}">Elegir y continuar</button>
+    </div>
+    <div style="padding:18px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;flex-direction:column">
+        ${cfg.sedes.length > 1 ? `<div style="font-weight:400;font-size:12px;color:#757575;padding-bottom:8px">Suma de ${cfg.sedes.length} sedes</div>` : ''}
+        ${resumenClaves}
+        ${opcionalesActivas.length ? `<div style="padding:10px 0;border-top:1px solid ${colorDivisor};font-weight:400;font-size:12px;color:${colorSuave}">+ ${esc(opcionalesActivas.join(', '))}</div>` : ''}
+        ${cfg.vidaOn ? `<div style="padding:10px 0;border-top:1px solid ${colorDivisor};display:flex;justify-content:space-between;gap:10px"><span style="font-weight:400;font-size:12.5px;color:${colorSuave}">Vida Pymes</span><span style="font-weight:700;font-size:12.5px;color:${colorCheck}">${fmt(cfg.vas)}</span></div>` : ''}
       </div>
-      <button type="button" class="pymes-option" style="text-align:left;background:#FFF8BC;border-color:#FFF8BC" data-action="verCoberturas:${p.id}"><span style="flex:1;font-weight:600;font-size:13px;color:#414141">Consultar todas las coberturas</span><span class="material-symbols-outlined" style="font-size:20px;color:#414141">chevron_right</span></button>
-      <button type="button" class="sb-ui-button ${sel ? 'sb-ui-button--primary sb-ui-button--fill' : 'sb-ui-button--secondary sb-ui-button--stroke'} sb-ui-button--block" data-action="plan:${p.id}">${sel ? 'Plan seleccionado' : 'Elegir ' + p.nombre}</button>
-    </div>`;
-  }).join('')}
-</div>`;
+      <button type="button" style="border:none;border-radius:16px;background:#FFF6D4;color:#303030;font-weight:400;font-size:14px;padding:14px 16px;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px" data-action="verCoberturas:${cfg.id}">Ver el detalle completo<span class="material-symbols-outlined" style="font-size:18px;color:#038450">chevron_right</span></button>
+    </div>
+  </div>`;
+};
 
-const plan = () => state.personalizando ? planes() : planSugerido();
+/** Pantalla dedicada para personalizar UN plan del comparativo: mismo patrón visual que "Ajuste
+ * sus coberturas y valores" (divisores, no cajas grises anidadas) para que se sienta parte del
+ * mismo sistema en vez de un widget aparte. "Volver al comparativo" guarda solo por estar en el
+ * mismo objeto cfg (nada que confirmar aparte) y regresa a ver las 3 tarjetas ya actualizadas. */
+const personalizarPlanCandidato = (cfg, i) => {
+  /** Mismo patrón de restauración que "Ajuste sus coberturas y valores": un chip "Volver al
+   * sugerido" por campo cuando el valor se editó (comparado contra cfg.sugeridos, la foto inicial
+   * de ESTE plan), y un botón "Restaurar sugeridos" general para los 3 campos a la vez. */
+  const ks = sedePlanActiva(cfg);
+  const sedeCfg = cfg.sedes[ks];
+  const sedeReal = state.sedes[ks];
+  const principales = CLAVES.map((clave, k) => {
+    if (clave === 'edificios' && sedeReal.propietario === false) return `<div style="display:flex;flex-direction:column;gap:14px;padding:20px 0;${k > 0 ? 'border-top:1px solid #E1E1E1;' : ''}"><div style="font-weight:700;font-size:14px;color:#1B1B1B">${ETIQUETAS[clave]}</div><div style="font-weight:400;font-size:12.5px;color:#757575">No aplica: el inmueble de esta sede es arrendado.</div></div>`;
+    const value = sedeCfg.valores[clave] || 0;
+    const sug = sedeCfg.sugeridos[clave];
+    const igual = value === sug;
+    const apoyo = igual
+      ? `<div style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:12.5px;color:#757575"><span class="material-symbols-outlined" style="font-size:16px;color:#006B40">check_small</span>Valor sugerido para este plan</div>`
+      : `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap"><span style="font-weight:400;font-size:12.5px;color:#757575">Sugerido: ${fmt(sug)}</span><button type="button" class="sb-ui-chip sb-ui-chip--sm sb-ui-chip--clickable sb-ui-chip--soft sb-ui-chip--primary" style="font-size:12px;font-weight:500" data-action="planSugerirCampo:${i}:${clave}">Volver al sugerido</button></div>`;
+    return `<div style="display:flex;flex-direction:column;gap:14px;padding:20px 0;${k > 0 ? 'border-top:1px solid #E1E1E1;' : ''}">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
+        <span style="font-weight:700;font-size:14px;color:#1B1B1B">${ETIQUETAS[clave]}</span>
+        <span style="font-weight:400;font-size:12px;color:#757575">máx. ${fmt(MAX[clave])}</span>
+      </div>
+      ${stepper(value, `data-plan-cover="${i}:${clave}"`, `planCover:${i}:${clave}:-1`, `planCover:${i}:${clave}:1`, !igual)}
+      ${apoyo}
+    </div>`;
+  }).join('');
+  const opcionales = Object.keys(OPC).map((clave) => {
+    const on = cfg.opcionales[clave];
+    return `<button type="button" class="pymes-option ${on ? 'is-selected' : ''}" data-action="planOpc:${i}:${clave}" style="text-align:left;width:100%">
+      <span style="flex:1"><span style="display:block;font-weight:700;font-size:13.5px;color:#1B1B1B">${OPC[clave].label}</span><span style="display:block;font-weight:400;font-size:12.5px;line-height:1.4;color:#5B5B5B;margin-top:2px">${OPC[clave].desc}</span></span>
+      <span class="material-symbols-outlined" style="font-size:20px;color:${on ? '#006B40' : '#C2C7CF'}">${on ? 'check_circle' : 'radio_button_unchecked'}</span>
+    </button>`;
+  }).join('');
+  /** Vida Pymes con el mismo patrón explícito de vidaPaquete(): un botón de basurero para quitarla
+   * (no un chip que hay que entender que también sirve para incluir) y, cuando no está, una tarjeta
+   * aparte que explica que se puede volver a incluir — más claro que un solo chip que hace las dos
+   * cosas según su estado. */
+  const vidaCard = !cfg.vidaOn
+    ? `<div style="background:#fff;border:1px solid #E1E1E1;border-radius:24px;padding:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <div style="display:flex;gap:12px;align-items:center"><span style="flex:none;width:38px;height:38px;border-radius:999px;background:#E1E1E1;display:flex;align-items:center;justify-content:center"><span class="material-symbols-outlined" style="font-size:20px;color:#5B5B5B">favorite</span></span><div><div style="font-weight:700;font-size:15px">Vida Pymes no está en este plan</div><div style="font-weight:400;font-size:12.5px;color:#5B5B5B;margin-top:2px">Protección para usted o un empleado clave.</div></div></div>
+        <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--small sb-ui-button--icon-left" data-action="planVida:${i}"><span class="material-symbols-outlined" style="font-size:18px">add</span>Volver a incluirla</button>
+      </div>`
+    : `<div style="background:#fff;border:1px solid #FFE16F;border-radius:24px;padding:14px 18px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <div style="display:flex;gap:10px;align-items:center"><span style="flex:none;width:34px;height:34px;border-radius:999px;background:#FFE16F;display:flex;align-items:center;justify-content:center"><span class="material-symbols-outlined" style="font-size:18px;color:#038450">favorite</span></span><div style="font-weight:700;font-size:15px">Vida Pymes <span style="font-weight:600;font-size:11px;color:#006B40;background:#E5F4EE;border-radius:999px;padding:3px 9px;margin-left:4px">Incluida</span></div></div>
+          <button type="button" class="sb-ui-button sb-ui-button--error sb-ui-button--stroke sb-ui-button--circle sb-ui-button--icon-only" data-action="planVida:${i}" title="Quitar Vida Pymes de este plan" aria-label="Quitar Vida Pymes de este plan"><span class="material-symbols-outlined" style="font-size:20px">delete</span></button>
+        </div>
+        <div><div style="font-weight:700;font-size:13px;margin-bottom:8px">Valor asegurado</div>${stepper(cfg.vas, `data-plan-vas="${i}"`, `planVas:${i}:-1`, `planVas:${i}:1`)}<div style="font-weight:400;font-size:12px;color:#9B9B9B;margin-top:6px">Entre ${fmt(VAS_MIN)} y ${fmt(VAS_MAX)}.</div></div>
+      </div>`;
+  const selectorSedesPlan = state.sedes.length > 1 ? `<div class="pymes-sede-tabs"><div class="sb-ui-tabs" role="tablist" aria-label="Sedes">${state.sedes.map((s, k) => `<button type="button" role="tab" aria-selected="${k === ks}" class="sb-ui-tabs__item${k === ks ? ' sb-ui-tabs__item--active' : ''}" data-action="planVerSede:${k}"><span class="material-symbols-outlined sb-ui-tabs__icon" style="font-size:18px">${iconoTipoSede(s.tipo)}</span><span class="sb-ui-tabs__title">${esc(etiquetaSede(s, k))}</span></button>`).join('')}</div></div>` : '';
+  return `<div style="display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <div style="font-weight:700;font-size:19px;color:#006B40">${fmt(aPeriodo(calcularPrimaPlan(cfg)))} ${state.periodicidad === 'mensual' ? '/ mes' : '/ año'}</div>
+    </div>
+    <div><div style="font-weight:700;font-size:20px">${cfg.nombre}</div><div style="font-weight:400;font-size:13px;color:#5B5B5B;margin-top:2px">${cfg.nivel}${cfg.sugerido ? ' · Sugerido' : ''}</div></div>
+    ${selectorSedesPlan}
+    ${state.sedes.length > 1 ? `<div style="font-weight:400;font-size:12.5px;color:#757575">Es un solo plan para todo el negocio: cada sede tiene sus valores de cobertura; las opcionales y Vida Pymes aplican al plan completo. ${esc(sedeResumen(sedeReal))}</div>` : ''}
+    <div class="pymes-coberturas-grid">
+      <div style="background:#fff;border:1px solid #E1E1E1;border-radius:24px;padding:20px 24px 22px;display:flex;flex-direction:column;gap:18px">
+        <div style="display:flex;flex-direction:column;gap:4px"><div style="font-weight:700;font-size:17px">Coberturas principales</div><div style="font-weight:400;font-size:12.5px;color:#757575">Ajuste el valor con − y + o escríbalo directamente.</div></div>
+        <div style="display:flex;flex-direction:column">${principales}</div>
+        <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--small sb-ui-button--icon-left" style="align-self:flex-start" data-action="planRestaurarTodo:${i}"><span class="material-symbols-outlined" style="font-size:18px">restart_alt</span>Restaurar sugeridos</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+        <div style="background:#fff;border:1px solid #E1E1E1;border-radius:24px;padding:14px 18px;display:flex;flex-direction:column;gap:10px">
+          <div style="font-weight:700;font-size:17px">Coberturas opcionales</div>
+          <div style="display:flex;flex-direction:column;gap:10px">${opcionales}</div>
+        </div>
+        ${vidaCard}
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+      <button type="button" style="border:none;border-radius:999px;background:#FFE16F;color:#006B40;font-weight:700;font-size:14px;padding:12px 22px;cursor:pointer" data-action="planElegir:${i}">Elegir y continuar</button>    </div>
+  </div>`;
+};
+
+/** Reemplaza el paquete único + "Personalizar mi plan": ahora se sugieren 3 planes de una vez (uno
+ * marcado "Sugerido"). Las tarjetas son solo un resumen para comparar de un vistazo; "Personalizar"
+ * lleva a una pantalla aparte (mismo patrón visual que "Ajuste sus coberturas y valores") para
+ * editar con espacio, y "Volver al comparativo" regresa a las 3 tarjetas ya actualizadas. Elegir
+ * cualquiera (incluida la sugerida, editada o no) lleva a "Ajuste sus coberturas y valores" para
+ * afinar el resto del detalle por sede. La descarga es del comparativo completo (los 3 planes
+ * juntos), no de cada cotización por separado. */
+const plan = () => {
+  if (!state.comparativoPlanes || state.comparativoPlanes[0].sedes.length !== state.sedes.length) state.comparativoPlanes = crearComparativoPlanes();
+  if (state.personalizandoPlanIdx !== null) {
+    const cfg = state.comparativoPlanes[state.personalizandoPlanIdx];
+    if (cfg) return personalizarPlanCandidato(cfg, state.personalizandoPlanIdx);
+    state.personalizandoPlanIdx = null;
+  }
+  return `<div style="display:flex;flex-direction:column;gap:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <div style="font-weight:400;font-size:13.5px;line-height:1.5;color:#5B5B5B;max-width:640px">Compare los tres planes de un vistazo. Si quiere ajustar alguno, entre a personalizarlo con más detalle.</div>
+      <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--small sb-ui-button--icon-left" data-action="descargarComparativoPlanes"><span class="material-symbols-outlined" style="font-size:18px">download</span>Descargar comparativo</button>
+    </div>
+    <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:stretch">${state.comparativoPlanes.map((cfg, i) => tarjetaPlanComparativo(cfg, i)).join('')}</div>
+  </div>`;
+};
 
 const stepper = (value, dataAttr, decAction, incAction, activo = false) => `<div class="pymes-stepper" style="${activo ? 'border-color:#009056' : ''}">
   <button type="button" class="pymes-stepper__btn" data-action="${decAction}">−</button>
@@ -2117,13 +2298,13 @@ const coberturas = () => {
    * librería no trae un preset en píldora (solo track/button/folder), así que el contenedor y el
    * radio de cada item se completan en pymes-digital.css con ese único ajuste. */
   const selectorSedes = state.sedes.length > 1 ? `<div style="display:flex;flex-direction:column;gap:8px">
-    <div class="pymes-sede-tabs"><div class="sb-ui-tabs" role="tablist" aria-label="Sedes">${state.sedes.map((s, i) => `<button type="button" role="tab" aria-selected="${i === state.sedeActiva}" class="sb-ui-tabs__item${i === state.sedeActiva ? ' sb-ui-tabs__item--active' : ''}" data-action="verSede:${i}"><span class="material-symbols-outlined sb-ui-tabs__icon" style="font-size:18px">storefront</span><span class="sb-ui-tabs__title">Sede ${i + 1}</span></button>`).join('')}</div></div>
+    <div class="pymes-sede-tabs"><div class="sb-ui-tabs" role="tablist" aria-label="Sedes">${state.sedes.map((s, i) => `<button type="button" role="tab" aria-selected="${i === state.sedeActiva}" class="sb-ui-tabs__item${i === state.sedeActiva ? ' sb-ui-tabs__item--active' : ''}" data-action="verSede:${i}"><span class="material-symbols-outlined sb-ui-tabs__icon" style="font-size:18px">${iconoTipoSede(s.tipo)}</span><span class="sb-ui-tabs__title">${esc(etiquetaSede(s, i))}</span></button>`).join('')}</div></div>
     <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
       <div style="display:flex;align-items:center;gap:8px">
         <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--circle sb-ui-button--icon-only" data-action="abrirDrawerSede:${state.sedeActiva}" title="Editar sede" aria-label="Editar sede"><span class="material-symbols-outlined" style="font-size:16px">edit</span></button>
         <span style="font-weight:400;font-size:12.5px;color:#757575">${esc(sedeResumen(state.sedes[state.sedeActiva]))}</span>
       </div>
-      <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--small sb-ui-button--icon-left" data-action="copiarConfigSedeActiva" title="Copia edificios, equipos electrónicos, maquinaria, mercancías, terceros, ciberseguridad y movilización de esta sede a las demás"><span class="material-symbols-outlined" style="font-size:18px">content_copy</span>Copiar esta configuración a las demás sedes</button>
+      <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--small sb-ui-button--icon-left" data-action="copiarConfigSedeActiva" title="Copia edificios, equipos electrónicos, maquinaria, mercancías, terceros, ciberseguridad y movilización de esta sede a las demás"><span class="material-symbols-outlined" style="font-size:18px">content_copy</span>Copiar a las demás sedes</button>
     </div>
   </div>` : '';
   return `<div style="display:flex;flex-direction:column;gap:14px">
@@ -2132,7 +2313,7 @@ const coberturas = () => {
       <div style="background:#fff;border:1px solid #E1E1E1;border-radius:24px;padding:20px 24px 22px;display:flex;flex-direction:column;gap:18px">
         <div style="display:flex;flex-direction:column;gap:4px"><div style="font-weight:700;font-size:17px">Coberturas principales</div><div style="font-weight:400;font-size:12.5px;color:#757575">Ajuste el valor con − y + o escríbalo directamente.</div></div>
         <div style="display:flex;flex-direction:column">${principales}</div>
-        <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--small sb-ui-button--icon-left" style="align-self:flex-start" data-action="restaurarTodo"><span class="material-symbols-outlined" style="font-size:18px">restart_alt</span>Restaurar todos los sugeridos</button>
+        <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--small sb-ui-button--icon-left" style="align-self:flex-start" data-action="restaurarTodo"><span class="material-symbols-outlined" style="font-size:18px">restart_alt</span>Restaurar sugeridos</button>
       </div>
       <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
         <div style="background:#fff;border:1px solid #E1E1E1;border-radius:24px;padding:14px 18px;display:flex;flex-direction:column;gap:10px">
@@ -2209,7 +2390,7 @@ const vidaPaquete = () => {
       </div>
       <div>
         ${inputField('nacimiento', 'Fecha de nacimiento del asegurado', state.nacimiento, 'DD/MM/AAAA')}
-        <div style="font-weight:400;font-size:12px;color:${fechaInvalida ? '#B3261E' : '#9B9B9B'};margin-top:6px">${fechaInvalida ? 'Ingrese una fecha válida (DD/MM/AAAA); el asegurado debe tener entre 18 y 99 años.' : 'Puede ser usted o el empleado que quiere proteger. La necesitamos para calcular el valor final.'}</div>
+        <div style="font-weight:400;font-size:12px;color:${fechaInvalida ? '#B3261E' : '#9B9B9B'};margin-top:6px">${fechaInvalida ? 'Esa fecha no es válida: escríbala como DD/MM/AAAA y confirme que el asegurado tenga entre 18 y 99 años.' : 'Puede ser usted o el empleado que quiere proteger. La necesitamos para calcular el valor final.'}</div>
       </div>
     </div>
     <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:4px;border-top:1px solid #E1E1E1"><span style="font-weight:700;font-size:14px">Prima Vida Pymes${vidaEstimada() ? ' <span style="font-weight:400;font-size:12px;color:#9B9B9B">(estimada)</span>' : ''}</span><span style="font-weight:700;font-size:19px;color:#006B40">${fmt(aPeriodo(primaVida()))} ${state.periodicidad}</span></div>
@@ -2544,9 +2725,10 @@ const render = () => {
     const nextLabel = state.paso === 'pago' ? `Pagar ${primaTxt()}` : (state.paso === 'resumen' ? 'Confirmar y validar' : 'Continuar');
     const bloqueado = !puedeSeguir();
     const conRail = CON_RAIL.includes(state.paso);
+    const personalizandoAhora = state.paso === 'plan' && state.personalizandoPlanIdx !== null;
     const conCta = state.paso !== 'emision' && !SIN_CTA_PROPIA.includes(state.paso);
     const cuerpo = `<div style="display:flex;flex-direction:column;gap:24px;padding:32px 0 ${conCta ? '102px' : '32px'} 0">
-      ${index > 0 ? '<button type="button" class="pymes-link-volver" data-action="back"><span class="material-symbols-outlined" style="font-size:20px">chevron_left</span>Volver</button>' : ''}
+      ${index > 0 ? `<button type="button" class="pymes-link-volver" data-action="${personalizandoAhora ? 'planCerrarPersonalizar' : 'back'}"><span class="material-symbols-outlined" style="font-size:20px">chevron_left</span>${personalizandoAhora ? 'Volver al comparativo' : 'Volver'}</button>` : ''}
       <div style="display:flex;flex-direction:column;gap:8px">
         <div><h1 style="margin:0 0 4px;font-weight:700;font-size:22px;line-height:1.25;letter-spacing:-.01em;color:#1B1B1B">${esc(TITULOS[state.paso])}</h1><p style="margin:0;max-width:680px;font-weight:400;font-size:13.5px;line-height:1.4;color:#5B5B5B">${esc(BAJADAS[state.paso] || '')}</p></div>
         ${conRail ? `<div style="background:#fff;border:1px solid #E1E1E1;border-radius:16px;padding:14px 20px;margin-top:6px">${periodPrecios(false, true)}</div>` : ''}
@@ -2670,6 +2852,15 @@ document.body.addEventListener('input', (event) => {
   if (target.dataset.ciber === 'monto') sede.ciber.monto = Number(target.value.replace(/\D/g, '')) || 0;
   if (target.dataset.mov === 'limite') sede.mov.limite = Number(target.value.replace(/\D/g, '')) || 0;
   if (target.hasAttribute('data-vas')) state.vas = Number(target.value.replace(/\D/g, '')) || 0;
+  if (target.dataset.planCover) {
+    const [i, clave] = target.dataset.planCover.split(':');
+    const cfg = state.comparativoPlanes && state.comparativoPlanes[Number(i)];
+    if (cfg) cfg.sedes[sedePlanActiva(cfg)].valores[clave] = Number(target.value.replace(/\D/g, '')) || 0;
+  }
+  if (target.dataset.planVas !== undefined) {
+    const cfg = state.comparativoPlanes && state.comparativoPlanes[Number(target.dataset.planVas)];
+    if (cfg) cfg.vas = Number(target.value.replace(/\D/g, '')) || 0;
+  }
   if (target.hasAttribute('data-declaracion')) { state.declaracion = target.checked; render(); }
   if (target.hasAttribute('data-autoriza')) { state.autoriza = target.checked; render(); }
   if (target.hasAttribute('data-incluir-correo-principal')) { state.incluirCorreoPrincipal = target.checked; render(); }
@@ -2682,7 +2873,16 @@ document.body.addEventListener('change', (event) => {
   if (target.dataset.ciber === 'monto') sede.ciber.monto = Math.max(20000000, Math.min(200000000, sede.ciber.monto || 0));
   if (target.dataset.mov === 'limite') sede.mov.limite = Math.max(10000000, Math.min(100000000, sede.mov.limite || 0));
   if (target.hasAttribute('data-vas')) state.vas = Math.max(VAS_MIN, Math.min(VAS_MAX, state.vas));
-  if (target.dataset.cover || target.dataset.ciber === 'monto' || target.dataset.mov === 'limite' || target.hasAttribute('data-vas')) render();
+  if (target.dataset.planCover) {
+    const [i, clave] = target.dataset.planCover.split(':');
+    const cfg = state.comparativoPlanes && state.comparativoPlanes[Number(i)];
+    if (cfg) { const sv = cfg.sedes[sedePlanActiva(cfg)].valores; sv[clave] = Math.max(0, Math.min(MAX[clave], sv[clave] || 0)); }
+  }
+  if (target.dataset.planVas !== undefined) {
+    const cfg = state.comparativoPlanes && state.comparativoPlanes[Number(target.dataset.planVas)];
+    if (cfg) cfg.vas = Math.max(VAS_MIN, Math.min(VAS_MAX, cfg.vas || 0));
+  }
+  if (target.dataset.cover || target.dataset.ciber === 'monto' || target.dataset.mov === 'limite' || target.hasAttribute('data-vas') || target.dataset.planCover || target.dataset.planVas !== undefined) render();
 });
 /** Simula la consulta de datos del cliente por número de documento, como en el prototipo original. */
 document.body.addEventListener('focusout', (event) => {
@@ -2712,22 +2912,71 @@ document.body.addEventListener('click', (event) => {
     if (!puedeSeguir()) { render(); return; }
     state.paso = currentRoute[Math.min(index + 1, currentRoute.length - 1)];
   } else if (action === 'back') {
+    if (state.paso === 'plan') state.personalizandoPlanIdx = null;
     state.paso = currentRoute[Math.max(index - 1, 0)];
   } else if (action === 'landingPaso2') {
     if (!puedeSeguir()) { render(); return; }
     state.landingPaso = 2;
   } else if (action === 'landingPaso1') { state.landingPaso = 1; }
   else if (action.startsWith('actividad:')) { state.actividad = action.slice(10); state.actividadBusqueda = state.actividad; }
-  else if (action.startsWith('plan:')) { state.plan = action.slice(5); state.personalizando = false; state.paso = currentRoute[Math.min(index + 1, currentRoute.length - 1)]; }
   else if (action.startsWith('verCoberturas:')) state.modalPlan = action.slice(14);
   else if (action.startsWith('verSede:')) state.sedeActiva = Number(action.slice(8));
   else if (action === 'cerrarModal') state.modalPlan = null;
   else if (action.startsWith('period:')) state.periodicidad = action.slice(7);
-  /** Variante "flujo corto": quedarse con el sugerido salta coberturas (va directo a fotos) y
-   * personalizar salta la comparación de planes (planes()) y va directo a "Ajuste sus coberturas
-   * y valores", que es donde de verdad se personaliza el paquete en este flujo. */
-  else if (action === 'quedarmeSugerido') { state.plan = 'sugerido'; state.personalizando = false; state.paso = 'fotos'; }
-  else if (action === 'personalizar') { state.plan = 'sugerido'; state.personalizando = false; state.paso = 'coberturas'; }
+  /** Comparativo de 3 planes (pantalla "plan"): cada acción trae el índice de la columna
+   * (0/1/2 sobre state.comparativoPlanes). */
+  else if (action.startsWith('planAbrirPersonalizar:')) {
+    const i = Number(action.slice(22));
+    const cfg = state.comparativoPlanes[i];
+    if (cfg) { state.personalizandoPlanIdx = i; state.planSedeActiva = 0; }
+  }
+  else if (action === 'planCerrarPersonalizar') state.personalizandoPlanIdx = null;
+  else if (action.startsWith('planVerSede:')) state.planSedeActiva = Number(action.slice(12));
+  else if (/^planCover:\d+:.+:-?1$/.test(action)) {
+    const [, i, clave, dir] = action.match(/^planCover:(\d+):(.+):(-?1)$/);
+    const cfg = state.comparativoPlanes[Number(i)];
+    if (cfg) { const sv = cfg.sedes[sedePlanActiva(cfg)].valores; sv[clave] = Math.max(0, Math.min(MAX[clave], (sv[clave] || 0) + Number(dir) * STEP[clave])); }
+  }
+  else if (/^planOpc:\d+:.+$/.test(action)) {
+    const [, i, clave] = action.match(/^planOpc:(\d+):(.+)$/);
+    const cfg = state.comparativoPlanes[Number(i)];
+    if (cfg) cfg.opcionales[clave] = !cfg.opcionales[clave];
+  }
+  else if (/^planVida:\d+$/.test(action)) {
+    const cfg = state.comparativoPlanes[Number(action.slice(9))];
+    if (cfg) cfg.vidaOn = !cfg.vidaOn;
+  }
+  else if (/^planVas:\d+:-?1$/.test(action)) {
+    const [, i, dir] = action.match(/^planVas:(\d+):(-?1)$/);
+    const cfg = state.comparativoPlanes[Number(i)];
+    if (cfg) cfg.vas = Math.max(VAS_MIN, Math.min(VAS_MAX, cfg.vas + Number(dir) * VAS_STEP));
+  }
+  else if (/^planSugerirCampo:\d+:.+$/.test(action)) {
+    const [, i, clave] = action.match(/^planSugerirCampo:(\d+):(.+)$/);
+    const cfg = state.comparativoPlanes[Number(i)];
+    if (cfg) { const s = cfg.sedes[sedePlanActiva(cfg)]; s.valores[clave] = s.sugeridos[clave]; }
+  }
+  else if (/^planRestaurarTodo:\d+$/.test(action)) {
+    const cfg = state.comparativoPlanes[Number(action.slice(18))];
+    if (cfg) { const s = cfg.sedes[sedePlanActiva(cfg)]; CLAVES.forEach((clave) => { s.valores[clave] = s.sugeridos[clave]; }); }
+  }
+  else if (action === 'descargarComparativoPlanes') {
+    const resumen = state.comparativoPlanes.map((c) => `${c.nombre}: ${fmt(aPeriodo(calcularPrimaPlan(c)))} ${state.periodicidad}`).join(' · ');
+    window.alert('Descarga del comparativo de planes simulada: ' + resumen + '.');
+    return;
+  }
+  else if (action.startsWith('planElegir:')) {
+    const cfg = state.comparativoPlanes[Number(action.slice(11))];
+    if (cfg) {
+      state.sedes.forEach((sedeReal, k) => { CLAVES.forEach((clave) => { sedeReal.valores[clave] = cfg.sedes[k].valores[clave]; }); });
+      state.opcionales = { ...cfg.opcionales };
+      state.vidaOn = cfg.vidaOn;
+      state.vas = cfg.vas;
+      state.plan = 'sugerido';
+      state.personalizandoPlanIdx = null;
+      state.paso = 'coberturas';
+    }
+  }
   else if (action.startsWith('multi:')) {
     state.multiSede = action.endsWith('1');
     if (state.multiSede && state.sedes.length === 1 && !state.sedes[0].direccion) state.sedes = [];
@@ -2833,7 +3082,8 @@ document.body.addEventListener('click', (event) => {
     if (destinos.length) window.alert('Simulación: enviaríamos la cotización a ' + destinos.join(', ') + '.');
     return;
   }
-  else if (action === 'toggleOlivia') state.oliviaAbierta = !state.oliviaAbierta;
+  else if (action === 'toggleOlivia') { state.oliviaAbierta = !state.oliviaAbierta; state.oliviaTipCerrado = true; }
+  else if (action === 'cerrarOliviaTip') state.oliviaTipCerrado = true;
   else if (action.startsWith('oliviaChip:')) {
     const pregunta = decodeURIComponent(action.slice(11));
     state.oliviaLog.push({ from: 'cliente', text: pregunta });
@@ -2894,6 +3144,7 @@ const sembrarEstadoHasta = (paso) => {
     const s = state.sedes[0] || nuevaSede();
     s.direccion = 'Calle 100 # 15-20';
     s.ciudad = 'Bogotá';
+    s.tipo = 'Local comercial';
     s.propietario = true;
     s.primerPiso = true;
     s.ubicacion = { lat: 4.6837, lng: -74.0466 };
@@ -2901,8 +3152,26 @@ const sembrarEstadoHasta = (paso) => {
     state.sedeActiva = 0;
   };
 
+  /** Para la personalización real (arranque EN 'coberturas' o después) dejamos DOS sedes de tipos
+   * distintos —un local y una bodega— para que la pantalla muestre las pestañas diferenciadas por
+   * tipo y se pueda comparar la configuración entre una y otra. */
+  const dosSedesTipadas = () => {
+    const local = nuevaSede();
+    local.direccion = 'Calle 100 # 15-20'; local.ciudad = 'Bogotá'; local.tipo = 'Local comercial';
+    local.propietario = true; local.primerPiso = true; local.ubicacion = { lat: 4.6837, lng: -74.0466 };
+    const bodega = nuevaSede();
+    bodega.direccion = 'Carrera 68 # 40-25'; bodega.ciudad = 'Bogotá'; bodega.tipo = 'Bodega';
+    bodega.propietario = false; bodega.primerPiso = true; bodega.ubicacion = { lat: 4.6285, lng: -74.1002 };
+    state.sedes = [local, bodega];
+    state.sedeActiva = 0;
+  };
+
   if (paso === 'sedes') {
     state.multiSede = true; // sede vacía: el usuario la llena
+  } else if (objetivo >= RUTA.indexOf('coberturas')) {
+    // coberturas en adelante: dos sedes tipadas para la personalización real
+    state.multiSede = true;
+    dosSedesTipadas();
   } else if (completo('sedes') || completo('plan')) {
     state.multiSede = false;
     sedeLista();
@@ -2919,6 +3188,14 @@ const sembrarEstadoHasta = (paso) => {
     state.vidaOn = true;
     state.nacimiento = '15/03/1985';
     state.vas = 100000000;
+  }
+
+  /** Al arrancar EN 'coberturas' (personalización real): dejamos Ciberseguridad Pymes ya
+   * seleccionada como punto de partida del ajuste. Respondemos la pregunta de interrupciones de
+   * cada sede (puedeSeguir la exige cuando ciber está activo) para no bloquear "Continuar". */
+  if (objetivo === RUTA.indexOf('coberturas')) {
+    state.opcionales.ciber = true;
+    state.sedes.forEach((s) => { if (s.ciber.interrupciones === null) s.ciber.interrupciones = false; });
   }
 
   // fotos: las tres obligatorias

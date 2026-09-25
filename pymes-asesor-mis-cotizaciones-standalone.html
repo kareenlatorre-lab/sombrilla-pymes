@@ -1517,7 +1517,7 @@ const state = {
   landingPaso: 1, claveAsesor: '', correoAsesor: '',
   actividadBusqueda: '', actividad: '', ventas: '',
   multiSede: null, sedes: [nuevaSede()], sedeActiva: 0,
-  plan: 'sugerido', periodicidad: 'anual', personalizando: false,
+  plan: 'sugerido', periodicidad: 'anual', personalizando: false, comparativoPlanes: null,
   opcionales: { dinero: false, muebles: false, roboEmpleados: false, ciber: false, movMercancias: false },
   fotos: { entrada: false, trabajo: false, almacenamiento: false, general: false },
   vidaOn: true, vas: 100000000, nacimiento: '', beneficiarios: [],
@@ -2006,45 +2006,102 @@ const enviarOlivia = () => {
   render();
 };
 
-const planSugerido = () => `<div style="background:#fff;border:1px solid #E1E1E1;border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:20px;max-width:880px">
-  <div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap">
-    <div style="flex:1;min-width:240px"><div style="font-weight:700;font-size:22px">Paquete sugerido para su negocio</div><div style="font-weight:400;font-size:14.5px;line-height:1.5;color:#5B5B5B;margin-top:6px">Lo armamos con su actividad (${esc(state.actividad || 'su negocio')}) y sus ventas anuales. Cubre lo que más se reclama en negocios como el suyo e incluye Vida Pymes para proteger a su familia o a un empleado clave.</div></div>
-    ${periodPrecios()}
-  </div>
-  <div style="height:1px;background:#E1E1E1"></div>
-  <div style="font-weight:700;font-size:15px">Coberturas incluidas y valores asegurados sugeridos</div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px">
-    ${CLAVES.map((k) => `<div style="display:flex;gap:10px;align-items:flex-start;padding:14px;background:#FAFAFA;border-radius:16px"><span class="material-symbols-outlined" style="font-size:20px;color:#006B40">check_small</span><div><div style="font-weight:700;font-size:13.5px">${ETIQUETAS[k]}</div><div style="font-weight:400;font-size:13px;color:#5B5B5B">${fmt(sugerido(state.sedes[0], k))}</div></div></div>`).join('')}
-    ${state.vidaOn ? `<div style="display:flex;gap:10px;align-items:flex-start;padding:14px;background:#FFF8BC;border-radius:16px"><span class="material-symbols-outlined" style="font-size:20px;color:#006B40">favorite</span><div><div style="font-weight:700;font-size:13.5px">Vida Pymes <span style="font-weight:600;font-size:11px;color:#006B40;background:#fff;border-radius:999px;padding:2px 8px;margin-left:4px">Incluida</span></div><div style="font-weight:400;font-size:13px;color:#5B5B5B">Valor asegurado ${fmt(state.vas)}</div></div></div>` : ''}
-  </div>
-  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px">
-    ${btn('Quedarme con el plan sugerido', 'quedarmeSugerido', 'primary')}
-    ${btn('Personalizar mi plan', 'personalizar', 'secondary')}
-  </div>
-</div>`;
+/** Fórmula de precio propia para el comparativo (independiente de primaPymes()/primaVida()/
+ * primaTotal(), que siguen leyendo state.sedes tal cual): cada columna del comparativo es una
+ * config agregada (no por sede) para poder tener 3 planes editables en paralelo sin bifurcar
+ * state.sedes. Los montos fijos de ciber/movilización replican los valores por defecto de
+ * nuevaSede() (80.000.000 y 40.000.000) para que, al "Elegir este plan", el precio que se ve aquí
+ * coincida con el que recalculará primaPymes() en las pantallas siguientes. */
+const calcularPrimaPlan = (cfg) => {
+  let total = 0;
+  CLAVES.forEach((clave) => { total += (cfg.valores[clave] || 0) * TASA[clave]; });
+  if (cfg.opcionales.ciber) total += 80000000 * 0.0055;
+  if (cfg.opcionales.movMercancias) total += 40000000 * 0.006;
+  Object.keys(OPC).forEach((clave) => { if (cfg.opcionales[clave]) total += OPC[clave].prima; });
+  total *= 1.19;
+  if (cfg.vidaOn) {
+    const years = edad() || EDAD_REFERENCIA;
+    total += cfg.vas * (0.0012 + Math.max(0, years - 30) * 0.00007) * 1.19;
+  }
+  return total;
+};
 
-const planes = () => `<div style="display:flex;gap:20px;flex-wrap:wrap;align-items:stretch">
-  ${PLANES.map((p) => {
-    const sel = state.plan === p.id;
-    const borde = sel ? '2px solid #009056' : '1px solid #E1E1E1';
-    const mult = PLAN_MULT_LANDING[p.id];
-    let base = 0;
-    CLAVES.forEach((k) => { base += BASE[k] * TASA[k]; });
-    base = base * mult * 1.19;
-    return `<div style="flex:1 1 260px;display:flex;flex-direction:column;gap:14px;background:#fff;border:${borde};border-radius:24px;padding:18px">
-      <div><div style="font-weight:700;font-size:20px">${p.nombre}</div><div style="font-weight:400;font-size:13px;color:#5B5B5B;margin-top:3px">${p.nivel}</div></div>
-      <div><div style="font-weight:700;font-size:26px;line-height:1;color:#1B1B1B">${fmt(aPeriodo(base))}</div><div style="font-weight:400;font-size:13px;color:#5B5B5B;margin-top:4px">${state.periodicidad === 'mensual' ? ' / mes' : ' / año'}</div>${state.vidaOn ? `<div style="font-weight:600;font-size:12px;color:#006B40;margin-top:4px">+ Vida Pymes incluida ${fmt(aPeriodo(primaVida()))}</div>` : ''}</div>
-      <div style="height:1px;background:#E1E1E1"></div>
-      <div style="display:flex;flex-direction:column;gap:9px;flex:1">
-        ${p.items.map(([icon, txt]) => `<div style="display:flex;gap:9px;align-items:flex-start"><span class="material-symbols-outlined" style="font-size:18px;color:${icon === 'check_small' ? '#006B40' : '#9B9B9B'}">${icon}</span><span style="font-weight:400;font-size:13.5px;line-height:1.4;color:#414141">${txt}</span></div>`).join('')}
+/** Arma las 3 columnas del comparativo a partir del perfil real del negocio (sede, ventas) una
+ * sola vez por cotización: si el cliente va y vuelve entre pasos, no las reconstruye, para no
+ * perder lo que ya haya ajustado en cada una. */
+const crearComparativoPlanes = () => {
+  const sede = state.sedes[0];
+  const base = {};
+  CLAVES.forEach((clave) => { base[clave] = sugerido(sede, clave); });
+  const escalar = (mult) => {
+    const v = {};
+    CLAVES.forEach((clave) => { v[clave] = (clave === 'edificios' && sede.propietario === false) ? 0 : Math.round(base[clave] * mult / 5000000) * 5000000; });
+    return v;
+  };
+  const vasPremium = Math.round(Math.min(VAS_MAX, state.vas * 1.5) / VAS_STEP) * VAS_STEP;
+  return [
+    { id: 'basico', nombre: 'Plan Básico', nivel: 'Protección esencial', sugerido: false, fijado: false,
+      valores: escalar(0.7), opcionales: { dinero: false, muebles: false, roboEmpleados: false, ciber: false, movMercancias: false }, vidaOn: false, vas: state.vas },
+    { id: 'medio', nombre: 'Plan Medio', nivel: 'El más elegido por comercios', sugerido: true, fijado: false,
+      valores: escalar(1), opcionales: { ...state.opcionales }, vidaOn: state.vidaOn, vas: state.vas },
+    { id: 'premium', nombre: 'Plan Premium', nivel: 'Protección ampliada', sugerido: false, fijado: false,
+      valores: escalar(1.3), opcionales: { dinero: true, muebles: true, roboEmpleados: true, ciber: true, movMercancias: true }, vidaOn: true, vas: vasPremium }
+  ];
+};
+
+/** Tarjeta de una columna del comparativo: todo editable en línea (steppers y chips, los mismos
+ * componentes ya probados en "Ajuste sus coberturas y valores"), para poder ir comparando sin
+ * salir de la pantalla. El candado "fija" la tarjeta como referencia: un <fieldset disabled>
+ * la deja visible pero no editable, sin necesitar lógica aparte para bloquear cada control. */
+const tarjetaPlanComparativo = (cfg, i) => {
+  const precio = calcularPrimaPlan(cfg);
+  const borde = cfg.sugerido ? '2px solid #009056' : '1px solid #E1E1E1';
+  return `<div style="flex:1 1 280px;min-width:266px;max-width:340px;display:flex;flex-direction:column;gap:14px;background:#fff;border:${borde};border-radius:24px;padding:20px 18px 18px;position:relative">
+    ${cfg.sugerido ? `<span style="position:absolute;top:-12px;left:18px;background:#FFE16F;color:#7A6100;font-weight:700;font-size:11px;letter-spacing:.03em;text-transform:uppercase;padding:4px 12px;border-radius:999px">Sugerido</span>` : ''}
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+      <div><div style="font-weight:700;font-size:19px;color:#1B1B1B">${cfg.nombre}</div><div style="font-weight:400;font-size:12.5px;color:#5B5B5B;margin-top:2px">${cfg.nivel}</div></div>
+      <button type="button" class="sb-ui-button ${cfg.fijado ? 'sb-ui-button--primary sb-ui-button--fill' : 'sb-ui-button--secondary sb-ui-button--stroke'} sb-ui-button--circle sb-ui-button--icon-only" data-action="planFijar:${i}" title="${cfg.fijado ? 'Desbloquear para editar' : 'Fijar como referencia (no editable)'}" aria-label="Fijar plan"><span class="material-symbols-outlined" style="font-size:18px">${cfg.fijado ? 'lock' : 'lock_open'}</span></button>
+    </div>
+    <div><div style="font-weight:700;font-size:27px;line-height:1;color:#1B1B1B">${fmt(aPeriodo(precio))}</div><div style="font-weight:400;font-size:12.5px;color:#5B5B5B;margin-top:4px">${state.periodicidad === 'mensual' ? '/ mes' : '/ año'} (IVA incluido)</div></div>
+    <button type="button" class="sb-ui-button sb-ui-button--primary sb-ui-button--fill sb-ui-button--block" data-action="planElegir:${i}">Elegir este plan y continuar</button>
+    <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--small sb-ui-button--icon-left" style="align-self:flex-start" data-action="planDescargar:${i}"><span class="material-symbols-outlined" style="font-size:18px">download</span>Descargar esta cotización</button>
+    <div style="height:1px;background:#E1E1E1"></div>
+    <fieldset style="border:none;padding:0;margin:0;display:flex;flex-direction:column;gap:14px;${cfg.fijado ? 'opacity:.55' : ''}" ${cfg.fijado ? 'disabled' : ''}>
+      ${CLAVES.map((clave) => `<div style="display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px"><span style="font-weight:700;font-size:13px;color:#1B1B1B">${ETIQUETAS[clave]}</span><span style="font-weight:400;font-size:11px;color:#9B9B9B">máx. ${fmt(MAX[clave])}</span></div>
+        ${stepper(cfg.valores[clave], `data-plan-cover="${i}:${clave}"`, `planCover:${i}:${clave}:-1`, `planCover:${i}:${clave}:1`)}
+      </div>`).join('')}
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="font-weight:700;font-size:13px;color:#1B1B1B">Coberturas opcionales</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          ${chip('Ciberseguridad', `planOpc:${i}:ciber`, cfg.opcionales.ciber)}
+          ${chip('Movilización', `planOpc:${i}:movMercancias`, cfg.opcionales.movMercancias)}
+          ${chip('Dinero', `planOpc:${i}:dinero`, cfg.opcionales.dinero)}
+          ${chip('Muebles', `planOpc:${i}:muebles`, cfg.opcionales.muebles)}
+          ${chip('Robo empleados', `planOpc:${i}:roboEmpleados`, cfg.opcionales.roboEmpleados)}
+        </div>
       </div>
-      <button type="button" class="pymes-option" style="text-align:left;background:#FFF8BC;border-color:#FFF8BC" data-action="verCoberturas:${p.id}"><span style="flex:1;font-weight:600;font-size:13px;color:#414141">Consultar todas las coberturas</span><span class="material-symbols-outlined" style="font-size:20px;color:#414141">chevron_right</span></button>
-      <button type="button" class="sb-ui-button ${sel ? 'sb-ui-button--primary sb-ui-button--fill' : 'sb-ui-button--secondary sb-ui-button--stroke'} sb-ui-button--block" data-action="plan:${p.id}">${sel ? 'Plan seleccionado' : 'Elegir ' + p.nombre}</button>
-    </div>`;
-  }).join('')}
-</div>`;
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="font-weight:700;font-size:13px;color:#1B1B1B">Vida Pymes</span>${chip(cfg.vidaOn ? 'Incluida' : 'No incluida', `planVida:${i}`, cfg.vidaOn)}</div>
+        ${cfg.vidaOn ? `<div style="display:flex;flex-direction:column;gap:6px"><span style="font-weight:400;font-size:11.5px;color:#9B9B9B">Valor asegurado</span>${stepper(cfg.vas, `data-plan-vas="${i}"`, `planVas:${i}:-1`, `planVas:${i}:1`)}</div>` : ''}
+      </div>
+    </fieldset>
+    <button type="button" class="pymes-option" style="text-align:left;background:#FFF8BC;border-color:#FFF8BC" data-action="verCoberturas:${cfg.id}"><span style="flex:1;font-weight:600;font-size:13px;color:#414141">Consultar todas las coberturas</span><span class="material-symbols-outlined" style="font-size:20px;color:#414141">chevron_right</span></button>
+  </div>`;
+};
 
-const plan = () => state.personalizando ? planes() : planSugerido();
+/** Reemplaza el paquete único + "Personalizar mi plan": ahora se sugieren 3 planes de una vez
+ * (uno marcado "Sugerido"), los tres editables y comparables lado a lado sin navegar entre ellos.
+ * El candado de cada tarjeta permite dejar una fija como referencia mientras se ajustan las otras
+ * dos, o dejar las tres libres. Elegir cualquiera (incluida la sugerida) lleva a "Ajuste sus
+ * coberturas y valores" para afinar el resto del detalle por sede. */
+const plan = () => {
+  if (!state.comparativoPlanes) state.comparativoPlanes = crearComparativoPlanes();
+  return `<div style="display:flex;flex-direction:column;gap:16px">
+    <div style="font-weight:400;font-size:13.5px;line-height:1.5;color:#5B5B5B;max-width:760px">Ajuste, fije o compare cualquiera de los tres planes: los valores y el precio se recalculan al instante. Cuando tenga el que más le convenga, continúe con ese para afinar el resto de los detalles.</div>
+    <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:stretch">${state.comparativoPlanes.map((cfg, i) => tarjetaPlanComparativo(cfg, i)).join('')}</div>
+  </div>`;
+};
 
 const stepper = (value, dataAttr, decAction, incAction, activo = false) => `<div class="pymes-stepper" style="${activo ? 'border-color:#009056' : ''}">
   <button type="button" class="pymes-stepper__btn" data-action="${decAction}">−</button>
@@ -2633,6 +2690,15 @@ document.body.addEventListener('input', (event) => {
   if (target.dataset.ciber === 'monto') sede.ciber.monto = Number(target.value.replace(/\D/g, '')) || 0;
   if (target.dataset.mov === 'limite') sede.mov.limite = Number(target.value.replace(/\D/g, '')) || 0;
   if (target.hasAttribute('data-vas')) state.vas = Number(target.value.replace(/\D/g, '')) || 0;
+  if (target.dataset.planCover) {
+    const [i, clave] = target.dataset.planCover.split(':');
+    const cfg = state.comparativoPlanes && state.comparativoPlanes[Number(i)];
+    if (cfg && !cfg.fijado) cfg.valores[clave] = Number(target.value.replace(/\D/g, '')) || 0;
+  }
+  if (target.dataset.planVas !== undefined) {
+    const cfg = state.comparativoPlanes && state.comparativoPlanes[Number(target.dataset.planVas)];
+    if (cfg && !cfg.fijado) cfg.vas = Number(target.value.replace(/\D/g, '')) || 0;
+  }
   if (target.hasAttribute('data-declaracion')) { state.declaracion = target.checked; render(); }
   if (target.hasAttribute('data-autoriza')) { state.autoriza = target.checked; render(); }
   if (target.hasAttribute('data-incluir-correo-principal')) { state.incluirCorreoPrincipal = target.checked; render(); }
@@ -2645,7 +2711,16 @@ document.body.addEventListener('change', (event) => {
   if (target.dataset.ciber === 'monto') sede.ciber.monto = Math.max(20000000, Math.min(200000000, sede.ciber.monto || 0));
   if (target.dataset.mov === 'limite') sede.mov.limite = Math.max(10000000, Math.min(100000000, sede.mov.limite || 0));
   if (target.hasAttribute('data-vas')) state.vas = Math.max(VAS_MIN, Math.min(VAS_MAX, state.vas));
-  if (target.dataset.cover || target.dataset.ciber === 'monto' || target.dataset.mov === 'limite' || target.hasAttribute('data-vas')) render();
+  if (target.dataset.planCover) {
+    const [i, clave] = target.dataset.planCover.split(':');
+    const cfg = state.comparativoPlanes && state.comparativoPlanes[Number(i)];
+    if (cfg && !cfg.fijado) cfg.valores[clave] = Math.max(0, Math.min(MAX[clave], cfg.valores[clave] || 0));
+  }
+  if (target.dataset.planVas !== undefined) {
+    const cfg = state.comparativoPlanes && state.comparativoPlanes[Number(target.dataset.planVas)];
+    if (cfg && !cfg.fijado) cfg.vas = Math.max(VAS_MIN, Math.min(VAS_MAX, cfg.vas || 0));
+  }
+  if (target.dataset.cover || target.dataset.ciber === 'monto' || target.dataset.mov === 'limite' || target.hasAttribute('data-vas') || target.dataset.planCover || target.dataset.planVas !== undefined) render();
 });
 /** Simula la consulta de datos del cliente por número de documento, como en el prototipo original. */
 document.body.addEventListener('focusout', (event) => {
@@ -2682,16 +2757,53 @@ document.body.addEventListener('click', (event) => {
     state.landingPaso = 2;
   } else if (action === 'landingPaso1') { state.landingPaso = 1; }
   else if (action.startsWith('actividad:')) { state.actividad = action.slice(10); state.actividadBusqueda = state.actividad; }
-  else if (action.startsWith('plan:')) { state.plan = action.slice(5); state.personalizando = false; state.paso = currentRoute[Math.min(index + 1, currentRoute.length - 1)]; }
   else if (action.startsWith('verCoberturas:')) state.modalPlan = action.slice(14);
   else if (action.startsWith('verSede:')) state.sedeActiva = Number(action.slice(8));
   else if (action === 'cerrarModal') state.modalPlan = null;
   else if (action.startsWith('period:')) state.periodicidad = action.slice(7);
-  /** Variante "flujo corto": quedarse con el sugerido salta coberturas (va directo a fotos) y
-   * personalizar salta la comparación de planes (planes()) y va directo a "Ajuste sus coberturas
-   * y valores", que es donde de verdad se personaliza el paquete en este flujo. */
-  else if (action === 'quedarmeSugerido') { state.plan = 'sugerido'; state.personalizando = false; state.paso = 'fotos'; }
-  else if (action === 'personalizar') { state.plan = 'sugerido'; state.personalizando = false; state.paso = 'coberturas'; }
+  /** Comparativo de 3 planes (pantalla "plan"): cada acción trae el índice de la columna
+   * (0/1/2 sobre state.comparativoPlanes). El candado ("fijado") ya bloquea los controles vía
+   * <fieldset disabled> en el HTML; el "&& !cfg.fijado" de abajo es solo un respaldo. */
+  else if (action.startsWith('planFijar:')) {
+    const cfg = state.comparativoPlanes[Number(action.slice(10))];
+    if (cfg) cfg.fijado = !cfg.fijado;
+  }
+  else if (/^planCover:\d+:.+:-?1$/.test(action)) {
+    const [, i, clave, dir] = action.match(/^planCover:(\d+):(.+):(-?1)$/);
+    const cfg = state.comparativoPlanes[Number(i)];
+    if (cfg && !cfg.fijado) cfg.valores[clave] = Math.max(0, Math.min(MAX[clave], (cfg.valores[clave] || 0) + Number(dir) * STEP[clave]));
+  }
+  else if (/^planOpc:\d+:.+$/.test(action)) {
+    const [, i, clave] = action.match(/^planOpc:(\d+):(.+)$/);
+    const cfg = state.comparativoPlanes[Number(i)];
+    if (cfg && !cfg.fijado) cfg.opcionales[clave] = !cfg.opcionales[clave];
+  }
+  else if (/^planVida:\d+$/.test(action)) {
+    const cfg = state.comparativoPlanes[Number(action.slice(9))];
+    if (cfg && !cfg.fijado) cfg.vidaOn = !cfg.vidaOn;
+  }
+  else if (/^planVas:\d+:-?1$/.test(action)) {
+    const [, i, dir] = action.match(/^planVas:(\d+):(-?1)$/);
+    const cfg = state.comparativoPlanes[Number(i)];
+    if (cfg && !cfg.fijado) cfg.vas = Math.max(VAS_MIN, Math.min(VAS_MAX, cfg.vas + Number(dir) * VAS_STEP));
+  }
+  else if (action.startsWith('planDescargar:')) {
+    const cfg = state.comparativoPlanes[Number(action.slice(14))];
+    if (cfg) window.alert('Descarga de la cotización simulada: ' + cfg.nombre + ' — ' + fmt(aPeriodo(calcularPrimaPlan(cfg))) + ' ' + state.periodicidad + '.');
+    return;
+  }
+  else if (action.startsWith('planElegir:')) {
+    const cfg = state.comparativoPlanes[Number(action.slice(11))];
+    if (cfg) {
+      const sedeElegida = state.sedes[0];
+      CLAVES.forEach((clave) => { sedeElegida.valores[clave] = cfg.valores[clave]; });
+      state.opcionales = { ...cfg.opcionales };
+      state.vidaOn = cfg.vidaOn;
+      state.vas = cfg.vas;
+      state.plan = 'sugerido';
+      state.paso = 'coberturas';
+    }
+  }
   else if (action.startsWith('multi:')) {
     state.multiSede = action.endsWith('1');
     if (state.multiSede && state.sedes.length === 1 && !state.sedes[0].direccion) state.sedes = [];
@@ -2985,6 +3097,7 @@ function precargarCotizacion(c) {
     state.sedes[0] = Object.assign(nuevaSede(), { direccion: 'Cra 13 # 45-20', ciudad: 'Bogotá', propietario: true, primerPiso: true });
   }
   state.plan = 'sugerido';
+  state.comparativoPlanes = null;
   state.paso = RUTA.includes(c.paso) ? c.paso : 'landing';
 }
 
@@ -3032,7 +3145,7 @@ document.body.addEventListener('click', (event) => {
     const hoy = new Date().toISOString().slice(0, 10);
     COTIZACIONES.push({ id, empresa: 'Nueva empresa', cliente: 'Cliente nuevo', producto: 'Seguro Pymes', estado: 'borrador', fecha: hoy, paso: 'landing',
       snapshot: { edificios: 0, electronicos: 0, maquinaria: 0, mercancias: 0, terceros: 0, ciber: false, movMercancias: false, vidaPymes: false, periodicidad: 'anual', prima: 0 } });
-    Object.assign(state, { paso: 'landing', landingPaso: 1, nombre: '', correo: '', celular: '', numDoc: '', autoriza: false, actividad: '', actividadBusqueda: '', ventas: '', multiSede: null, sedes: [nuevaSede()], plan: 'sugerido', vidaOn: true, beneficiarios: [] });
+    Object.assign(state, { paso: 'landing', landingPaso: 1, nombre: '', correo: '', celular: '', numDoc: '', autoriza: false, actividad: '', actividadBusqueda: '', ventas: '', multiSede: null, sedes: [nuevaSede()], plan: 'sugerido', comparativoPlanes: null, vidaOn: true, beneficiarios: [] });
     gestorState.cotizacionId = id;
     gestorState.vista = 'cotizador';
   }
