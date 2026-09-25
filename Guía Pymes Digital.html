@@ -1,0 +1,492 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Guía Pymes Digital</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F0EBDE; --bg2:#EDE8DE;
+    --surface:#FFFFFF; --surface-2:#FBF9F4;
+    --ink:#201E1A; --ink-muted:#655F53; --ink-faint:#948C7A;
+    --border:#DFD8C6;
+    --accent:#A5283B; --accent-ink:#FFFFFF; --accent-soft:#F4DFDF;
+    --steel:#2E5268; --steel-soft:#DEE8EC;
+    --good:#2F6B4F; --good-soft:#DCEBDF;
+    --warn:#8A5A10; --warn-soft:#F1E3C4;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#18160F; --bg2:#211E16;
+      --surface:#211E16; --surface-2:#27231A;
+      --ink:#F1ECDF; --ink-muted:#B7AF9B; --ink-faint:#8B8370;
+      --border:#3B361F;
+      --accent:#E58A97; --accent-ink:#241014; --accent-soft:#3A2226;
+      --steel:#8FB6C9; --steel-soft:#1D2C33;
+      --good:#8FCBA8; --good-soft:#1B3024;
+      --warn:#E2B25C; --warn-soft:#392B10;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#18160F; --bg2:#211E16;
+    --surface:#211E16; --surface-2:#27231A;
+    --ink:#F1ECDF; --ink-muted:#B7AF9B; --ink-faint:#8B8370;
+    --border:#3B361F;
+    --accent:#E58A97; --accent-ink:#241014; --accent-soft:#3A2226;
+    --steel:#8FB6C9; --steel-soft:#1D2C33;
+    --good:#8FCBA8; --good-soft:#1B3024;
+    --warn:#E2B25C; --warn-soft:#392B10;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body{
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
+    font-size: 16px;
+    line-height: 1.55;
+    padding-inline: 20px;
+    padding-block: 28px 80px;
+  }
+  h1,h2,h3, .eyebrow, .navlabel, .tag, .stat-label, .mono, dt, .script-label, .note-label, th {
+    font-family: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  }
+  .mono, code, .tag, .table-wrap td:first-child, .stat-value, .footnote {
+    font-family: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+  h1,h2,h3{ text-wrap: balance; font-weight: 700; margin: 0; }
+  p{ margin: 0; }
+  ul,ol,dl{ margin:0; padding:0; }
+
+  .page{ max-width: 1180px; margin: 0 auto; }
+  .layout{ display:block; }
+
+  /* ---- top mobile nav (chip strip) ---- */
+  .navstrip{
+    position: sticky; top: env(safe-area-inset-top, 0px);
+    z-index: 20;
+    display:flex; gap:8px; overflow-x:auto;
+    background: var(--bg); border-bottom:1px solid var(--border);
+    padding: 10px 2px 12px; margin: -28px -20px 28px; padding-inline: 20px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .navstrip a{
+    flex: 0 0 auto; white-space:nowrap;
+    font-size:.72rem; letter-spacing:.03em; text-transform:uppercase;
+    color: var(--ink-muted); text-decoration:none;
+    border:1px solid var(--border); border-radius:999px;
+    padding:6px 12px; background:var(--surface);
+  }
+  .navstrip a:hover{ border-color:var(--accent); color:var(--accent); }
+
+  /* ---- header ---- */
+  .masthead{ max-width: 700px; margin: 0 0 44px; }
+  .eyebrow{
+    font-size:.74rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+    color: var(--accent); margin-bottom:14px; display:block;
+  }
+  .masthead h1{ font-size: clamp(1.9rem, 4.4vw, 2.7rem); line-height:1.12; letter-spacing:-.01em; }
+  .masthead .lead{
+    margin-top:16px; font-size:1.05rem; color: var(--ink-muted); max-width:56ch;
+  }
+  .metarow{
+    margin-top:22px; display:flex; flex-wrap:wrap; gap:8px 10px; align-items:center;
+  }
+  .chip{
+    font-size:.72rem; font-family:"IBM Plex Mono",monospace; letter-spacing:.01em;
+    color: var(--ink-muted); border:1px solid var(--border); border-radius:5px;
+    padding:4px 9px; background:var(--surface-2);
+  }
+
+  /* ---- body grid ---- */
+  .body-grid{ display:block; }
+  @media (min-width: 900px){
+    .navstrip{ display:none; }
+    .body-grid{ display:grid; grid-template-columns: 196px 1fr; gap:56px; align-items:start; }
+    .railnav{
+      position:sticky; top: calc(env(safe-area-inset-top,0px) + 28px);
+      display:flex; flex-direction:column; gap:2px;
+    }
+    .railnav a{
+      font-size:.76rem; letter-spacing:.02em; text-decoration:none; color:var(--ink-faint);
+      padding:7px 0 7px 14px; border-left:2px solid var(--border);
+    }
+    .railnav a:hover{ color:var(--ink); border-color:var(--ink-faint); }
+    .railnav a .n{ color:var(--accent); font-family:"IBM Plex Mono",monospace; margin-right:8px; }
+  }
+  .railnav{ display:none; }
+  @media (min-width:900px){ .railnav{ display:flex; } }
+
+  main{ max-width: 700px; }
+
+  section{ padding-block: 46px; border-top:1px solid var(--border); }
+  section:first-of-type{ padding-top:0; border-top:none; }
+  .sec-head{ display:flex; align-items:baseline; gap:14px; margin-bottom:20px; }
+  .sec-num{ font-family:"IBM Plex Mono",monospace; color:var(--accent); font-size:.85rem; font-weight:600; }
+  section h2{ font-size:1.5rem; }
+  section > .sec-head + p, .prose p{ margin-bottom: 14px; }
+  .prose p + p{ margin-top:14px; }
+  section p{ color: var(--ink); }
+  section p.muted{ color: var(--ink-muted); }
+
+  h3.sub{
+    font-size:.98rem; font-weight:700; margin: 26px 0 10px;
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  }
+  h3.sub:first-of-type{ margin-top: 22px; }
+
+  .tag{
+    font-size:.66rem; font-weight:600; letter-spacing:.03em;
+    padding:2px 7px; border-radius:4px; text-transform:uppercase;
+  }
+  .tag-h{ background:var(--steel-soft); color:var(--steel); }
+  .tag-crit{ background:var(--accent-soft); color:var(--accent); }
+  .tag-warn{ background:var(--warn-soft); color:var(--warn); }
+  .tag-good{ background:var(--good-soft); color:var(--good); }
+
+  ul.q-list, ul.plain{ list-style:none; display:flex; flex-direction:column; gap:10px; margin: 4px 0 0; }
+  ul.q-list li, ul.plain li{
+    position:relative; padding-left:20px; color:var(--ink);
+  }
+  ul.q-list li::before, ul.plain li::before{
+    content:"–"; position:absolute; left:0; color:var(--accent); font-weight:700;
+  }
+
+  ol.steps{ list-style:none; display:flex; flex-direction:column; gap:14px; margin:4px 0 0; counter-reset:step; }
+  ol.steps li{
+    counter-increment:step; position:relative; padding-left:34px;
+  }
+  ol.steps li::before{
+    content: counter(step);
+    font-family:"IBM Plex Mono",monospace; font-weight:600; font-size:.85rem;
+    position:absolute; left:0; top:.05em; color:var(--accent-ink); background:var(--accent);
+    width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  }
+  ol.steps .note{ display:block; margin-top:3px; font-size:.86rem; color:var(--ink-muted); }
+
+  .callout, .script{
+    border-left:3px solid var(--steel); background:var(--steel-soft);
+    border-radius:0 6px 6px 0; padding:14px 18px; margin:18px 0;
+  }
+  .callout .note-label{
+    font-size:.68rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--steel); display:block; margin-bottom:6px;
+  }
+  .script{ border-left-color:var(--accent); background:var(--accent-soft); }
+  .script .script-label{
+    font-size:.68rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--accent); display:block; margin-bottom:8px;
+  }
+  .script p{ font-style:italic; font-size:1rem; }
+
+  dl.specs{ display:flex; flex-direction:column; gap:16px; margin-top:4px; }
+  dl.specs > div{ display:grid; grid-template-columns: 140px 1fr; gap:16px; align-items:start; }
+  @media (max-width:520px){ dl.specs > div{ grid-template-columns: 1fr; gap:4px; } }
+  dl.specs dt{
+    font-size:.72rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint);
+    padding-top:2px;
+  }
+  dl.specs dd{ margin:0; }
+  dl.specs ul{ list-style:none; display:flex; flex-direction:column; gap:6px; }
+  dl.specs ul li{ position:relative; padding-left:16px; }
+  dl.specs ul li::before{ content:"·"; position:absolute; left:0; color:var(--accent); font-weight:800; }
+
+  .stats{ display:flex; gap:14px; flex-wrap:wrap; margin:18px 0 6px; }
+  .stat{
+    flex:1 1 180px; background:var(--surface); border:1px solid var(--border); border-radius:8px;
+    padding:16px 18px;
+  }
+  .stat-label{ font-size:.7rem; letter-spacing:.04em; text-transform:uppercase; color:var(--ink-faint); }
+  .stat-value{ font-size:1.7rem; font-weight:600; margin-top:6px; color:var(--ink); }
+  .stat-value small{ font-size:.9rem; font-weight:500; color:var(--ink-muted); }
+  .stat.flag .stat-value{ color:var(--accent); }
+
+  .table-wrap{ overflow-x:auto; margin-top:8px; border:1px solid var(--border); border-radius:8px; }
+  table{ border-collapse:collapse; width:100%; font-size:.86rem; min-width:560px; }
+  thead th{
+    text-align:left; font-size:.68rem; letter-spacing:.05em; text-transform:uppercase;
+    color:var(--ink-faint); background:var(--surface-2); padding:10px 14px; border-bottom:1px solid var(--border);
+  }
+  tbody td{ padding:11px 14px; border-bottom:1px solid var(--border); vertical-align:top; color:var(--ink); }
+  tbody tr:last-child td{ border-bottom:none; }
+  tbody td:first-child{ color:var(--accent); white-space:nowrap; font-size:.8rem; }
+
+  footer{
+    max-width:700px; margin-left:auto; margin-right:auto;
+    margin-top:50px; padding-top:22px; border-top:1px solid var(--border);
+  }
+  @media (min-width:900px){ footer{ margin-left:252px; } }
+  .footnote{ font-size:.74rem; color:var(--ink-faint); line-height:1.6; }
+</style>
+
+<div class="page">
+
+  <nav class="navstrip" aria-label="Secciones">
+    <a href="#s00">00 Contexto</a>
+    <a href="#s01">01 Preguntas</a>
+    <a href="#s02">02 Participantes</a>
+    <a href="#s03">03 Logística</a>
+    <a href="#s04">04 Entrevista</a>
+    <a href="#s05">05 Tareas</a>
+    <a href="#s06">06 Métricas</a>
+    <a href="#s07">07 Cierre</a>
+    <a href="#s08">08 Anexo</a>
+  </nav>
+
+  <header class="masthead">
+    <span class="eyebrow">Guion de investigación de campo</span>
+    <h1>Asesores comerciales frente a Pymes Digital</h1>
+    <p class="lead">Guía de moderación para testear el prototipo <em>Mockup Pymes Digital</em> con asesores comerciales: la facilidad percibida del proceso y la pertinencia de vender varias coberturas a la vez bajo la categoría sombrilla.</p>
+    <div class="metarow">
+      <span class="chip">22 sep 2026</span>
+      <span class="chip">Relacionamiento Digital</span>
+      <span class="chip">6–8 sesiones · 60 min</span>
+      <span class="chip">Entrevista + usabilidad</span>
+    </div>
+  </header>
+
+  <div class="body-grid">
+    <nav class="railnav" aria-label="Secciones">
+      <a href="#s00"><span class="n">00</span>Contexto y objetivos</a>
+      <a href="#s01"><span class="n">01</span>Preguntas de investigación</a>
+      <a href="#s02"><span class="n">02</span>Participantes</a>
+      <a href="#s03"><span class="n">03</span>Logística</a>
+      <a href="#s04"><span class="n">04</span>Entrevista</a>
+      <a href="#s05"><span class="n">05</span>Tareas de usabilidad</a>
+      <a href="#s06"><span class="n">06</span>Métricas y registro</a>
+      <a href="#s07"><span class="n">07</span>Cierre de sesión</a>
+      <a href="#s08"><span class="n">08</span>Anexo</a>
+    </nav>
+
+    <main>
+
+      <section id="s00">
+        <div class="sec-head"><span class="sec-num">00</span><h2>Contexto y objetivos</h2></div>
+        <div class="prose">
+          <p>Seguros Bolívar tiene hoy dos herramientas de cotización de PYMES en uso — Pymes IA (Olivia, web + WhatsApp) y Pymes + Digital (el formulario que usan los asesores en campo) — y tres fuentes independientes que apuntan al mismo problema: el cierre del flujo.</p>
+          <p>La auditoría Sherlock v3 (16 jul 2026) reprobó a Olivia por la ausencia de la pantalla de confirmación de emisión <span class="tag tag-crit">P08 · bloqueante</span> y por sobrecarga de decisiones al configurar coberturas por sede <span class="tag tag-crit">P05 · crítico</span>. La retroalimentación directa de los asesores sobre Pymes + Digital, recogida en la sesión «Hablemos de Pymes IA» (3 sept 2026), confirma el mismo patrón desde la experiencia diaria: intentos de 30–40 minutos que no llegan a la descarga de la cotización, campos obligatorios que bloquean casos válidos, y falta de claridad sobre qué fotos se piden por sede. El Informe Discovery (25 ago 2026) añade evidencia de mercado en la misma dirección: el cierre es el punto más frágil de cualquier canal de venta conversacional o autogestionado.</p>
+          <p>El <em>Mockup Pymes Digital</em> es el prototipo que responde a esos tres hallazgos: plan sugerido preseleccionado con personalización por sede, verificación por OTP, una pantalla final con número de póliza y descarga, y Vida Pymes ofrecida como producto complementario después de cerrar el Seguro Pymes.</p>
+          <div class="callout">
+            <span class="note-label">Objetivo de esta ronda</span>
+            <p>Validar con asesores comerciales — quienes hoy cotizan PYMES en campo — si el mockup resuelve la fricción que ellos mismos reportaron, y explorar con ellos las tres hipótesis del Informe Discovery (autogestión del cliente, empaquetamiento con Vida Pymes, y cómo deciden los dueños de pyme) desde su rol de intermediarios.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="s01">
+        <div class="sec-head"><span class="sec-num">01</span><h2>Preguntas de investigación</h2></div>
+        <p class="muted">El foco de esta ronda es la experiencia de vender bajo la categoría sombrilla: qué tan fácil percibe el asesor el proceso completo, y si contratarle al cliente varias coberturas a la vez le parece pertinente. El canal (¿chat o autogestión?) y quién decide en la pyme son dudas de producto que esta validación no resuelve — se anotan si surgen, sin indagar a fondo.</p>
+
+        <h3 class="sub"><span class="tag tag-h">Facilidad</span>Facilidad percibida del proceso</h3>
+        <ul class="q-list">
+          <li>En términos generales, ¿qué tan fácil o difícil le resultó avanzar por todo el proceso de cotización del paquete sombrilla, de principio a fin?</li>
+          <li>¿En qué momento sintió que perdía fluidez, tuvo que detenerse a pensar, o hubiera necesitado ayuda?</li>
+          <li>Comparado con cómo cotiza hoy (Pymes + Digital u Olivia), ¿este proceso se siente más simple, igual de complicado, o más complicado?</li>
+          <li><span class="tag tag-crit">P05</span> La selección de coberturas por sede (plan sugerido + personalizar), ¿se sintió simple, o hubo un punto donde dudó o se sintió abrumado?</li>
+          <li><span class="tag tag-crit">P08</span> La pantalla final con número de póliza, ¿le dio la sensación de haber cerrado el proceso completo, sin quedar en duda?</li>
+        </ul>
+
+        <h3 class="sub"><span class="tag tag-h">Sombrilla</span>Pertinencia de contratar varias cosas a la vez</h3>
+        <ul class="q-list">
+          <li>¿Le parece natural ofrecerle al cliente varias coberturas o productos —Seguro Pymes, Vida Pymes, lo que venga después— en una sola conversación, bajo un mismo paquete?</li>
+          <li>¿Cree que el cliente entiende por qué esos productos van juntos, o los percibiría como una venta cruzada forzada?</li>
+          <li>Comparado con cotizar cada cobertura por separado como hace hoy, ¿ve valor en poder cerrar el paquete completo de una sola vez?</li>
+          <li>¿Hay algo del negocio del cliente que le haría dudar en ofrecer el paquete completo, en lugar de una sola cobertura?</li>
+        </ul>
+
+        <h3 class="sub"><span class="tag tag-warn">Fuera de foco</span>Anotar si surge, sin profundizar</h3>
+        <ul class="q-list">
+          <li>Si el cliente pudiera autogestionar parte del proceso sin el asesor presente.</li>
+          <li>Si el dueño de la pyme suele decidir solo o consulta con alguien más antes de cerrar.</li>
+        </ul>
+      </section>
+
+      <section id="s02">
+        <div class="sec-head"><span class="sec-num">02</span><h2>Perfil de participantes y reclutamiento</h2></div>
+        <div class="stats">
+          <div class="stat flag">
+            <div class="stat-label">Muestra objetivo</div>
+            <div class="stat-value">6–8 <small>asesores</small></div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Criterio de cierre</div>
+            <div class="stat-value" style="font-size:1.05rem; font-weight:600;">Saturación de hallazgos</div>
+          </div>
+        </div>
+
+        <h3 class="sub">Criterios obligatorios</h3>
+        <ul class="q-list">
+          <li>Asesor comercial activo, con al menos 3 cotizaciones de PYMES hechas en los últimos 2 meses (en Pymes + Digital, Olivia/Pymes IA, o ambas).</li>
+          <li>Uso directo de al menos una de las dos herramientas actuales — no solo haber asistido a una capacitación.</li>
+        </ul>
+
+        <h3 class="sub">Variables a diversificar en la muestra</h3>
+        <ul class="q-list">
+          <li><strong>Canal:</strong> Fuerza Verde, Banca Seguros, y si es posible La Vivienda (mencionado en las notas de Gemini como el siguiente en habilitarse).</li>
+          <li><strong>Herramienta principal:</strong> unos que usan sobre todo Pymes + Digital, otros que ya probaron Olivia/Pymes IA, para poder comparar percepciones.</li>
+          <li><strong>Antigüedad:</strong> mezcla de asesores con más de 2 años en el rol y asesores nuevos (menos de 6 meses) — la tolerancia a fricción y el punto de comparación con herramientas previas (360, Simón) cambia con la experiencia.</li>
+          <li><strong>Multi-sede:</strong> al menos 2–3 participantes que cotizan regularmente pymes con más de una sede, porque son quienes mejor pueden evaluar la tarea de P05.</li>
+        </ul>
+
+        <h3 class="sub">Reclutamiento</h3>
+        <p>A través de los líderes de Fuerza Verde y Banca Seguros, priorizando a quienes participaron o fueron mencionados en la sesión «Hablemos de Pymes IA», que pueden ayudar a identificar candidatos representativos del sentir general del equipo.</p>
+      </section>
+
+      <section id="s03">
+        <div class="sec-head"><span class="sec-num">03</span><h2>Logística de las sesiones</h2></div>
+        <dl class="specs">
+          <div><dt>Duración</dt><dd><p>60 minutos por sesión — 20 min entrevista exploratoria, 30 min tareas de usabilidad sobre el mockup, 10 min cierre.</p></dd></div>
+          <div><dt>Modalidad</dt><dd><p>Presencial o por videollamada con pantalla compartida, según disponibilidad. Se prioriza presencial para quienes trabajan con clientes en iPad, ya que replica mejor su contexto real de uso.</p></dd></div>
+          <div><dt>Materiales</dt><dd>
+            <ul>
+              <li>El archivo Mockup Pymes Digital, cargado en el mismo tipo de dispositivo que el asesor usa en campo (idealmente iPad o tablet).</li>
+              <li>Guion impreso o en tablet para el moderador.</li>
+              <li>Grabación de pantalla y audio, con consentimiento (ver Anexo).</li>
+              <li>Planilla de registro de métricas por tarea.</li>
+            </ul>
+          </dd></div>
+          <div><dt>Roles</dt><dd><p>Un moderador que conduce la sesión y un observador que registra tiempos, éxitos/fallas y citas textuales, para no interrumpir el flujo de la conversación.</p></dd></div>
+          <div><dt>Antes de empezar</dt><dd><p>Confirmar que el asesor no haya visto el mockup previamente, para no contaminar la primera impresión.</p></dd></div>
+        </dl>
+      </section>
+
+      <section id="s04">
+        <div class="sec-head"><span class="sec-num">04</span><h2>Guion — Parte 1: entrevista semiestructurada</h2></div>
+        <p class="muted">20 minutos.</p>
+
+        <div class="callout">
+          <span class="note-label">Apertura (2 min)</span>
+          <p style="font-style:normal; color:var(--ink-muted)">Agradecer, explicar que se evalúa la herramienta y no al asesor, y leer el guion de consentimiento del Anexo antes de grabar.</p>
+        </div>
+
+        <h3 class="sub">Contexto actual · 5 min</h3>
+        <ol class="steps">
+          <li>Cuéntame cómo es un día típico cotizando un seguro para una pyme. ¿Qué herramienta usas primero?</li>
+          <li>¿Qué tan seguido logras completar una cotización hasta el final, desde que empiezas hasta que el cliente paga?</li>
+          <li>De lo que no funciona hoy en Pymes + Digital u Olivia, ¿qué es lo que más te hace perder tiempo o te frustra?</li>
+          <li>Si no lo menciona espontáneamente, indagar puntualmente: tiempos de respuesta, edición de una cotización ya iniciada, proceso SARLAF, claridad sobre fotos por sede.<span class="note">Temas que salieron en «Hablemos de Pymes IA» — confirmar si siguen vigentes.</span></li>
+        </ol>
+
+        <h3 class="sub"><span class="tag tag-h">Sombrilla</span>Pertinencia del paquete sombrilla · 9 min</h3>
+        <ul class="q-list">
+          <li>Cuando cierras un Seguro Pymes, ¿sueles ofrecerle algo más al cliente? ¿Cómo lo presentas hoy?</li>
+          <li>¿Te parece natural ofrecer varias coberturas o productos en una sola conversación, bajo un mismo paquete, en lugar de cotizar cada uno por separado?</li>
+          <li>Si la herramienta te sugiere ofrecer Vida Pymes justo después de cerrar el Seguro Pymes, ¿te parece el momento correcto? ¿Por qué sí o por qué no?</li>
+          <li>¿Crees que el cliente entiende por qué esos productos van juntos, o lo vería como una venta cruzada forzada?</li>
+        </ul>
+
+        <h3 class="sub"><span class="tag tag-warn">Fuera de foco</span>Opcional, 2 min si el tiempo alcanza</h3>
+        <ul class="q-list">
+          <li>¿Alguna vez le has dado al cliente el control de la pantalla o el celular durante una cotización? ¿Lo dejarías avanzar solo en alguna parte del proceso?</li>
+          <li>Cuando cotizas con el dueño de una pyme, ¿normalmente decide solo, o consulta con alguien más antes de cerrar?</li>
+        </ul>
+      </section>
+
+      <section id="s05">
+        <div class="sec-head"><span class="sec-num">05</span><h2>Guion — Parte 2: tareas de usabilidad</h2></div>
+        <p class="muted">30 minutos, sobre el Mockup Pymes Digital.</p>
+
+        <div class="script">
+          <span class="script-label">Escenario — leer al asesor</span>
+          <p>«Imagina que estás con un cliente, dueño de un negocio con dos sedes —un local comercial y una bodega—, y vas a cotizarle el Seguro Pymes. Usa el prototipo como si estuvieras frente a él, pensando en voz alta.»</p>
+        </div>
+
+        <ol class="steps">
+          <li>Iniciar la cotización y registrar los datos del cliente (documento, nombre, correo, celular).<span class="note">Observar si reingresa datos que en su herramienta actual ya tenía guardados.</span></li>
+          <li>Elegir un plan y avanzar hasta la pantalla de coberturas por sede. Agregar la segunda sede del negocio.<span class="note"><span class="tag tag-crit">P05</span> mide directamente la fricción que documentó Sherlock.</span></li>
+          <li>Personalizar las coberturas de la primera sede —por ejemplo, ajustar el valor asegurado del edificio— y dejar la ciberseguridad en cero si el cliente no la necesita.<span class="note">Prueba en vivo la queja de campos bloqueados en cero, reportada en «Hablemos de Pymes IA».</span></li>
+          <li>Completar la carga de fotos del negocio.</li>
+          <li>Revisar el resumen del plan y decidir si ofrecer Vida Pymes. Si el asesor decide ofrecerlo, agregar un beneficiario.<span class="note"><span class="tag tag-h">Sombrilla</span> preguntar en el momento: ¿le parece natural ofrecer esto aquí, como parte del mismo cierre?</span></li>
+          <li>Confirmar identidad con el código OTP y elegir un medio de pago.</li>
+          <li>Llegar hasta la pantalla de confirmación con el número de póliza. Preguntar: «¿Esto es suficiente para que le digas a tu cliente que ya quedó asegurado?»<span class="note"><span class="tag tag-crit">P08</span> — prueba directa de si se resolvió el hallazgo.</span></li>
+        </ol>
+
+        <div class="callout">
+          <span class="note-label">Después de cada tarea, preguntar</span>
+          <p style="font-style:normal; color:var(--ink-muted)">¿En algún momento hubieras necesitado ayuda o hubieras llamado a soporte? ¿Cómo se compara este paso con lo que haces hoy en Pymes + Digital u Olivia?</p>
+        </div>
+
+        <h3 class="sub">Casos límite, si el tiempo alcanza</h3>
+        <p class="muted">Tomados de los edge cases sin cobertura documentada en Sherlock v3.</p>
+        <ul class="q-list">
+          <li>¿Qué esperarías que pase si buscas una dirección que Google Maps no encuentra?</li>
+          <li>¿Qué esperarías que pase si dejas la sesión inactiva varios minutos durante la carga de fotos?</li>
+        </ul>
+      </section>
+
+      <section id="s06">
+        <div class="sec-head"><span class="sec-num">06</span><h2>Métricas y registro</h2></div>
+        <p>Para cada tarea, el observador registra:</p>
+        <ul class="q-list">
+          <li><strong>Resultado:</strong> éxito sin ayuda, éxito con ayuda del moderador, o falla.</li>
+          <li><strong>Tiempo</strong> aproximado empleado en la tarea.</li>
+          <li><strong>SEQ</strong> — inmediatamente después de cada tarea: «En una escala de 1 a 7, ¿qué tan fácil o difícil fue esta tarea?»</li>
+          <li><strong>Fricción observada:</strong> en qué pantalla dudó, qué palabra no entendió, qué intentó hacer y no pudo.</li>
+          <li><strong>Comentarios espontáneos</strong> de comparación con Pymes + Digital u Olivia.</li>
+        </ul>
+
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-label">Umbral Sherlock (aprobación)</div>
+            <div class="stat-value">≥5.5 <small>/ 7 SEQ</small></div>
+          </div>
+          <div class="stat flag">
+            <div class="stat-label">Línea base — Olivia</div>
+            <div class="stat-value">4.8 <small>/ 7 SEQ · ❌ no aprobado</small></div>
+          </div>
+        </div>
+        <p style="margin-top:14px;">Al cierre de cada sesión, calcular el SEQ promedio por tarea y compararlo contra estas dos referencias. Si las tareas 2 y 7 —las que corresponden a P05 y P08— no superan el umbral de aprobación, la corrección propuesta en el mockup todavía no está resuelta desde la perspectiva del asesor.</p>
+      </section>
+
+      <section id="s07">
+        <div class="sec-head"><span class="sec-num">07</span><h2>Cierre de la sesión</h2></div>
+        <ul class="q-list">
+          <li>De todo lo que probamos hoy, ¿qué es lo que más te gustaría que tuviera la herramienta que usas todos los días?</li>
+          <li>Comparado con Pymes + Digital y con Olivia, ¿dónde ubicarías esta versión nueva: peor, igual o mejor? ¿Por qué?</li>
+          <li>Después de probarlo, ¿le seguiría pareciendo natural ofrecer el paquete completo en una sola conversación, o preferiría cotizar cada cobertura por separado?</li>
+          <li>Si esta herramienta estuviera lista mañana, ¿la usarías con tus clientes? ¿Qué te haría dudar?</li>
+          <li>¿Hay algo que viste hoy que no te pregunté y quieras comentar?</li>
+        </ul>
+        <p class="muted" style="margin-top:16px;">Agradecer al asesor y cerrar la grabación.</p>
+      </section>
+
+      <section id="s08">
+        <div class="sec-head"><span class="sec-num">08</span><h2>Anexo</h2></div>
+
+        <h3 class="sub">Mapa de trazabilidad</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Hallazgo / hipótesis</th><th>Fuente</th><th>Dónde se prueba en esta guía</th></tr></thead>
+            <tbody>
+              <tr><td>Facilidad</td><td>Sherlock v3 (SEQ, IED)</td><td>Preguntas 01; Tareas 1–7; Métricas (06)</td></tr>
+              <tr><td>Sombrilla</td><td>Discovery, Bloque C</td><td>Preguntas 01; Entrevista (04); Tarea 5; Cierre (07)</td></tr>
+              <tr><td>P05</td><td>Sherlock v3</td><td>Tareas 2 y 3</td></tr>
+              <tr><td>P08</td><td>Sherlock v3</td><td>Tarea 7</td></tr>
+              <tr><td>Reingreso / campos en cero</td><td>Notas de Gemini</td><td>Tareas 1 y 3</td></tr>
+              <tr><td>Cierre incompleto</td><td>Discovery — Perspectiva del asesor</td><td>Tarea 7 y pregunta de cierre</td></tr>
+              <tr><td>Confianza en la IA</td><td>Discovery — Perspectiva del asesor</td><td>Preguntas de cierre</td></tr>
+              <tr><td>Fuera de foco (H1, H3)</td><td>Discovery, Bloques B y D</td><td>Entrevista (04) — solo si surge</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="sub" style="margin-top:34px;">Guion de consentimiento</h3>
+        <p class="muted">Leer al inicio de cada sesión.</p>
+        <div class="script">
+          <span class="script-label">Leer en voz alta</span>
+          <p>«Vamos a grabar esta sesión en audio y pantalla, solo para uso interno del equipo de Relacionamiento Digital, con el fin de mejorar la herramienta que usas para cotizar. No se compartirá por fuera del equipo de investigación. Puedes detener la sesión en cualquier momento, y no hay respuestas correctas o incorrectas: estamos evaluando la herramienta, no a ti. ¿Autorizas la grabación?»</p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <footer>
+    <p class="footnote">Insumos: Notas de Gemini «Hablemos de Pymes IA» (3 sept 2026) · Informe Discovery v4.2 (25 ago 2026) · Auditoría Sherlock v3 de Olivia (16 jul 2026) · Mockup Pymes Digital · Preparado por Daniel González Benítez, Relacionamiento Digital.</p>
+  </footer>
+
+</div>
+
+</body></html>
