@@ -156,6 +156,8 @@ button, input, select { font: inherit; }
 .pymes-olivia-fab { position: fixed; right: 28px; bottom: 28px; width: 56px; height: 56px; border-radius: 999px; background: #009056; color: #fff; border: none; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,.22); cursor: pointer; z-index: 45; }
 .pymes-olivia-fab .material-symbols-outlined { font-size: 26px; }
 .pymes-olivia-fab:hover { background: #006b40; }
+@keyframes pymes-girar { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.pymes-spinner { display: inline-flex; animation: pymes-girar 1s linear infinite; }
 .pymes-acc { background: #fff; border: 1px solid #E1E1E1; border-radius: 16px; overflow: hidden; }
 .pymes-acc__head { all: unset; box-sizing: border-box; width: 100%; display: flex; align-items: center; gap: 14px; padding: 12px 16px; cursor: pointer; }
 .pymes-acc__head::-webkit-details-marker { display: none; }
@@ -1534,9 +1536,10 @@ const state = {
   multiSede: null, sedes: [nuevaSede()], sedeActiva: 0, fotoSedeActiva: 0, numCotizacion: 'COT-2026-' + String(Math.floor(1000000 + Math.random() * 9000000)),
   plan: 'sugerido', periodicidad: 'anual', personalizando: false, comparativoPlanes: null,
   opcionales: { dinero: false, muebles: false, roboEmpleados: false, ciber: false, movMercancias: false },
+  opcDescAbiertas: [],
     vidaOn: true, vas: 100000000, nacimiento: '', beneficiarios: [],
   benefNombre: '', benefParentesco: 'Cónyuge', benefPct: 100, benefIdx: -1,
-  medioPago: '', otp: '', otpValidado: false, declaracion: false, autoriza: false, modalPlan: null, drawerVida: false, drawerBenef: false, benefEditIdx: -1,
+  medioPago: '', procesandoPago: false, pagoError: null, pagoToken: 0, otp: '', otpValidado: false, declaracion: false, autoriza: false, modalPlan: null, drawerVida: false, drawerBenef: false, benefEditIdx: -1,
   drawerSede: false, sedeEditIdx: -1, sedeDraft: nuevaSede(),
   drawerMapa: false, mapaSedeIdx: null, mapaBusqueda: '', mapaError: '', mapaBuscando: false,
   incluirCorreoPrincipal: true, correosExtra: [], nuevoCorreoExtra: '', mostrarAgregarCorreo: false,
@@ -1664,7 +1667,7 @@ const negocio = () => `<div style="background:#FAFAFA;border:1px solid #E1E1E1;b
   <div>
     <div style="font-weight:700;font-size:15px;margin-bottom:8px">¿Cuál es la actividad principal de su negocio?</div>
     <div><label class="sb-ui-input-label" for="actividadBusqueda">Busque su actividad</label><div style="position:relative"><span class="material-symbols-outlined" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:18px;color:#5B5B5B;pointer-events:none;z-index:1">search</span><input id="actividadBusqueda" class="sb-ui-input" style="padding-left:42px" type="text" value="${esc(state.actividadBusqueda)}" placeholder="Ej. Restaurante" data-model="actividadBusqueda"></div></div>
-    ${state.actividadBusqueda && state.actividadBusqueda !== state.actividad ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">${ACTIVIDADES.filter((activity) => activity.toLowerCase().includes(state.actividadBusqueda.toLowerCase())).map((activity) => chip(activity, `actividad:${activity}`, false)).join('')}</div>` : ''}
+    ${state.actividadBusqueda && state.actividadBusqueda !== state.actividad ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">${ACTIVIDADES.filter((activity) => activity.toLowerCase().includes(state.actividadBusqueda.toLowerCase())).map((activity) => chip(activity, `actividad:${activity}`, false)).join('')}${ACTIVIDADES.some((activity) => activity.toLowerCase() === state.actividadBusqueda.trim().toLowerCase()) ? '' : chip(`Otra actividad: ${state.actividadBusqueda.trim()}`, 'actividadOtra', false)}</div>` : ''}
     ${state.actividad ? `<div style="display:flex;align-items:center;gap:8px;margin-top:10px;padding:8px 12px;background:#E5F4EE;border-radius:999px;width:fit-content"><span class="material-symbols-outlined" style="font-size:18px;color:#006B40">check_small</span><span style="font-weight:600;font-size:13px;color:#006B40">${esc(state.actividad)}</span></div>` : ''}
     <div style="font-weight:400;font-size:12.5px;color:#757575;margin-top:8px">Con la actividad ajustamos las coberturas recomendadas y las fotos que necesitamos.</div>
   </div>
@@ -1714,10 +1717,9 @@ const iconoTipoSede = (tipo) => ICONO_TIPO_INMUEBLE[(tipo || '').trim()] || 'sto
  * state.sedes[i], ya que aquí no hay drawer intermedio: se edita todo en la misma tabla). */
 const yesNoFila = (i, campo, current) => `<div class="pymes-chips" style="flex-wrap:nowrap">${chip('Sí', `sedeRow:${i}:${campo}:1`, current === true)}${chip('No', `sedeRow:${i}:${campo}:0`, current === false)}</div>`;
 
-/** Campo de dirección con el buscador/ubicador de mapa integrado como ícono dentro del mismo
- * input, en vez de un botón aparte: al confirmar un punto en el mapa (buscando, arrastrando el
- * pin o haciendo clic), el valor de este campo pasa a ser las coordenadas de ese punto, porque la
- * dirección "de Google Maps" a veces no coincide con el sitio real y las coordenadas sí sirven. */
+/** Campo Dirección con el ícono de mapa dentro del input. Al confirmar un punto en el mapa, las
+ * coordenadas se guardan aparte (obj.ubicacion) y la dirección escrita se conserva; solo se completa
+ * si estaba vacía (ver confirmarPin). */
 const campoDireccionMapa = (id, obj, extraAttrs, mapAction) => `<div style="position:relative">
   <input id="${id}" class="sb-ui-input" style="min-width:190px;padding-right:38px" placeholder="Escriba para buscar o confirme en el mapa" value="${esc(obj.direccion)}" ${extraAttrs}>
   <button type="button" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);width:30px;height:30px;border:none;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:999px" data-action="${mapAction}" title="${obj.ubicacion ? 'Ubicación confirmada · ver o mover el pin' : 'Buscar y ubicar en el mapa'}" aria-label="Ubicar en el mapa">
@@ -1808,7 +1810,7 @@ const mapaDrawer = () => {
   if (!obj) return '';
   return drawerShell(`
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
-      <div><div style="font-weight:700;font-size:20px">Ubicar en el mapa</div><div style="font-weight:400;font-size:12.5px;color:#5B5B5B;margin-top:2px">Busque la dirección y, si el pin no cae en el lugar correcto, arrástrelo o haga clic en el punto exacto. Al confirmar, el campo Dirección de la sede quedará con las coordenadas del pin, más confiables que la dirección de Google Maps.</div></div>
+      <div><div style="font-weight:700;font-size:20px">Ubicar en el mapa</div><div style="font-weight:400;font-size:12.5px;color:#5B5B5B;margin-top:2px">Busque la dirección y, si el pin no cae en el lugar correcto, arrástrelo o haga clic en el punto exacto. Al confirmar, guardamos las coordenadas del pin como dato aparte y no cambiamos la dirección que usted ya escribió; si el campo estaba vacío, lo completamos con lo que buscó.</div></div>
       <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--circle sb-ui-button--icon-only" data-action="cerrarDrawerMapa">×</button>
     </div>
     <div style="display:flex;gap:8px">
@@ -1871,7 +1873,7 @@ const PLANES = [
     ['check_small', 'Asistencia prioritaria 24/7', 'Línea de atención prioritaria para reportar siniestros y resolver dudas en cualquier momento.', 'support_agent']
   ] }
 ];
-const LANDING_SELLOS = ['Cotización en línea en cinco minutos', 'Fotos solo después de ver su precio', 'Todas las sedes en una sola póliza'];
+const LANDING_SELLOS = ['En línea, de principio a fin', 'Fotos solo después de ver su precio', 'Todas las sedes en una sola póliza'];
 const LANDING_COBERTURAS = [
   { icon: 'apartment', label: 'Edificios', desc: 'El inmueble donde opera, si es propietario.' },
   { icon: 'computer', label: 'Equipos electrónicos', desc: 'Computadores, datáfonos y equipos de red.' },
@@ -2077,11 +2079,12 @@ const aplicarPlanElegido = (cfg) => {
   state.plan = 'sugerido';
 };
 
-/** "Elegir y continuar" acepta el plan tal cual y va directo a Fotos. Solo pasa antes por "Ajuste
- * sus coberturas y valores" si falta un dato obligatorio que ahí se captura: la fecha de nacimiento
- * del asegurado de Vida Pymes o la pregunta de interrupciones de Ciberseguridad. */
+/** "Elegir y continuar" acepta el plan tal cual y va directo a Fotos, salvo que el plan traiga Vida
+ * Pymes o Ciberseguridad: con Vida Pymes la fecha de nacimiento del asegurado se confirma siempre en
+ * "Ajuste sus coberturas y valores" (aunque ya haya una guardada de antes), y con Ciberseguridad se
+ * responde ahí la pregunta de interrupciones. */
 const pasoTrasElegirPlan = () => {
-  const faltaVida = state.vidaOn && !edad();
+  const faltaVida = state.vidaOn;
   const faltaCiber = state.opcionales.ciber && state.sedes.some((sede) => sede.ciber.interrupciones === null);
   return (faltaVida || faltaCiber) ? 'coberturas' : 'fotos';
 };
@@ -2164,7 +2167,7 @@ const stepper = (value, dataAttr, decAction, incAction, activo = false) => `<div
  * activa (en vez de llevar al cliente a otra pantalla). */
 const ciberCampos = (sede) => `<div style="display:flex;flex-direction:column;gap:14px;padding:14px;background:#FAFAFA;border-radius:14px;margin-top:8px">
   <div>
-    <div style="font-weight:700;font-size:13px;margin-bottom:8px">¿Ha tenido interrupciones de red de más de 12 horas en los últimos 4 meses?</div>
+    <div style="font-weight:700;font-size:13px;margin-bottom:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span>¿Ha tenido interrupciones de red de más de 12 horas en los últimos 4 meses?</span><details style="display:inline-block"><summary aria-label="Qué cuenta como interrupción de red" style="cursor:pointer;list-style:none;display:inline-flex;align-items:center;padding:4px;margin:-4px"><span class="material-symbols-outlined" style="font-size:16px;color:#5B5B5B">info</span></summary><div style="font-weight:400;font-size:12px;line-height:1.4;color:#5B5B5B;margin-top:4px;max-width:300px">Se refiere a que internet, el datáfono/POS u otro sistema digital de su negocio dejó de funcionar por cualquier causa (falla del proveedor, corte eléctrico, ataque, etc.).</div></details></div>
     <div style="display:flex;gap:8px;max-width:260px">${chip('Sí', 'ciberInt:1', sede.ciber.interrupciones === true)}${chip('No', 'ciberInt:0', sede.ciber.interrupciones === false)}</div>
   </div>
   <div>
@@ -2217,13 +2220,22 @@ const coberturas = () => {
   }).join('');
   const opcionales = Object.keys(OPC).map((clave) => {
     const on = state.opcionales[clave];
+    const abierta = state.opcDescAbiertas.includes(clave);
+    const precio = OPC[clave].prima > 0 ? `${fmt(OPC[clave].prima)} al año` : '';
+    const ayudaOlivia = clave === 'ciber' ? `<button type="button" style="all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-weight:600;font-size:12px;color:#009056;margin-top:8px" data-action="oliviaPreguntar:${encodeURIComponent('¿Qué no cubre Ciberseguridad Pymes?')}"><span class="material-symbols-outlined" style="font-size:16px">auto_awesome</span>Pregúntele a OLIVIA qué no cubre</button>` : '';
     const extra = !on ? '' : (clave === 'ciber' ? ciberCampos(sede) : (clave === 'movMercancias' ? movmercCampos(sede) : ''));
-    return `<div>
-      <button type="button" class="pymes-option ${on ? 'is-selected' : ''}" data-action="opc:${clave}" style="text-align:left;width:100%">
-        <span style="flex:1"><span style="display:block;font-weight:700;font-size:13.5px;color:#1B1B1B">${OPC[clave].label}</span><span style="display:block;font-weight:400;font-size:12.5px;line-height:1.4;color:#5B5B5B;margin-top:2px">${OPC[clave].desc}</span></span>
-        <span class="material-symbols-outlined" style="font-size:20px;color:${on ? '#006B40' : '#C2C7CF'}">${on ? 'check_circle' : 'radio_button_unchecked'}</span>
-      </button>
-      ${extra}
+    return `<div class="pymes-option ${on ? 'is-selected' : ''}" style="flex-direction:column;align-items:stretch;padding:0;cursor:default">
+      <div style="display:flex;align-items:center;gap:2px;padding:12px">
+        <button type="button" data-action="opc:${clave}" style="all:unset;flex:1;min-width:0;display:flex;align-items:center;gap:10px;cursor:pointer">
+          <span style="flex:1;min-width:0"><span style="display:block;font-weight:700;font-size:13.5px;color:#1B1B1B">${OPC[clave].label}</span>${precio ? `<span style="display:block;font-weight:400;font-size:12px;color:#5B5B5B;margin-top:2px">${precio}</span>` : ''}</span>
+          <span class="material-symbols-outlined" style="font-size:20px;color:${on ? '#006B40' : '#C2C7CF'};flex:none">${on ? 'check_circle' : 'radio_button_unchecked'}</span>
+        </button>
+        <button type="button" data-action="opcVerDesc:${clave}" aria-expanded="${abierta}" aria-label="${abierta ? 'Ocultar' : 'Ver'} qué cubre ${esc(OPC[clave].label)}" style="all:unset;cursor:pointer;padding:4px;display:flex;flex:none">
+          <span class="material-symbols-outlined" style="font-size:20px;color:#9B9B9B;transition:transform .15s;transform:rotate(${abierta ? 180 : 0}deg)">expand_more</span>
+        </button>
+      </div>
+      ${abierta ? `<div style="padding:0 12px 12px 12px;font-weight:400;font-size:12.5px;line-height:1.4;color:#5B5B5B">${OPC[clave].desc}${ayudaOlivia}</div>` : ''}
+      ${extra ? `<div style="padding:0 12px 12px 12px">${extra}</div>` : ''}
     </div>`;
   }).join('');
   /** Con varias sedes, tabs reales de la librería (.sb-ui-tabs / .sb-ui-tabs__item, mismas clases
@@ -2532,7 +2544,40 @@ const validacion = () => `<div style="background:#FAFAFA;border:1px solid #E1E1E
 </div>`;
 
 const MEDIOS = [['pse', 'PSE', 'Débito desde su banco', 'account_balance'], ['tarjeta', 'Tarjeta de crédito', 'Visa, Mastercard o Amex', 'credit_card'], ['debito', 'Débito automático', 'Desde su cuenta cada periodo', 'sync']];
-const pago = () => `<div style="display:flex;flex-direction:column;gap:14px">${chipCotizacion()}<div style="display:flex;gap:20px;flex-wrap:wrap;align-items:stretch">
+/** Estado de carga entre "Pagar" y "Emisión": sin esto, un corte de conexión en ese momento no
+ * tiene ninguna señal en pantalla (el usuario no sabe si se cobró o no). pagoToken invalida el
+ * timeout pendiente si el usuario simula un error de conexión mientras espera. */
+const iniciarPago = (destino) => {
+  state.procesandoPago = true;
+  state.pagoError = null;
+  const miToken = ++state.pagoToken;
+  setTimeout(() => {
+    if (state.pagoToken !== miToken) return;
+    state.procesandoPago = false;
+    state.paso = destino;
+    render();
+  }, 1600);
+};
+
+const pagoProcesando = () => `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:64px 20px;text-align:center;max-width:420px;margin:0 auto">
+  <span class="material-symbols-outlined pymes-spinner" style="font-size:40px;color:#009056">progress_activity</span>
+  <div style="font-weight:700;font-size:17px;color:#1B1B1B">Procesando su pago…</div>
+  <div style="font-weight:400;font-size:13.5px;line-height:1.5;color:#5B5B5B">No cierre ni recargue esta página. Esto toma solo un momento.</div>
+  <button type="button" style="all:unset;cursor:pointer;font-weight:600;font-size:12px;color:#9B9B9B;text-decoration:underline;margin-top:10px" data-action="pagoSimularError">Simular error de conexión (prototipo)</button>
+</div>`;
+
+const pagoErrorVista = () => `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:64px 20px;text-align:center;max-width:420px;margin:0 auto">
+  <span class="material-symbols-outlined" style="font-size:40px;color:#B3261E">wifi_off</span>
+  <div style="font-weight:700;font-size:17px;color:#1B1B1B">No pudimos confirmar su pago</div>
+  <div style="font-weight:400;font-size:13.5px;line-height:1.5;color:#5B5B5B">${esc(state.pagoError)} No se realizó ningún cobro.</div>
+  <button type="button" class="sb-ui-button sb-ui-button--primary sb-ui-button--fill" data-action="pagoReintentar">Reintentar</button>
+  <button type="button" style="all:unset;cursor:pointer;font-weight:600;font-size:12.5px;color:#009056" data-action="pagoCambiarMedio">Elegir otro medio de pago</button>
+</div>`;
+
+const pago = () => {
+  if (state.procesandoPago) return pagoProcesando();
+  if (state.pagoError) return pagoErrorVista();
+  return `<div style="display:flex;flex-direction:column;gap:14px">${chipCotizacion()}<div style="display:flex;gap:20px;flex-wrap:wrap;align-items:stretch">
   <div style="flex:1 1 320px;background:#fff;border:1px solid #E1E1E1;border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:14px">
     <div style="font-weight:700;font-size:17px">Medio de pago</div>
     ${MEDIOS.map(([id, label, desc, icon]) => {
@@ -2553,6 +2598,7 @@ const pago = () => `<div style="display:flex;flex-direction:column;gap:14px">${c
     <button type="button" class="sb-ui-button sb-ui-button--primary sb-ui-button--fill" style="margin-top:auto" data-action="next" ${!state.medioPago ? 'disabled' : ''}>Pagar ${primaTxt()}</button>
   </div>
 </div>`;
+};
 
 const emision = () => `<div style="display:flex;flex-direction:column;gap:16px;max-width:820px">
   <div style="background:#E5F4EE;border-radius:24px;padding:18px;display:flex;gap:14px;align-items:flex-start"><span class="material-symbols-outlined" style="font-size:28px;color:#006B40">check_small</span><div><div style="font-weight:700;font-size:22px;line-height:1.3">Su póliza fue emitida correctamente</div><div style="font-weight:400;font-size:14px;line-height:1.5;color:#414141;margin-top:5px">Enviamos una copia a ${esc(state.correo || 'su correo')} y queda disponible en su cuenta.</div></div></div>
@@ -2679,10 +2725,10 @@ const render = () => {
     const nextLabel = state.paso === 'pago' ? `Pagar ${primaTxt()}` : (state.paso === 'resumen' ? 'Confirmar y validar' : 'Continuar');
     const bloqueado = !puedeSeguir();
     const conRail = CON_RAIL.includes(state.paso);
-    const conCta = state.paso !== 'emision' && !SIN_CTA_PROPIA.includes(state.paso);
+    const conCta = state.paso !== 'emision' && !SIN_CTA_PROPIA.includes(state.paso) && !(state.paso === 'pago' && (state.procesandoPago || state.pagoError));
     ctaVisibleOlivia = conCta;
     const cuerpo = `<div style="display:flex;flex-direction:column;gap:24px;padding:32px 0 ${conCta ? '176px' : '112px'} 0">
-      ${index > 0 && state.paso !== 'emision' ? `<button type="button" class="pymes-link-volver" data-action="back"><span class="material-symbols-outlined" style="font-size:20px">chevron_left</span>Volver</button>` : ''}
+      ${index > 0 && state.paso !== 'emision' && !(state.paso === 'pago' && state.procesandoPago) ? `<button type="button" class="pymes-link-volver" data-action="back"><span class="material-symbols-outlined" style="font-size:20px">chevron_left</span>Volver</button>` : ''}
       <div style="display:flex;flex-direction:column;gap:8px">
         <div><h1 style="margin:0 0 4px;font-weight:700;font-size:22px;line-height:1.25;letter-spacing:-.01em;color:#1B1B1B">${esc(TITULOS[state.paso])}</h1><p style="margin:0;max-width:680px;font-weight:400;font-size:13.5px;line-height:1.4;color:#5B5B5B">${esc(BAJADAS[state.paso] || '')}</p></div>
         ${conRail ? `<div aria-live="polite" aria-atomic="true" style="background:#fff;border:1px solid #E1E1E1;border-radius:16px;padding:14px 20px;margin-top:6px">${periodPrecios(false, true)}</div>` : ''}
@@ -2846,7 +2892,8 @@ document.body.addEventListener('click', (event) => {
   const index = currentRoute.indexOf(state.paso);
   if (action === 'next') {
     if (!puedeSeguir()) { render(); return; }
-    state.paso = currentRoute[Math.min(index + 1, currentRoute.length - 1)];
+    const destino = currentRoute[Math.min(index + 1, currentRoute.length - 1)];
+    if (state.paso === 'pago') iniciarPago(destino); else state.paso = destino;
   } else if (action === 'back') {
     if (state.paso === 'emision') return;
     state.paso = currentRoute[Math.max(index - 1, 0)];
@@ -2854,10 +2901,14 @@ document.body.addEventListener('click', (event) => {
     if (!puedeSeguir()) { render(); return; }
     state.landingPaso = 2;
   } else if (action === 'landingPaso1') { state.landingPaso = 1; }
+  else if (action === 'actividadOtra') { const texto = state.actividadBusqueda.trim(); if (texto) { state.actividad = texto; state.actividadBusqueda = texto; } }
   else if (action.startsWith('actividad:')) { state.actividad = action.slice(10); state.actividadBusqueda = state.actividad; }
   else if (action.startsWith('verCoberturas:')) state.modalPlan = action.slice(14);
   else if (action.startsWith('verSede:')) state.sedeActiva = Number(action.slice(8));
   else if (action === 'cerrarModal') state.modalPlan = null;
+  else if (action === 'pagoSimularError') { state.pagoToken++; state.procesandoPago = false; state.pagoError = 'Parece que su conexión se interrumpió durante la transacción.'; }
+  else if (action === 'pagoReintentar') iniciarPago(currentRoute[Math.min(index + 1, currentRoute.length - 1)]);
+  else if (action === 'pagoCambiarMedio') { state.pagoError = null; state.medioPago = ''; }
   else if (action.startsWith('period:')) state.periodicidad = action.slice(7);
   /** Comparativo de 3 planes (pantalla "plan"): cada acción trae el índice de la columna
    * (0/1/2 sobre state.comparativoPlanes). */
@@ -2912,6 +2963,16 @@ document.body.addEventListener('click', (event) => {
   else if (action.startsWith('ciberPlan:')) sede.ciber.plan = action.slice(10);
   else if (action.startsWith('mov:') && !action.startsWith('mov:limite:')) sede.mov.frecuencia = action.slice(4);
   else if (action.startsWith('opc:')) state.opcionales[action.slice(4)] = !state.opcionales[action.slice(4)];
+  else if (action.startsWith('opcVerDesc:')) {
+    const clave = action.slice(11);
+    state.opcDescAbiertas = state.opcDescAbiertas.includes(clave) ? state.opcDescAbiertas.filter((c) => c !== clave) : [...state.opcDescAbiertas, clave];
+  }
+  else if (action.startsWith('oliviaPreguntar:')) {
+    const pregunta = decodeURIComponent(action.slice(16));
+    state.oliviaAbierta = true;
+    state.oliviaLog.push({ from: 'cliente', text: pregunta });
+    state.oliviaLog.push({ from: 'olivia', text: OLIVIA_RESPUESTAS[pregunta] || 'Buena pregunta — consulte el clausulado oficial para confirmar el detalle exacto.' });
+  }
   else if (action.startsWith('foto:')) { const fs = fotosDe(state.sedes[Math.min(state.fotoSedeActiva, state.sedes.length - 1)]); fs[action.slice(5)] = !fs[action.slice(5)]; }
   else if (action.startsWith('verSedeFoto:')) state.fotoSedeActiva = Number(action.slice(12));
   else if (action === 'abrirDrawerVida') state.drawerVida = true;
