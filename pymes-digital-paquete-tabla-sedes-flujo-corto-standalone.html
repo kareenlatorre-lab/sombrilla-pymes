@@ -3218,17 +3218,39 @@ const completarPasoActual = (paso) => {
  *   4) Sin nada de lo anterior, arranca en landing como siempre. */
 const pasoPorQuery = new URLSearchParams(location.search).get('paso');
 
+/** Con varias sedes, Useberry necesita una tarea por sede (una para 'Local comercial' y otra para
+ * 'Bodega', por ejemplo): sin esto, toda tarea arranca siempre en la primera sede porque
+ * sembrarEstadoHasta() no sabe cuál probar. ?sede= acepta un índice (0, 1...) o parte del tipo de
+ * sede ("bodega", "local"), sin distinguir mayúsculas, y mueve tanto la pestaña de Coberturas
+ * (state.sedeActiva) como la de Fotos (state.fotoSedeActiva) a esa sede. Se aplica después de
+ * sembrar el estado, porque hasta entonces no existen las sedes contra las que resolverlo. */
+const resolverIndiceSede = (valor) => {
+  if (valor === null || valor === '') return null;
+  const porIndice = Number(valor);
+  if (!Number.isNaN(porIndice) && state.sedes[porIndice]) return porIndice;
+  const idx = state.sedes.findIndex((s) => (s.tipo || '').toLowerCase().includes(valor.toLowerCase()));
+  return idx >= 0 ? idx : null;
+};
+const aplicarSedePorQuery = () => {
+  const idx = resolverIndiceSede(new URLSearchParams(location.search).get('sede'));
+  if (idx !== null) { state.sedeActiva = idx; state.fotoSedeActiva = idx; }
+};
+
+
 if (pasoPorQuery && RUTA.includes(pasoPorQuery)) {
   try { sessionStorage.removeItem(STORAGE_KEY); } catch (e) {}
   sembrarEstadoHasta(pasoPorQuery);
   state.paso = pasoPorQuery;
+  aplicarSedePorQuery();
   const listo = new URLSearchParams(location.search).get('listo');
   if (listo === '1' || listo === 'true') completarPasoActual(pasoPorQuery);
 } else if (rehidratarEstado()) {
+  aplicarSedePorQuery();
   // state.paso ya quedó restaurado desde sessionStorage: retomamos donde iba.
 } else if (pasoInicial && RUTA.includes(pasoInicial)) {
   sembrarEstadoHasta(pasoInicial);
   state.paso = pasoInicial;
+  aplicarSedePorQuery();
 }
 
 render();
