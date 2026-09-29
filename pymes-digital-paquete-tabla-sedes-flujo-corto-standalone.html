@@ -1691,7 +1691,7 @@ const negocio = () => formCard('negocio', `
   <div style="height:1px;background:#E1E1E1"></div>
   <div>
     <div style="font-weight:700;font-size:15px;margin-bottom:8px">¿Cuánto vende aproximadamente su negocio al año?</div>
-    <div style="display:flex;align-items:center;gap:8px;max-width:340px"><span style="font-weight:700;font-size:15px;color:#5B5B5B">$</span><input id="ventas" class="sb-ui-input" style="flex:1;min-width:0" value="${esc(state.ventas)}" placeholder="Ej. 1.200.000.000" data-model="ventas"></div>
+    <div style="display:flex;align-items:center;gap:8px;max-width:340px"><span style="font-weight:700;font-size:15px;color:#5B5B5B">$</span><input id="ventas" class="sb-ui-input" type="text" inputmode="numeric" style="flex:1;min-width:0" value="${esc(state.ventas)}" placeholder="Ej. 1.200.000.000" data-model="ventas"></div>
     <div style="font-weight:400;font-size:12.5px;line-height:1.45;color:#5B5B5B;margin-top:8px;max-width:520px">Usamos este dato para recomendarle una protección acorde al tamaño de su negocio.</div>
   </div>
   <div style="height:1px;background:#E1E1E1"></div>
@@ -2707,6 +2707,33 @@ const stepperFases = () => {
     }).join('')}
   </div>`;
 };
+/** Campos como "ventas" muestran los separadores de miles MIENTRAS se escribe (no solo al salir
+ * del campo, como las cifras de coberturas). Como el texto cambia de longitud al insertar puntos,
+ * no basta con restaurar la misma posición de cursor (eso es lo que hace renderConFoco): hay que
+ * contar cuántos dígitos había ANTES del cursor, reformatear, y ubicar el cursor después de esa
+ * misma cantidad de dígitos en el texto ya formateado. */
+const formatearMilesAlEscribir = (target) => {
+  const key = target.dataset.model;
+  const cursor = target.selectionStart == null ? target.value.length : target.selectionStart;
+  const digitosAntes = target.value.slice(0, cursor).replace(/\D/g, '').length;
+  const digitos = target.value.replace(/\D/g, '');
+  state[key] = digitos ? Number(digitos).toLocaleString('es-CO') : '';
+  render();
+  const el = document.getElementById(target.id);
+  if (!el) return;
+  el.focus();
+  let nuevaPos = el.value.length;
+  if (digitosAntes === 0) nuevaPos = 0;
+  else {
+    let contados = 0;
+    for (let i = 0; i < el.value.length; i++) {
+      if (/\d/.test(el.value[i])) contados++;
+      if (contados === digitosAntes) { nuevaPos = i + 1; break; }
+    }
+  }
+  try { el.setSelectionRange(nuevaPos, nuevaPos); } catch (e) {}
+};
+
 /** Vuelve a renderizar sin perder el foco/cursor del campo que se está escribiendo, ya que render() reemplaza el HTML. */
 const renderConFoco = () => {
   const activo = document.activeElement;
@@ -2849,9 +2876,12 @@ document.body.addEventListener('input', (event) => {
   const sede = state.sedes[state.sedeActiva];
   if (target.dataset.model) {
     const key = target.dataset.model;
-    state[key] = target.value;
-    if (key === 'actividadBusqueda' && state.actividadBusqueda !== state.actividad) state.actividad = '';
-    renderConFoco();
+    if (key === 'ventas') { formatearMilesAlEscribir(target); }
+    else {
+      state[key] = target.value;
+      if (key === 'actividadBusqueda' && state.actividadBusqueda !== state.actividad) state.actividad = '';
+      renderConFoco();
+    }
   }
   if (target.dataset.porcentaje) {
     const key = target.dataset.porcentaje;
