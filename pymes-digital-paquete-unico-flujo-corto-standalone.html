@@ -1512,11 +1512,11 @@ const PLAN_MULT = { basico: 0.85, medio: 1, premium: 1.28, sugerido: 1 };
 /** Variante "paquete": no hay pantalla de venta cruzada ('resumenCompra'); Vida Pymes se
  * personaliza dentro de 'coberturas', junto al resto del plan. */
 const RUTA = ['landing', 'negocio', 'sedes', 'plan', 'coberturas', 'beneficiarios', 'fotos', 'resumen', 'pago', 'emision'];
-const TITULOS = { negocio: 'Cuéntenos de su negocio', sedes: 'Las sedes que quiere asegurar', plan: 'Elija el plan que quiere personalizar', coberturas: 'Ajuste sus coberturas y valores', fotos: 'Las fotos de su negocio', resumenCompra: 'Personalice su seguro', beneficiarios: 'Beneficiarios de Vida Pymes', resumen: 'Revise antes de pagar', pago: 'Elija cómo quiere pagar', emision: 'Listo, su negocio quedó protegido' };
+const TITULOS = { negocio: 'Cuéntenos de su negocio', sedes: 'Las sedes que quiere asegurar', plan: 'Este es el paquete que le sugerimos', coberturas: 'Ajuste sus coberturas y valores', fotos: 'Las fotos de su negocio', resumenCompra: 'Personalice su seguro', beneficiarios: 'Beneficiarios de Vida Pymes', resumen: 'Revise antes de pagar', pago: 'Elija cómo quiere pagar', emision: 'Listo, su negocio quedó protegido' };
 const BAJADAS = {
   negocio: 'Con la actividad y las ventas de su negocio ajustamos las coberturas recomendadas.',
   sedes: 'Agregue cada sede que quiere asegurar; puede editarlas o quitarlas cuando quiera.',
-  plan: 'Compare los tres planes y elija el que más le convenga para su negocio.',
+  plan: 'Lo armamos según la actividad y el tamaño de su negocio. Puede continuar así o ajustarlo.',
   coberturas: 'Ajuste el valor de cada cobertura, active las opcionales y personalice Vida Pymes, incluida en su paquete.',
   fotos: 'Estas fotos nos permiten confirmar su precio y emitir la póliza.',
   resumenCompra: 'Su paquete incluye Vida Pymes. Ajuste el valor asegurado, confirme la fecha de nacimiento del asegurado para ver el valor final, o quítela si no la necesita.',
@@ -1554,7 +1554,7 @@ const state = {
   landingPaso: 1, claveAsesor: '', correoAsesor: '',
   actividadBusqueda: '', actividad: '', ventas: '',
   multiSede: null, sedes: [nuevaSede()], sedeActiva: 0, fotoSedeActiva: 0, numCotizacion: 'COT-2026-' + String(Math.floor(1000000 + Math.random() * 9000000)),
-  plan: 'sugerido', periodicidad: 'anual', personalizando: false, comparativoPlanes: null,
+  plan: 'sugerido', periodicidad: 'anual', personalizando: false, paqueteSugerido: null,
   opcionales: { dinero: false, muebles: false, roboEmpleados: false, ciber: false, movMercancias: false },
   opcDescAbiertas: [],
     vidaOn: true, vas: 100000000, nacimiento: '', beneficiarios: [],
@@ -2086,24 +2086,21 @@ const calcularPrimaPlan = (cfg) => {
   return total;
 };
 
-/** Arma las 3 columnas del comparativo a partir del perfil real del negocio (todas las sedes,
- * ventas) una sola vez por cotización. Cada plan guarda por sede sus valores de cobertura. */
-const crearComparativoPlanes = () => {
-  const escalar = (sede, mult) => {
+/** Arma el único paquete sugerido a partir del perfil real del negocio (todas las sedes, ventas)
+ * una sola vez por cotización: sin comparativo, un solo cfg con los valores sugeridos tal cual
+ * (multiplicador 1, igual al que antes era "Plan Medio"). Guarda por sede sus valores de cobertura,
+ * igual que antes, para que "Personalizar" y "Elegir y continuar" sigan funcionando sin cambios. */
+const crearPaqueteSugerido = () => {
+  const escalar = (sede) => {
     const v = {};
-    CLAVES.forEach((clave) => { v[clave] = (clave === 'edificios' && sede.propietario === false) ? 0 : Math.round(sugerido(sede, clave) * mult / 5000000) * 5000000; });
+    CLAVES.forEach((clave) => { v[clave] = (clave === 'edificios' && sede.propietario === false) ? 0 : Math.round(sugerido(sede, clave) / 5000000) * 5000000; });
     return v;
   };
-  const vasPremium = Math.round(Math.min(VAS_MAX, state.vas * 1.5) / VAS_STEP) * VAS_STEP;
-  const armar = (id, nombre, nivel, sugeridoFlag, mult, opcionales, vidaOn, vas) => ({
-    id, nombre, nivel, sugerido: sugeridoFlag, opcionales, vidaOn, vas,
-    sedes: state.sedes.map((sede) => ({ valores: escalar(sede, mult) }))
-  });
-  return [
-    armar('basico', 'Plan Básico', 'Protección esencial', false, 0.7, { dinero: false, muebles: false, roboEmpleados: false, ciber: false, movMercancias: false }, false, state.vas),
-    armar('medio', 'Plan Medio', 'El más elegido por comercios', true, 1, { ...state.opcionales }, state.vidaOn, state.vas),
-    armar('premium', 'Plan Premium', 'Protección ampliada', false, 1.3, { dinero: true, muebles: true, roboEmpleados: true, ciber: true, movMercancias: true }, true, vasPremium)
-  ];
+  return {
+    id: 'medio', nombre: 'Paquete sugerido', nivel: 'Ajustado a la actividad y el tamaño de su negocio', sugerido: true,
+    opcionales: { ...state.opcionales }, vidaOn: state.vidaOn, vas: state.vas,
+    sedes: state.sedes.map((sede) => ({ valores: escalar(sede) }))
+  };
 };
 
 /** Vuelca el plan elegido a las sedes reales y al resto del estado: desde ahí el cotizador sigue con
@@ -2127,27 +2124,26 @@ const pasoTrasElegirPlan = () => {
   return (faltaVida || faltaCiber) ? 'coberturas' : 'fotos';
 };
 
-/** Tarjeta de una columna del comparativo: solo un RESUMEN de lectura (precio, coberturas y
- * valores), sin controles editables adentro. "Elegir y continuar" acepta el plan tal cual; el
- * lápiz de la esquina lo carga en "Ajuste sus coberturas y valores" (la única pantalla de
- * personalización) para editarlo. Es un ícono y no un botón de ancho completo para que nunca quede
- * pegado a "Elegir y continuar": son dos jerarquías distintas (editar vs. elegir). Lleva aria-label y title porque es un botón solo-ícono, así
- * su acción queda clara igual que si tuviera texto. La descarga es una sola para los 3 planes juntos
- * (ver plan()), no por tarjeta — así se descarga el comparativo, no cada cotización por separado.
+/** Tarjeta del único paquete sugerido: solo un RESUMEN de lectura (precio, coberturas y valores),
+ * sin controles editables adentro. "Elegir y continuar" acepta el paquete tal cual; el lápiz de la
+ * esquina lo carga en "Ajuste sus coberturas y valores" (la única pantalla de personalización) para
+ * editarlo. Es un ícono y no un botón de ancho completo para que nunca quede pegado a "Elegir y
+ * continuar": son dos jerarquías distintas (editar vs. elegir). Lleva aria-label y title porque es
+ * un botón solo-ícono, así su acción queda clara igual que si tuviera texto. No hay comparativo que
+ * descargar aquí — la descarga de la cotización ya vive en "Revise antes de pagar".
  * Estilo tomado exactamente de la tarjeta de planes de Seguros Bolívar en tienda (Figma
  * 7ny7ThsZU6vr8kbwVuKsUE, nodo 2001:5604) — solo el estilo, no su contenido de seguros. El verde
  * sólido (#009056) va SOLO en la cabecera (título, precio y botón "Elegir"): el cuerpo con las
- * coberturas y "Ver el detalle completo" es blanco en las 3 tarjetas por igual, igual que en el
- * diseño original. "Ver el detalle completo" es un botón píldora (fondo crema #FFF6D4, texto oscuro,
- * flecha a la derecha), no un link de texto — así también viene en Figma. Se arma con estilos en
- * línea (no con variantes de sb-ui-button sin verificar) para no depender de nombres de variable CSS
- * que no están confirmados en este bundle. */
-const tarjetaPlanComparativo = (cfg, i) => {
+ * coberturas y "Ver el detalle completo" es blanco, igual que en el diseño original. "Ver el detalle
+ * completo" es un botón píldora (fondo crema #FFF6D4, texto oscuro, flecha a la derecha), no un link
+ * de texto — así también viene en Figma. Se arma con estilos en línea (no con variantes de
+ * sb-ui-button sin verificar) para no depender de nombres de variable CSS que no están confirmados
+ * en este bundle. */
+const tarjetaPaqueteSugerido = (cfg) => {
   const anual = calcularPrimaPlan(cfg);
   const mensual = anual / 12 * 1.06;
-  const sug = cfg.sugerido;
-  const headerTexto = sug ? '#fff' : '#282828';
-  const headerSuave = sug ? 'rgba(255,255,255,.9)' : '#414141';
+  const headerTexto = '#fff';
+  const headerSuave = 'rgba(255,255,255,.9)';
   const colorTexto = '#1B1B1B';
   const colorSuave = '#5B5B5B';
   const colorCheck = '#006B40';
@@ -2157,39 +2153,42 @@ const tarjetaPlanComparativo = (cfg, i) => {
     <div style="flex:1"><div style="font-weight:400;font-size:12.5px;color:${colorSuave}">${ETIQUETAS[clave]}</div><div style="font-weight:700;font-size:13px;color:${colorTexto}">${fmt(cfg.sedes.reduce((suma, s) => suma + (s.valores[clave] || 0), 0))}</div></div>
   </div>`).join('');
   const opcionalesActivas = Object.keys(OPC).filter((clave) => cfg.opcionales[clave]).map((clave) => OPC[clave].label);
-  const btnPersonalizarBorde = sug ? 'rgba(255,255,255,.7)' : '#C2C7CF';
-  const btnPersonalizarFondo = sug ? 'rgba(255,255,255,.15)' : '#fff';
-  const btnPersonalizarIcono = sug ? '#fff' : '#1B1B1B';
-  return `<div style="flex:1 1 280px;min-width:266px;max-width:340px;display:flex;flex-direction:column;background:#fff;border:1px solid #E1E1E1;border-radius:24px;overflow:hidden;position:relative">
-    <button type="button" aria-label="Personalizar ${esc(cfg.nombre)}" title="Personalizar este plan: ajustar sus coberturas y valores" style="position:absolute;top:16px;right:16px;width:34px;height:34px;border-radius:50%;border:1.5px solid ${btnPersonalizarBorde};background:${btnPersonalizarFondo};color:${btnPersonalizarIcono};display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0" data-action="planAbrirPersonalizar:${i}"><span class="material-symbols-outlined" style="font-size:18px">edit</span></button>
-    <div style="background:${sug ? '#009056' : '#fff'};padding:20px 18px;display:flex;flex-direction:column;gap:14px">
-      ${sug ? `<span style="align-self:flex-start;background:#FFDC5D;color:#282828;font-weight:600;font-size:12px;padding:4px 12px;border-radius:999px">Sugerido</span>` : `<span aria-hidden="true" style="align-self:flex-start;visibility:hidden;font-weight:600;font-size:12px;padding:4px 12px">Sugerido</span>`}
-      <div style="max-width:calc(100% - 44px)"><div style="font-weight:700;font-size:19px;color:${headerTexto}">${cfg.nombre}</div><div style="font-weight:400;font-size:12.5px;color:${headerSuave};margin-top:2px">${cfg.nivel}</div></div>
-      <div><div style="font-weight:700;font-size:27px;line-height:1;color:${headerTexto}">${fmt(mensual)}<span style="font-weight:400;font-size:14px">/mes</span></div><div style="font-weight:400;font-size:12.5px;color:${headerSuave};margin-top:4px">o ${fmt(anual)}/año (IVA incluido)</div></div>
-      <button type="button" style="border:none;border-radius:999px;background:#FFE16F;color:#05794A;font-weight:700;font-size:14px;padding:12px 16px;cursor:pointer;width:100%" data-action="planElegir:${i}">Elegir y continuar</button>
-    </div>
-    <div style="padding:18px;display:flex;flex-direction:column;gap:14px;flex:1">
-      <div style="display:flex;flex-direction:column">
-        ${cfg.sedes.length > 1 ? `<div style="font-weight:400;font-size:12px;color:#757575;padding-bottom:8px">Suma de ${cfg.sedes.length} sedes</div>` : ''}
-        ${resumenClaves}
-        <div style="padding:10px 0;border-top:1px solid ${colorDivisor};font-weight:400;font-size:12px;line-height:1.4;color:${colorSuave};min-height:2.8em;box-sizing:content-box">${opcionalesActivas.length ? '+ ' + esc(opcionalesActivas.join(', ')) : 'Sin coberturas opcionales'}</div>
-        <div style="padding:10px 0;border-top:1px solid ${colorDivisor};display:flex;justify-content:space-between;gap:10px"><span style="font-weight:400;font-size:12.5px;color:${colorSuave}">Vida Pymes</span><span style="font-weight:${cfg.vidaOn ? 700 : 400};font-size:12.5px;color:${cfg.vidaOn ? colorCheck : colorSuave}">${cfg.vidaOn ? fmt(cfg.vas) : 'No incluida'}</span></div>
+  return `<div style="width:100%;max-width:900px;margin:0 auto;display:flex;flex-direction:column;background:#fff;border:1px solid #E1E1E1;border-radius:24px;overflow:hidden">
+    <div style="background:#009056;padding:22px 26px;display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="align-self:flex-start;background:#FFDC5D;color:#282828;font-weight:600;font-size:12px;padding:4px 12px;border-radius:999px">Sugerido</span>
+        <div><div style="font-weight:700;font-size:22px;color:${headerTexto}">${cfg.nombre}</div><div style="font-weight:400;font-size:13px;color:${headerSuave};margin-top:2px">${cfg.nivel}</div></div>
       </div>
-      <button type="button" style="border:none;border-radius:16px;background:#FFF6D4;color:#303030;font-weight:400;font-size:14px;padding:14px 16px;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto" data-action="verCoberturas:${cfg.id}">Ver el detalle completo<span class="material-symbols-outlined" style="font-size:18px;color:#038450">chevron_right</span></button>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px">
+        <button type="button" aria-label="Personalizar ${esc(cfg.nombre)}" title="Personalizar este paquete: ajustar sus coberturas y valores" style="width:34px;height:34px;border-radius:50%;border:1.5px solid rgba(255,255,255,.7);background:rgba(255,255,255,.15);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0" data-action="planAbrirPersonalizar"><span class="material-symbols-outlined" style="font-size:18px">edit</span></button>
+        <div style="text-align:right"><div style="font-weight:700;font-size:30px;line-height:1;color:${headerTexto}">${fmt(mensual)}<span style="font-weight:400;font-size:14px">/mes</span></div><div style="font-weight:400;font-size:12.5px;color:${headerSuave};margin-top:4px">o ${fmt(anual)}/año (IVA incluido)</div></div>
+        <button type="button" style="border:none;border-radius:999px;background:#FFE16F;color:#05794A;font-weight:700;font-size:14px;padding:12px 22px;cursor:pointer;white-space:nowrap" data-action="planElegir">Elegir y continuar</button>
+      </div>
+    </div>
+    <div style="padding:24px 26px;display:flex;flex-direction:column;gap:16px">
+      ${cfg.sedes.length > 1 ? `<div style="font-weight:400;font-size:12px;color:#757575">Suma de ${cfg.sedes.length} sedes</div>` : ''}
+      <div class="pymes-coberturas-grid">
+        <div style="display:flex;flex-direction:column">${resumenClaves}</div>
+        <div style="background:#FAFAFA;border:1px solid ${colorDivisor};border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:14px">
+          <div>
+            <div style="font-weight:700;font-size:13px;color:${colorTexto};margin-bottom:6px">Coberturas opcionales</div>
+            <div style="font-weight:400;font-size:12.5px;line-height:1.4;color:${colorSuave}">${opcionalesActivas.length ? esc(opcionalesActivas.join(', ')) : 'Ninguna incluida por ahora'}</div>
+          </div>
+          <div style="padding-top:12px;border-top:1px solid ${colorDivisor};display:flex;justify-content:space-between;gap:10px"><span style="font-weight:400;font-size:12.5px;color:${colorSuave}">Vida Pymes</span><span style="font-weight:${cfg.vidaOn ? 700 : 400};font-size:12.5px;color:${cfg.vidaOn ? colorCheck : colorSuave}">${cfg.vidaOn ? fmt(cfg.vas) : 'No incluida'}</span></div>
+          <button type="button" style="border:none;border-radius:16px;background:#FFF6D4;color:#303030;font-weight:400;font-size:14px;padding:14px 16px;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px" data-action="verCoberturas:${cfg.id}">Ver el detalle completo<span class="material-symbols-outlined" style="font-size:18px;color:#038450">chevron_right</span></button>
+        </div>
+      </div>
     </div>
   </div>`;
 };
 
-/** Comparativo de 3 planes (uno marcado "Sugerido"): las tarjetas son solo un resumen para comparar
- * de un vistazo. "Elegir y continuar" acepta el plan tal cual (directo a Fotos, salvo que falte un
- * dato obligatorio) y el lápiz lo carga en "Ajuste sus coberturas y valores", la única pantalla de
- * personalización. La descarga es del comparativo completo (los 3 planes juntos). */
+/** Un solo paquete sugerido (sin comparativo): la tarjeta es solo un resumen para verlo de un
+ * vistazo. "Elegir y continuar" lo acepta tal cual (directo a Fotos, salvo que falte un dato
+ * obligatorio) y el lápiz lo carga en "Ajuste sus coberturas y valores", la única pantalla de
+ * personalización. */
 const plan = () => {
-  if (!state.comparativoPlanes || state.comparativoPlanes[0].sedes.length !== state.sedes.length) state.comparativoPlanes = crearComparativoPlanes();
-  return `<div style="display:flex;flex-direction:column;gap:16px">
-    <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--small sb-ui-button--icon-left" style="align-self:flex-end" data-action="descargarComparativoPlanes"><span class="material-symbols-outlined" style="font-size:18px">download</span>Descargar comparativo</button>
-    <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:stretch">${state.comparativoPlanes.map((cfg, i) => tarjetaPlanComparativo(cfg, i)).join('')}</div>
-  </div>`;
+  if (!state.paqueteSugerido || state.paqueteSugerido.sedes.length !== state.sedes.length) state.paqueteSugerido = crearPaqueteSugerido();
+  return tarjetaPaqueteSugerido(state.paqueteSugerido);
 };
 
 const stepper = (value, dataAttr, decAction, incAction, activo = false) => `<div class="pymes-stepper" style="${activo ? 'border-color:#009056' : ''}">
@@ -2932,20 +2931,12 @@ document.body.addEventListener('click', (event) => {
   else if (action === 'pagoReintentar') iniciarPago(currentRoute[Math.min(index + 1, currentRoute.length - 1)]);
   else if (action === 'pagoCambiarMedio') { state.pagoError = null; state.medioPago = ''; }
   else if (action.startsWith('period:')) state.periodicidad = action.slice(7);
-  /** Comparativo de 3 planes (pantalla "plan"): cada acción trae el índice de la columna
-   * (0/1/2 sobre state.comparativoPlanes). */
-  else if (action.startsWith('planAbrirPersonalizar:')) {
-    const cfg = state.comparativoPlanes[Number(action.slice(22))];
-    if (cfg) { aplicarPlanElegido(cfg); state.sedeActiva = 0; state.paso = 'coberturas'; }
+  /** Único paquete sugerido (pantalla "plan"): sin índice de columna, ya no hay comparativo. */
+  else if (action === 'planAbrirPersonalizar') {
+    if (state.paqueteSugerido) { aplicarPlanElegido(state.paqueteSugerido); state.sedeActiva = 0; state.paso = 'coberturas'; }
   }
-  else if (action === 'descargarComparativoPlanes') {
-    const resumen = state.comparativoPlanes.map((c) => `${c.nombre}: ${fmt(aPeriodo(calcularPrimaPlan(c)))} ${state.periodicidad}`).join(' · ');
-    window.alert('Descarga del comparativo de planes simulada: ' + resumen + '.');
-    return;
-  }
-  else if (action.startsWith('planElegir:')) {
-    const cfg = state.comparativoPlanes[Number(action.slice(11))];
-    if (cfg) { aplicarPlanElegido(cfg); state.paso = pasoTrasElegirPlan(); }
+  else if (action === 'planElegir') {
+    if (state.paqueteSugerido) { aplicarPlanElegido(state.paqueteSugerido); state.paso = pasoTrasElegirPlan(); }
   }
   else if (action.startsWith('multi:')) {
     state.multiSede = action.endsWith('1');
