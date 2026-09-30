@@ -214,6 +214,8 @@ button, input, select { font: inherit; }
   .pymes-shell__main { margin-left: 0; padding: 0 16px; }
   .pymes-cta-bar--con-rail { left: 0; }
 }
+.pymes-landing-coberturas-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+@media (max-width: 820px) { .pymes-landing-coberturas-grid { grid-template-columns: 1fr; } }
 @media (max-width: 820px) {
   .pymes-header__content { min-height: 58px; gap: 10px; }
   .pymes-logo { width: 135px; }
@@ -1559,7 +1561,7 @@ const state = {
   opcDescAbiertas: [],
     vidaOn: true, vas: 100000000, nacimiento: '', beneficiarios: [],
   benefNombre: '', benefParentesco: 'Cónyuge', benefPct: 100, benefIdx: -1,
-  medioPago: '', procesandoPago: false, pagoError: null, pagoToken: 0, otp: '', otpValidado: false, otpAbierto: false, otpError: false, declaracion: false, autoriza: false, modalPlan: null, drawerVida: false, drawerBenef: false, benefEditIdx: -1,
+  medioPago: '', procesandoPago: false, pagoError: null, pagoToken: 0, otp: '', otpValidado: false, otpAbierto: false, otpError: false, declaracion: false, aceptaTerminos: false, aceptaDatos: false, modalPlan: null, drawerVida: false, drawerBenef: false, benefEditIdx: -1,
   drawerSede: false, sedeEditIdx: -1, sedeDraft: nuevaSede(),
   drawerMapa: false, mapaSedeIdx: null, mapaBusqueda: '', mapaError: '', mapaBuscando: false,
   incluirCorreoPrincipal: true, correosExtra: [], nuevoCorreoExtra: '', mostrarAgregarCorreo: false,
@@ -1624,16 +1626,23 @@ const landingBarraProgreso = () => `<div style="height:6px;border-radius:999px;b
 
 const landingFormPaso1 = () => `
   ${landingBarraProgreso()}
-  ${inputField('numDoc', 'NIT de su empresa', state.numDoc, 'Ej. 900.123.456-7')}
-  ${state.consultado ? `<div style="display:flex;align-items:flex-start;gap:9px;padding:11px 13px;background:${state.encontrado ? '#E5F4EE' : '#FFF8BC'};border-radius:12px"><span class="material-symbols-outlined" style="font-size:19px;color:${state.encontrado ? '#006B40' : '#7A6100'}">${state.encontrado ? 'check_small' : 'info'}</span><span style="font-weight:400;font-size:12.5px;line-height:1.4;color:#414141">${state.encontrado ? 'Encontramos sus datos y los completamos por usted. Revíselos y edite lo que necesite.' : 'No encontramos datos asociados a este documento. Complete la información a continuación.'}</span></div>` : ''}
-  ${inputField('nombre', '¿Cuál es su nombre?', state.nombre, 'Ej. Juan Pérez')}
+  ${selectField('tipoDoc', 'Tipo de documento', state.tipoDoc, [['CC', 'Cédula de ciudadanía'], ['CE', 'Cédula de extranjería'], ['NIT', 'NIT'], ['PA', 'Pasaporte']])}
+  ${inputField('numDoc', 'Número de documento', state.numDoc, 'Ej. 1.020.445.778')}
+  ${state.consultado ? `<div style="display:flex;align-items:flex-start;gap:9px;padding:11px 13px;background:${state.encontrado ? '#E5F4EE' : '#FFF8BC'};border-radius:12px"><span class="material-symbols-outlined" style="font-size:19px;color:${state.encontrado ? 'check_small' : 'info'}</span><span style="font-weight:400;font-size:12.5px;line-height:1.4;color:#414141">${state.encontrado ? 'Encontramos sus datos y los completamos por usted. Revíselos y edite lo que necesite.' : 'No encontramos datos asociados a este documento. Complete la información a continuación.'}</span></div>` : ''}
   ${inputField('correo', 'Correo electrónico', state.correo, 'Ej. nombre@correo.com', 'email')}
   ${inputField('celular', 'Número de celular', state.celular, 'Ej. 314 578 9001', 'tel')}
-  <label class="sb-ui-checkbox">
-    <input type="checkbox" class="sb-ui-checkbox__input" data-autoriza ${state.autoriza ? 'checked' : ''}>
-    <span class="sb-ui-checkbox__box"></span>
-    <span class="sb-ui-checkbox__label" style="font-size:12.5px">Autorizo la utilización de mis datos personales con fines comerciales.</span>
-  </label>
+  <div style="display:flex;flex-direction:column;gap:2px">
+    <label class="sb-ui-checkbox">
+      <input type="checkbox" class="sb-ui-checkbox__input" data-acepta-terminos ${state.aceptaTerminos ? 'checked' : ''}>
+      <span class="sb-ui-checkbox__box"></span>
+      <span class="sb-ui-checkbox__label" style="font-size:12.5px">Acepto <span style="color:#05794A;text-decoration:underline">los términos y condiciones del canal digital.</span></span>
+    </label>
+    <label class="sb-ui-checkbox">
+      <input type="checkbox" class="sb-ui-checkbox__input" data-acepta-datos ${state.aceptaDatos ? 'checked' : ''}>
+      <span class="sb-ui-checkbox__box"></span>
+      <span class="sb-ui-checkbox__label" style="font-size:12.5px">Acepto la <a href="https://d9b6rardqz97a.cloudfront.net/wp-content/uploads/2024/02/16112906/240213_transv_5335_15Feb24.pdf" target="_blank" style="color:#05794A;text-decoration:underline">Política de Tratamiento de Datos Personales</a> y el <a href="https://www.segurosbolivar.com/politicas-de-privacidad" target="_blank" style="color:#05794A;text-decoration:underline">Tratamiento de mis datos.</a></span>
+    </label>
+  </div>
   ${btn('Continuar', 'landingPaso2', 'primary', true, !puedeSeguir())}
 `;
 
@@ -1647,19 +1656,15 @@ const landingFormPaso2 = () => `
 `;
 
 const landingForm = () => `<div style="flex:1 1 380px;max-width:440px;background:#fff;border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:16px">
-  <div><div style="font-weight:700;font-size:20px">Empiece su cotización</div><div style="font-weight:400;font-size:13.5px;line-height:1.45;color:#5B5B5B;margin-top:4px">Le pedimos estos datos una sola vez. No se los volvemos a solicitar en el resto del proceso.</div></div>
+  <div><div style="font-weight:700;font-size:20px">Comprar mi seguro ahora</div><div style="font-weight:400;font-size:13.5px;line-height:1.45;color:#5B5B5B;margin-top:4px">Arme su seguro y proteja su negocio y su vida en un solo lugar.</div></div>
   ${state.landingPaso === 1 ? landingFormPaso1() : landingFormPaso2()}
 </div>`;
 
 
 const landing = () => `<div style="background:#009056;padding:56px 72px">
-  <div style="max-width:1280px;margin:0 auto;display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start">
+  <div style="max-width:1280px;margin:0 auto;display:flex;flex-wrap:wrap;gap:32px;align-items:center">
     <div style="flex:1 1 460px;min-width:0;display:flex;flex-direction:column;gap:18px">
-      <h1 style="margin:0;font-weight:700;font-size:52px;line-height:1.15;letter-spacing:-.01em;color:#fff">Proteja su negocio y siga trabajando tranquilo</h1>
-      <p style="margin:0;max-width:560px;font-weight:400;font-size:17px;line-height:1.5;color:rgba(255,255,255,.92)">El Seguro Pymes de Seguros Bolívar cubre el inmueble, lo que hay adentro y los daños que su operación pueda causar a terceros. Cotice, ajuste sus coberturas y pague en línea, sin visitas ni papeleo.</p>
-      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:2px">
-        ${LANDING_SELLOS.map((txt) => `<div style="display:flex;align-items:center;gap:9px;padding:11px 16px;background:rgba(255,255,255,.14);border-radius:999px"><span class="material-symbols-outlined" style="font-size:19px;color:#FFE16F">check_small</span><span style="font-weight:600;font-size:13.5px;color:#fff">${txt}</span></div>`).join('')}
-      </div>
+      <h1 style="margin:0;font-weight:700;font-size:52px;line-height:1.15;letter-spacing:-.01em"><span style="display:block;color:#FFE16F">Seguro</span><span style="display:block;color:#fff">Multioferta Empresas</span></h1>
     </div>
     ${landingForm()}
   </div>
@@ -1668,14 +1673,13 @@ const landing = () => `<div style="background:#009056;padding:56px 72px">
   <div style="max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:24px">
     <div style="display:flex;flex-direction:column;gap:24px">
       <div style="font-weight:700;font-size:32px;line-height:1.3">Coberturas que puede contratar</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px">
+      <div class="pymes-landing-coberturas-grid">
         ${LANDING_COBERTURAS.map((c) => `<div style="background:#fff;border:1px solid #C2C7CF;border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:16px">
           <span style="flex:none;width:36px;height:36px;border-radius:40px;background:#F1FCF5;display:flex;align-items:center;justify-content:center"><span class="material-symbols-outlined" style="font-size:22px;color:#006B40">${c.icon}</span></span>
           <div style="font-weight:600;font-size:20px">${c.label}</div>
           <div style="font-weight:400;font-size:16px;line-height:1.5;color:#2E3033">${c.desc}</div>
         </div>`).join('')}
       </div>
-      <div style="font-weight:400;font-size:12.5px;line-height:1.45;color:#757575">Vida Pymes se ofrece como producto complementario después de tener su cotización lista.</div>
     </div>
   </div>
 </div>`;
@@ -1890,16 +1894,18 @@ const PLANES = [
     ['check_small', 'Asistencia prioritaria 24/7', 'Línea de atención prioritaria para reportar siniestros y resolver dudas en cualquier momento.', 'support_agent']
   ] }
 ];
-const LANDING_SELLOS = ['En línea, de principio a fin', 'Fotos solo después de ver su precio', 'Todas las sedes en una sola póliza'];
+/** Las coberturas de Vida Pymes se listan una por una (no en una sola caja resumen) para que
+ * ocupen el mismo nivel de detalle que las de Pymes: así el grid de 9 tarjetas queda parejo
+ * (3 columnas × 3 filas) sin dejar espacios en blanco. Las opcionales de Pymes (Ciberseguridad,
+ * Movilización, Dinero/muebles/robo) se dejan fuera de esta vista para no saturarla — se conocen
+ * al personalizar el paquete, no hace falta anticiparlas aquí. */
 const LANDING_COBERTURAS = [
   { icon: 'apartment', label: 'Edificios', desc: 'El inmueble donde opera, si es propietario.' },
   { icon: 'computer', label: 'Equipos electrónicos', desc: 'Computadores, datáfonos y equipos de red.' },
   { icon: 'precision_manufacturing', label: 'Maquinaria', desc: 'Equipos de producción y herramienta fija.' },
   { icon: 'inventory_2', label: 'Mercancías fijas', desc: 'Inventario almacenado en cada sede.' },
   { icon: 'gavel', label: 'Daños a terceros', desc: 'Responsabilidad civil frente a clientes y visitantes.' },
-  { icon: 'security', label: 'Ciberseguridad Pymes', desc: 'Opcional, con tres niveles de servicio.' },
-  { icon: 'local_shipping', label: 'Movilización de mercancías', desc: 'Opcional, según frecuencia de despachos.' },
-  { icon: 'payments', label: 'Dinero, muebles y robo de empleados', desc: 'Opcionales, se activan con un clic.' }
+  ...VIDA_COBERTURAS
 ];
 /** Muestra el valor mensual y anual al mismo tiempo. Solo es seleccionable (con tarjetas tipo
  * botón) en la pantalla "Elija cómo quiere pagar"; en el resto del flujo es texto plano
@@ -2651,7 +2657,7 @@ const ruta = () => RUTA.filter((step) => {
 const totalBenef = () => state.beneficiarios.reduce((sum, b) => sum + (+b.pct || 0), 0);
 const fotosMinimas = () => state.sedes.length > 0 && state.sedes.every(fotosSedeCompletas);
 const puedeSeguir = () => ({
-  landing: !!state.nombre && !!state.correo && !!state.celular && String(state.numDoc).replace(/\D/g, '').length >= 5 && state.autoriza,
+  landing: !!state.correo && !!state.celular && String(state.numDoc).replace(/\D/g, '').length >= 5 && state.aceptaTerminos && state.aceptaDatos,
   negocio: !!state.actividad && state.multiSede !== null && (state.multiSede === true || (state.sedes[0] && state.sedes[0].direccion && state.sedes[0].ciudad && state.sedes[0].propietario !== null && state.sedes[0].primerPiso !== null)),
   sedes: state.sedes.length >= 1 && state.sedes.every((s) => s.direccion.trim() && s.ciudad.trim() && s.propietario !== null && s.primerPiso !== null),
   plan: true,
@@ -2661,7 +2667,7 @@ const puedeSeguir = () => ({
   resumen: state.declaracion, pago: !!state.medioPago, emision: false
 }[state.paso]);
 const ayuda = () => ({
-  landing: 'Complete documento, nombre, correo, celular y autorice el uso de sus datos.', negocio: 'Elija una actividad, indique si asegura una o varias sedes y complete los datos de la sede.',
+  landing: 'Complete documento, correo y celular, y acepte los términos y la política de datos.', negocio: 'Elija una actividad, indique si asegura una o varias sedes y complete los datos de la sede.',
   sedes: 'Complete la dirección, ciudad y las preguntas de cada sede.', coberturas: [(state.opcionales.ciber && !state.sedes.every((sede) => sede.ciber.interrupciones !== null)) ? 'Responda la pregunta de interrupciones de Ciberseguridad Pymes.' : '', (state.vidaOn && !edad()) ? 'Ingrese la fecha de nacimiento del asegurado de Vida Pymes (o quítela del paquete) para ver el valor final.' : ''].filter(Boolean).join(' '),
   fotos: state.sedes.length > 1 ? 'Cargue las tres fotos obligatorias de cada sede.' : 'Cargue las tres fotos obligatorias.', beneficiarios: 'El total debe sumar 100%.',
   resumenCompra: 'Ingrese la fecha de nacimiento del asegurado de Vida Pymes (o quítela del paquete) para ver el valor final y continuar.',
@@ -2903,7 +2909,8 @@ document.body.addEventListener('input', (event) => {
   if (target.dataset.mov === 'limite') sede.mov.limite = Number(target.value.replace(/\D/g, '')) || 0;
   if (target.hasAttribute('data-vas')) state.vas = Number(target.value.replace(/\D/g, '')) || 0;
   if (target.hasAttribute('data-declaracion')) { state.declaracion = target.checked; render(); }
-  if (target.hasAttribute('data-autoriza')) { state.autoriza = target.checked; render(); }
+  if (target.hasAttribute('data-acepta-terminos')) { state.aceptaTerminos = target.checked; render(); }
+  if (target.hasAttribute('data-acepta-datos')) { state.aceptaDatos = target.checked; render(); }
   if (target.hasAttribute('data-incluir-correo-principal')) { state.incluirCorreoPrincipal = target.checked; render(); }
 });
 /** Los sliders/inputs numéricos solo re-renderizan al soltar/perder foco, para no interrumpir el arrastre. */
@@ -3156,7 +3163,7 @@ const sembrarEstadoHasta = (paso) => {
     state.nombre = 'Andrés Ramírez Peña';
     state.correo = 'andres.ramirez@andina.com.co';
     state.celular = '314 578 9001';
-    state.autoriza = true; state.landingPaso = 1;
+    state.aceptaTerminos = true; state.aceptaDatos = true; state.landingPaso = 1;
   }
 
   // negocio: actividad + decisión de sedes
