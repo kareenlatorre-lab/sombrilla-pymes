@@ -153,9 +153,15 @@ button, input, select { font: inherit; }
 .pymes-cta-bar { position: fixed; left: 0; right: 0; bottom: 0; background: #1b1b1b; padding: 14px 40px; display: flex; justify-content: center; z-index: 15; }
 .pymes-cta-bar__inner { width: 100%; max-width: 1180px; display: flex; align-items: center; gap: 14px; }
 /* Asistente OLIVIA: widget flotante disponible en todo el flujo (no interrumpe la cotización). */
-.pymes-olivia-fab { position: fixed; right: 28px; bottom: 28px; width: 56px; height: 56px; border-radius: 999px; background: #009056; color: #fff; border: none; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,.22); cursor: pointer; z-index: 45; }
+.pymes-olivia-fab { position: fixed; right: 28px; bottom: 28px; width: 56px; height: 56px; border-radius: 999px; background: #FFE16F; color: #05794A; border: none; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,.22); cursor: pointer; z-index: 45; animation: pymes-olivia-invita 2.6s ease-in-out infinite; }
 .pymes-olivia-fab .material-symbols-outlined { font-size: 26px; }
-.pymes-olivia-fab:hover { background: #006b40; }
+.pymes-olivia-fab:hover { background: #FFD84D; animation-play-state: paused; }
+/* Pulso + halo que se expande y se desvanece: invita a usar el botón sin ser intrusivo. */
+@keyframes pymes-olivia-invita {
+  0%, 100% { transform: scale(1); box-shadow: 0 8px 20px rgba(0,0,0,.22), 0 0 0 0 rgba(255,225,111,.55); }
+  50% { transform: scale(1.08); box-shadow: 0 8px 20px rgba(0,0,0,.22), 0 0 0 10px rgba(255,225,111,0); }
+}
+@media (prefers-reduced-motion: reduce) { .pymes-olivia-fab { animation: none; } }
 @keyframes pymes-girar { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 .pymes-spinner { display: inline-flex; animation: pymes-girar 1s linear infinite; }
 .pymes-acc { background: #fff; border: 1px solid #E1E1E1; border-radius: 16px; overflow: hidden; }
@@ -1606,10 +1612,12 @@ const btn = (label, action, variant = 'primary', block = false, disabled = false
 const chip = (label, action, active) => `<button type="button" class="sb-ui-chip sb-ui-chip--md sb-ui-chip--clickable ${active ? 'sb-ui-chip--primary sb-ui-chip--selected' : 'sb-ui-chip--outline sb-ui-chip--default'}" data-action="${action}">${label}</button>`;
 /** "email" (y "number") no soportan setSelectionRange: renderConFoco no puede restaurar el
  * cursor ahí y la escritura se siente rota (se pierde el cursor con cada tecla). Se usa type="text"
- * con inputmode/autocomplete para conservar el teclado y el autocompletado sin ese problema. */
+ * con inputmode para conservar el teclado sin ese problema. autocomplete="off" porque el input
+ * se recrea en cada render (app.innerHTML en cada tecla) y el dropdown nativo del navegador
+ * queda roto (se corta o no deja seleccionar). */
 const inputField = (id, label, value, placeholder = '', type = 'text') => {
   const esCorreo = type === 'email';
-  const attrs = esCorreo ? 'type="text" inputmode="email" autocomplete="email"' : `type="${type}"`;
+  const attrs = esCorreo ? 'type="text" inputmode="email" autocomplete="off"' : `type="${type}"`;
   return `<div><label class="sb-ui-input-label" for="${id}">${label}</label><input id="${id}" class="sb-ui-input" ${attrs} value="${esc(value)}" placeholder="${placeholder}" data-model="${id}"></div>`;
 };
 /** Campo con un "%" que siempre queda pegado al final del valor y no se puede borrar (basta con
@@ -1628,7 +1636,7 @@ const landingFormPaso1 = () => `
   ${landingBarraProgreso()}
   ${selectField('tipoDoc', 'Tipo de documento', state.tipoDoc, [['CC', 'Cédula de ciudadanía'], ['CE', 'Cédula de extranjería'], ['NIT', 'NIT'], ['PA', 'Pasaporte']])}
   ${inputField('numDoc', 'Número de documento', state.numDoc, 'Ej. 1.020.445.778')}
-  ${state.consultado ? `<div style="display:flex;align-items:flex-start;gap:9px;padding:11px 13px;background:${state.encontrado ? '#E5F4EE' : '#FFF8BC'};border-radius:12px"><span class="material-symbols-outlined" style="font-size:19px;color:${state.encontrado ? 'check_small' : 'info'}</span><span style="font-weight:400;font-size:12.5px;line-height:1.4;color:#414141">${state.encontrado ? 'Encontramos sus datos y los completamos por usted. Revíselos y edite lo que necesite.' : 'No encontramos datos asociados a este documento. Complete la información a continuación.'}</span></div>` : ''}
+  ${state.consultado ? `<div style="display:flex;align-items:flex-start;gap:9px;padding:11px 13px;background:${state.encontrado ? '#E5F4EE' : '#FFF8BC'};border-radius:12px"><span class="material-symbols-outlined" style="font-size:19px;color:${state.encontrado ? '#009056' : '#8A6D00'}">${state.encontrado ? 'check_small' : 'info'}</span><span style="font-weight:400;font-size:12.5px;line-height:1.4;color:#414141">${state.encontrado ? 'Encontramos sus datos y los completamos por usted. Revíselos y edite lo que necesite.' : 'No encontramos datos asociados a este documento. Complete la información a continuación.'}</span></div>` : ''}
   ${inputField('correo', 'Correo electrónico', state.correo, 'Ej. nombre@correo.com', 'email')}
   ${inputField('celular', 'Número de celular', state.celular, 'Ej. 314 578 9001', 'tel')}
   <div style="display:flex;flex-direction:column;gap:2px">
@@ -2061,11 +2069,39 @@ const oliviaPanel = () => `<div class="pymes-olivia-panel">
 
 const oliviaWidget = () => (state.oliviaAbierta ? oliviaPanel() : oliviaFab());
 
+/** Reconoce correo, celular y número de documento en el texto libre que el cliente le escribe a
+ * OLIVIA y, si está en la landing, autocompleta el formulario con ellos — cumple la promesa del
+ * tooltip del FAB ("¿Tiene los datos a la mano? OLIVIA los completa por usted"). Cada patrón se
+ * quita del texto antes de buscar el siguiente para que un celular no se lea como documento. */
+const RE_CORREO_OLIVIA = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
+const RE_CELULAR_OLIVIA = /(?:\+?57[\s.-]?)?\b3\d{2}[\s.-]?\d{3}[\s.-]?\d{4}\b/;
+const RE_DOC_OLIVIA = /\b\d[\d.]{4,12}-?\d?\b/;
+
+const autocompletarDesdeOlivia = (texto) => {
+  if (state.paso !== 'landing') return null;
+  let resto = texto;
+  const llenados = [];
+
+  const mCorreo = resto.match(RE_CORREO_OLIVIA);
+  if (mCorreo) { state.correo = mCorreo[0]; llenados.push('el correo'); resto = resto.replace(mCorreo[0], ' '); }
+
+  const mCelular = resto.match(RE_CELULAR_OLIVIA);
+  if (mCelular) { state.celular = mCelular[0].trim(); llenados.push('el celular'); resto = resto.replace(mCelular[0], ' '); }
+
+  const mDoc = resto.match(RE_DOC_OLIVIA);
+  if (mDoc && mDoc[0].replace(/\D/g, '').length >= 5) { state.numDoc = mDoc[0]; llenados.push('el número de documento'); }
+
+  return llenados.length ? llenados : null;
+};
+
 const enviarOlivia = () => {
   const texto = state.oliviaTexto.trim();
   if (!texto) return;
   state.oliviaLog.push({ from: 'cliente', text: texto });
-  state.oliviaLog.push({ from: 'olivia', text: OLIVIA_RESPUESTAS[texto] || 'Para este prototipo, OLIVIA responde con ejemplos predefinidos; en producción se conectaría a la base de conocimiento del producto.' });
+  const llenados = autocompletarDesdeOlivia(texto);
+  state.oliviaLog.push({ from: 'olivia', text: llenados
+    ? `Listo, completé ${llenados.join(', ')} en el formulario con esos datos. Revíselos y continúe cuando quiera.`
+    : (OLIVIA_RESPUESTAS[texto] || 'Para este prototipo, OLIVIA responde con ejemplos predefinidos; en producción se conectaría a la base de conocimiento del producto.') });
   state.oliviaTexto = '';
   render();
 };
