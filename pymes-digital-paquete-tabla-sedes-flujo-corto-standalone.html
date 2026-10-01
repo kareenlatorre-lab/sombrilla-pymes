@@ -132,6 +132,12 @@ button, input, select { font: inherit; }
 .sb-ui-button--small { --sb-ui-button-padding-inline: 12px; --sb-ui-button-padding-block: 7px; --sb-ui-button-min-block-size: 32px; --sb-ui-button-min-inline-size: auto; }
 .pymes-option:not(.is-selected):hover { border-color: #b9b9b9; background: #fafafa; }
 .pymes-option.is-selected { border-color: #009056; background: #e5f4ee; }
+/* Indicador de encendido/apagado con forma de interruptor (en vez del ícono de chulito), para las
+   filas plegables de coberturas opcionales y Vida Pymes. */
+.pymes-switch { position: relative; flex: none; width: 40px; height: 22px; border-radius: 999px; background: #c2c7cf; transition: background-color .15s ease; }
+.pymes-switch.is-on { background: #009056; }
+.pymes-switch__knob { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .15s ease; }
+.pymes-switch.is-on .pymes-switch__knob { transform: translateX(18px); }
 .pymes-stepper { display: flex; align-items: center; width: 100%; border: 1px solid #c2c7cf; border-radius: 999px; background: #fff; }
 .pymes-stepper__btn { flex: none; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border: none; background: transparent; border-radius: 999px; font-size: 20px; font-weight: 700; line-height: 1; color: #1b1b1b; cursor: pointer; transition: background-color .15s ease; }
 .pymes-stepper__btn:hover { background: #f5f5f5; }
@@ -150,8 +156,9 @@ button, input, select { font: inherit; }
 .pymes-link-volver:hover { color: #006b40; text-decoration: underline; }
 /* Barra de acción fija abajo (en vez de un botón suelto tras el contenido), para que "Continuar"
    quede siempre visible y accesible sin importar cuánto haya que scrollear en el paso. */
-.pymes-cta-bar { position: fixed; left: 0; right: 0; bottom: 0; background: #1b1b1b; padding: 14px 40px; display: flex; justify-content: center; z-index: 15; }
-.pymes-cta-bar__inner { width: 100%; max-width: 1180px; display: flex; align-items: center; gap: 14px; }
+.pymes-cta-bar { position: fixed; left: 0; right: 0; bottom: 0; background: #1b1b1b; padding: 14px 40px; display: flex; flex-direction: column; align-items: center; z-index: 15; }
+.pymes-cta-bar__inner { width: 100%; max-width: 1180px; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.pymes-cta-bar__accion { display: flex; align-items: center; gap: 10px; flex: none; }
 /* Asistente OLIVIA: widget flotante disponible en todo el flujo (no interrumpe la cotización). */
 .pymes-olivia-fab { position: fixed; right: 28px; bottom: 28px; width: 56px; height: 56px; border-radius: 999px; background: #FFE16F; color: #05794A; border: none; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,.22); cursor: pointer; z-index: 45; animation: pymes-olivia-invita 2.6s ease-in-out infinite; }
 .pymes-olivia-fab .material-symbols-outlined { font-size: 26px; }
@@ -204,8 +211,18 @@ button, input, select { font: inherit; }
    y el stepper no se desborda (con 286px sobraba 1px y aparecía una barra de scroll horizontal). */
 .pymes-shell__rail { position: fixed; top: 73px; bottom: 0; left: 0; width: 287px; padding: 40px 64px; background: #fff; border-right: 1px solid #e1e1e1; overflow-x: hidden; overflow-y: auto; z-index: 10; }
 .pymes-shell__main { margin-left: 287px; padding: 0 40px; }
-.pymes-shell__content { max-width: 1074px; margin: 0 auto; }
+.pymes-shell__body { display: flex; align-items: flex-start; gap: 32px; max-width: 1074px; margin: 0 auto; }
+.pymes-shell__body--con-carrito { max-width: 1406px; }
+.pymes-shell__content { flex: 1; min-width: 0; }
 .pymes-cta-bar--con-rail { left: 287px; }
+/* Carrito (Figma "Hogar Digital", nodo 299:14730): tarjeta verde sólida con el resumen de precio y
+   el botón "Continuar" adentro, pegada arriba al hacer scroll (sticky, no fixed, para que respete
+   el padding/gap de .pymes-shell__body en vez de ir pegada al borde de la ventana). En escritorio
+   reemplaza la barra negra de abajo (que para estas pantallas queda oculta, ver
+   .pymes-cta-bar--con-carrito); en mobile la tarjeta pierde el sticky y el botón propio se oculta
+   (.pymes-cart__cta), y vuelve a ser la barra negra la que lleva "Continuar", igual que siempre. */
+.pymes-cart { position: sticky; top: 90px; flex: none; width: 300px; padding: 24px; background: #086d44; border-radius: 24px; display: flex; flex-direction: column; gap: 24px; }
+@media (min-width: 821px) { .pymes-cta-bar--con-carrito { display: none; } }
 /* Selector de sede con las clases reales de .sb-ui-tabs (mismos tokens de color, tipografía y
    estados que trae la librería): la librería no incluye un preset en píldora (solo track/button/
    folder), así que este es el único ajuste que se añade encima, para que no parezcan botones. */
@@ -219,6 +236,9 @@ button, input, select { font: inherit; }
   .pymes-shell__rail { position: static; width: 100%; padding: 20px; border-right: 0; border-bottom: 1px solid #e1e1e1; }
   .pymes-shell__main { margin-left: 0; padding: 0 16px; }
   .pymes-cta-bar--con-rail { left: 0; }
+  .pymes-shell__body { flex-direction: column; gap: 16px; }
+  .pymes-cart { position: static; width: 100%; }
+  .pymes-cart__cta { display: none; }
 }
 .pymes-landing-coberturas-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 @media (max-width: 820px) { .pymes-landing-coberturas-grid { grid-template-columns: 1fr; } }
@@ -230,6 +250,8 @@ button, input, select { font: inherit; }
   .pymes-fase-sidebar--sticky { position: static; }
   .pymes-coberturas-grid { grid-template-columns: 1fr; }
   .pymes-cta-bar { padding: 12px 20px; }
+  .pymes-cta-bar__accion { flex: 1 1 100%; }
+  .pymes-cta-bar__accion .sb-ui-button { flex: 1; }
 }
 </style>
 </head>
@@ -1562,10 +1584,10 @@ const state = {
   landingPaso: 1, claveAsesor: '', correoAsesor: '',
   actividadBusqueda: '', actividad: '', ventas: '',
   multiSede: null, sedes: [nuevaSede()], sedeActiva: 0, fotoSedeActiva: 0, numCotizacion: 'COT-2026-' + String(Math.floor(1000000 + Math.random() * 9000000)),
-  plan: 'sugerido', periodicidad: 'anual', personalizando: false, comparativoPlanes: null,
+  plan: 'sugerido', periodicidad: 'anual', personalizando: false, comparativoPlanes: null, planElegidoNombre: null,
   opcionales: { dinero: false, muebles: false, roboEmpleados: false, ciber: false, movMercancias: false },
   opcDescAbiertas: [],
-    vidaOn: true, vas: 100000000, nacimiento: '', beneficiarios: [],
+    vidaOn: true, vidaAbierta: false, vas: 100000000, nacimiento: '', beneficiarios: [],
   benefNombre: '', benefParentesco: 'Cónyuge', benefPct: 100, benefIdx: -1,
   medioPago: '', procesandoPago: false, pagoError: null, pagoToken: 0, otp: '', otpValidado: false, otpAbierto: false, otpError: false, declaracion: false, aceptaTerminos: false, aceptaDatos: false, modalPlan: null, drawerVida: false, drawerBenef: false, benefEditIdx: -1,
   drawerSede: false, sedeEditIdx: -1, sedeDraft: nuevaSede(),
@@ -1610,6 +1632,10 @@ const primaTxt = () => fmt(aPeriodo(primaTotal()));
 const btn = (label, action, variant = 'primary', block = false, disabled = false) =>
   `<button type="button" class="sb-ui-button sb-ui-button--${variant} ${variant === 'tertiary' ? 'sb-ui-button--text' : 'sb-ui-button--fill'} ${block ? 'sb-ui-button--block' : ''}" data-action="${action}" ${disabled ? 'disabled' : ''}>${label}</button>`;
 const chip = (label, action, active) => `<button type="button" class="sb-ui-chip sb-ui-chip--md sb-ui-chip--clickable ${active ? 'sb-ui-chip--primary sb-ui-chip--selected' : 'sb-ui-chip--outline sb-ui-chip--default'}" data-action="${action}">${label}</button>`;
+/** Indicador de encendido/apagado como interruptor (ver .pymes-switch en <style>), en vez del
+ * ícono de chulito que se usaba antes. Es solo el indicador visual: vive dentro del botón que ya
+ * hace clic en toda la fila (ver vidaPaquete() y coberturas()), no un control aparte. */
+const switchInd = (on) => `<span class="pymes-switch${on ? ' is-on' : ''}" aria-hidden="true"><span class="pymes-switch__knob"></span></span>`;
 /** "email" (y "number") no soportan setSelectionRange: renderConFoco no puede restaurar el
  * cursor ahí y la escritura se siente rota (se pierde el cursor con cada tecla). Se usa type="text"
  * con inputmode para conservar el teclado sin ese problema. autocomplete="off" porque el input
@@ -2169,6 +2195,7 @@ const aplicarPlanElegido = (cfg) => {
   state.vidaOn = cfg.vidaOn;
   state.vas = cfg.vas;
   state.plan = 'sugerido';
+  state.planElegidoNombre = cfg.nombre;
 };
 
 /** "Elegir y continuar" acepta el plan tal cual y va directo a Fotos, salvo que el plan traiga Vida
@@ -2317,7 +2344,7 @@ const coberturas = () => {
       <div style="display:flex;align-items:center;gap:2px;padding:12px">
         <button type="button" data-action="opc:${clave}" style="all:unset;flex:1;min-width:0;display:flex;align-items:center;gap:10px;cursor:pointer">
           <span style="flex:1;min-width:0"><span style="display:block;font-weight:700;font-size:13.5px;color:#1B1B1B">${OPC[clave].label}</span>${precio ? `<span style="display:block;font-weight:400;font-size:12px;color:#5B5B5B;margin-top:2px">${precio}</span>` : ''}</span>
-          <span class="material-symbols-outlined" style="font-size:20px;color:${on ? '#006B40' : '#C2C7CF'};flex:none">${on ? 'check_circle' : 'radio_button_unchecked'}</span>
+          ${switchInd(on)}
         </button>
         <button type="button" data-action="opcVerDesc:${clave}" aria-expanded="${abierta}" aria-label="${abierta ? 'Ocultar' : 'Ver'} qué cubre ${esc(OPC[clave].label)}" style="all:unset;cursor:pointer;padding:4px;display:flex;flex:none">
           <span class="material-symbols-outlined" style="font-size:20px;color:#9B9B9B;transition:transform .15s;transform:rotate(${abierta ? 180 : 0}deg)">expand_more</span>
@@ -2333,7 +2360,10 @@ const coberturas = () => {
    * librería no trae un preset en píldora (solo track/button/folder), así que el contenedor y el
    * radio de cada item se completan en pymes-digital.css con ese único ajuste. */
   const selectorSedes = state.sedes.length > 1 ? `<div style="display:flex;flex-direction:column;gap:8px">
-    <div class="pymes-sede-tabs"><div class="sb-ui-tabs" role="tablist" aria-label="Sedes">${state.sedes.map((s, i) => `<button type="button" role="tab" aria-selected="${i === state.sedeActiva}" class="sb-ui-tabs__item${i === state.sedeActiva ? ' sb-ui-tabs__item--active' : ''}" data-action="verSede:${i}"><span class="material-symbols-outlined sb-ui-tabs__icon" style="font-size:18px">${iconoTipoSede(s.tipo)}</span><span class="sb-ui-tabs__title">${esc(etiquetaSede(s, i))}</span></button>`).join('')}</div></div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="pymes-sede-tabs"><div class="sb-ui-tabs" role="tablist" aria-label="Sedes">${state.sedes.map((s, i) => `<button type="button" role="tab" aria-selected="${i === state.sedeActiva}" class="sb-ui-tabs__item${i === state.sedeActiva ? ' sb-ui-tabs__item--active' : ''}" data-action="verSede:${i}"><span class="material-symbols-outlined sb-ui-tabs__icon" style="font-size:18px">${iconoTipoSede(s.tipo)}</span><span class="sb-ui-tabs__title">${esc(etiquetaSede(s, i))}</span></button>`).join('')}</div></div>
+      <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--circle sb-ui-button--icon-only" style="flex:none" data-action="abrirDrawerSede:-1" title="Agregar sede" aria-label="Agregar sede"><span class="material-symbols-outlined" style="font-size:18px">add</span></button>
+    </div>
     <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
       <div style="display:flex;align-items:center;gap:8px">
         <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--circle sb-ui-button--icon-only" data-action="abrirDrawerSede:${state.sedeActiva}" title="Editar sede" aria-label="Editar sede"><span class="material-symbols-outlined" style="font-size:16px">edit</span></button>
@@ -2343,6 +2373,8 @@ const coberturas = () => {
     </div>
   </div>` : '';
   return `<div style="display:flex;flex-direction:column;gap:14px">
+    ${vidaPaquete()}
+    <div style="height:1px;background:#E1E1E1"></div>
     ${selectorSedes}
     <div class="pymes-coberturas-grid">
       <div style="background:#fff;border:1px solid #E1E1E1;border-radius:24px;padding:20px 24px 22px;display:flex;flex-direction:column;gap:18px">
@@ -2350,12 +2382,9 @@ const coberturas = () => {
         <div style="display:flex;flex-direction:column">${principales}</div>
         <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--small sb-ui-button--icon-left" style="align-self:flex-start" data-action="restaurarTodo"><span class="material-symbols-outlined" style="font-size:18px">restart_alt</span>Restaurar sugeridos</button>
       </div>
-      <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
-        <div style="background:#fff;border:1px solid #E1E1E1;border-radius:24px;padding:14px 18px;display:flex;flex-direction:column;gap:10px">
-          <div style="font-weight:700;font-size:17px">Coberturas opcionales</div>
-          <div style="display:flex;flex-direction:column;gap:10px">${opcionales}</div>
-        </div>
-        ${vidaPaquete()}
+      <div style="background:#fff;border:1px solid #E1E1E1;border-radius:24px;padding:14px 18px;display:flex;flex-direction:column;gap:10px;min-width:0">
+        <div style="font-weight:700;font-size:17px">Coberturas opcionales</div>
+        <div style="display:flex;flex-direction:column;gap:10px">${opcionales}</div>
       </div>
     </div>
   </div>`;
@@ -2416,34 +2445,52 @@ const opcionalesActivasTxt = () => {
   const activas = Object.keys(OPC).filter((k) => state.opcionales[k]);
   return activas.length ? activas.map((k) => OPC[k].label).join(', ') : 'Ninguna opcional activa';
 };
-/** Vida Pymes como parte del paquete sugerido: se personaliza aquí (valor asegurado, fecha de
- * nacimiento del asegurado, quitarla o volver a incluirla) en vez de ofrecerse como venta cruzada. */
+/** Vida Pymes como una fila plegable más (misma lógica que las opcionales de coberturas: un
+ * interruptor para activarla/quitarla + una flecha aparte para expandir el detalle), en vez de una
+ * tarjeta grande siempre abierta. Contraída por defecto: solo se ve el resumen, y la flecha
+ * despliega el valor asegurado, la fecha de nacimiento y qué cubre. El total ya se ve en todo
+ * momento en el carrito de la derecha (ver MUESTRA_CARRITO en render()), así que aquí no se repite. */
 const vidaPaquete = () => {
-  if (!state.vidaOn) {
-    return `<div style="background:#fff;border:1px solid #E1E1E1;border-radius:24px;padding:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-      <div style="display:flex;gap:12px;align-items:center"><span style="flex:none;width:38px;height:38px;border-radius:999px;background:#E1E1E1;display:flex;align-items:center;justify-content:center"><span class="material-symbols-outlined" style="font-size:20px;color:#5B5B5B">favorite</span></span><div><div style="font-weight:700;font-size:15px">Vida Pymes no está en su paquete</div><div style="font-weight:400;font-size:12.5px;color:#5B5B5B;margin-top:2px">Protección para usted o un empleado clave. Puede volver a incluirla cuando quiera.</div></div></div>
-      <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--small sb-ui-button--icon-left" data-action="vidaAgregar"><span class="material-symbols-outlined" style="font-size:18px">add</span>Volver a incluirla</button>
-    </div>`;
-  }
+  const on = state.vidaOn;
+  const abierta = state.vidaAbierta;
   const fechaInvalida = state.nacimiento.trim() && !edad();
-  return `<div style="background:#fff;border:1px solid #FFE16F;border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:14px">
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
-      <div style="display:flex;gap:12px;align-items:center"><span style="flex:none;width:38px;height:38px;border-radius:999px;background:#FFE16F;display:flex;align-items:center;justify-content:center"><span class="material-symbols-outlined" style="font-size:20px;color:#038450">favorite</span></span><div><div style="font-weight:700;font-size:17px">Vida Pymes <span style="font-weight:600;font-size:11px;color:#006B40;background:#E5F4EE;border-radius:999px;padding:3px 9px;margin-left:4px">Incluida en su paquete</span></div><div style="font-weight:400;font-size:12.5px;color:#5B5B5B;margin-top:2px">Protección para usted o un empleado clave.</div></div></div>
-      <button type="button" class="sb-ui-button sb-ui-button--error sb-ui-button--stroke sb-ui-button--circle sb-ui-button--icon-only" data-action="vidaQuitar" title="Quitar Vida Pymes de mi paquete" aria-label="Quitar Vida Pymes de mi paquete"><span class="material-symbols-outlined" style="font-size:20px">delete</span></button>
+  const resumen = !on
+    ? 'No incluida en su paquete'
+    : `${fmt(state.vas)} asegurados · prima ${fmt(aPeriodo(primaVida()))} ${state.periodicidad}${vidaEstimada() ? ' (estimada)' : ''}`;
+  const detalle = !on
+    ? `<div style="font-weight:400;font-size:12.5px;line-height:1.4;color:#5B5B5B">Protección para usted o un empleado clave, para todo el negocio (no por sede). Puede volver a incluirla cuando quiera.</div>`
+    : `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;align-items:start">
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div>
+            <div style="font-weight:700;font-size:13px;margin-bottom:9px">Valor asegurado</div>
+            ${stepper(state.vas, 'data-vas', 'vas:-1', 'vas:1')}
+            <div style="font-weight:400;font-size:12px;color:#757575;margin-top:6px">Entre ${fmt(VAS_MIN)} y ${fmt(VAS_MAX)}.</div>
+          </div>
+          <div>
+            ${inputField('nacimiento', 'Fecha de nacimiento del asegurado', state.nacimiento, 'DD/MM/AAAA')}
+            <div style="font-weight:400;font-size:12px;color:${fechaInvalida ? '#B3261E' : '#9B9B9B'};margin-top:6px">${fechaInvalida ? 'Esa fecha no es válida: escríbala como DD/MM/AAAA.' : 'La necesitamos para calcular el valor final.'}</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+          <div style="font-weight:700;font-size:12.5px;color:#1B1B1B">Qué cubre</div>
+          ${VIDA_COBERTURAS.map((c, i) => `<div style="display:flex;gap:10px;align-items:flex-start;${i > 0 ? 'padding-top:8px;' : ''}"><span class="material-symbols-outlined" style="font-size:16px;color:#006B40;margin-top:1px;flex:none">${c.icon}</span><span style="font-weight:400;font-size:12.5px;line-height:1.4;color:#5B5B5B">${c.label}</span></div>`).join('')}
+        </div>
+      </div>`;
+  return `<div class="pymes-option ${on ? 'is-selected' : ''}" style="flex-direction:column;align-items:stretch;padding:0;cursor:default">
+    <div style="display:flex;align-items:center;gap:2px;padding:14px 16px">
+      <button type="button" data-action="vidaToggle" style="all:unset;flex:1;min-width:0;display:flex;align-items:center;gap:12px;cursor:pointer">
+        <span style="flex:none;width:38px;height:38px;border-radius:999px;background:${on ? '#FFE16F' : '#E1E1E1'};display:flex;align-items:center;justify-content:center"><span class="material-symbols-outlined" style="font-size:18px;color:${on ? '#038450' : '#5B5B5B'}">favorite</span></span>
+        <span style="flex:1;min-width:0">
+          <span style="display:block;font-weight:700;font-size:14.5px;color:#1B1B1B">Vida Pymes <span style="font-weight:400;font-size:11.5px;color:#9B9B9B">· todo el negocio, no por sede</span></span>
+          <span style="display:block;font-weight:400;font-size:12.5px;color:#5B5B5B;margin-top:2px">${esc(resumen)}</span>
+        </span>
+        ${switchInd(on)}
+      </button>
+      <button type="button" data-action="vidaVerDesc" aria-expanded="${abierta}" aria-label="${abierta ? 'Ocultar' : 'Ver'} detalle de Vida Pymes" style="all:unset;cursor:pointer;padding:4px;display:flex;flex:none">
+        <span class="material-symbols-outlined" style="font-size:20px;color:#9B9B9B;transition:transform .15s;transform:rotate(${abierta ? 180 : 0}deg)">expand_more</span>
+      </button>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;align-items:start">
-      <div>
-        <div style="font-weight:700;font-size:14px;margin-bottom:9px">Valor asegurado</div>
-        ${stepper(state.vas, 'data-vas', 'vas:-1', 'vas:1')}
-        <div style="font-weight:400;font-size:12px;color:#757575;margin-top:6px">Entre ${fmt(VAS_MIN)} y ${fmt(VAS_MAX)}.</div>
-      </div>
-      <div>
-        ${inputField('nacimiento', 'Fecha de nacimiento del asegurado', state.nacimiento, 'DD/MM/AAAA')}
-        <div style="font-weight:400;font-size:12px;color:${fechaInvalida ? '#B3261E' : '#9B9B9B'};margin-top:6px">${fechaInvalida ? 'Esa fecha no es válida: escríbala como DD/MM/AAAA y confirme que el asegurado tenga entre 18 y 99 años.' : 'Puede ser usted o el empleado que quiere proteger. La necesitamos para calcular el valor final.'}</div>
-      </div>
-    </div>
-    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:4px;border-top:1px solid #E1E1E1"><span style="font-weight:700;font-size:14px">Prima Vida Pymes${vidaEstimada() ? ' <span style="font-weight:400;font-size:12px;color:#757575">(estimada)</span>' : ''}</span><span style="font-weight:700;font-size:19px;color:#006B40">${fmt(aPeriodo(primaVida()))} ${state.periodicidad}</span></div>
-    <button type="button" class="pymes-option" style="text-align:left;background:#FFF8BC;border-color:#FFF8BC" data-action="abrirDrawerVida"><span style="flex:1;font-weight:600;font-size:13px;color:#414141">Ver coberturas incluidas</span><span class="material-symbols-outlined" style="font-size:20px;color:#414141">chevron_right</span></button>
+    ${abierta ? `<div style="padding:0 16px 16px 16px">${detalle}</div>` : ''}
   </div>`;
 };
 
@@ -2716,14 +2763,18 @@ const puedeSeguir = () => ({
 }[state.paso]);
 const ayuda = () => ({
   landing: 'Complete documento, correo y celular, y acepte los términos y la política de datos.', negocio: 'Elija una actividad, indique si asegura una o varias sedes y complete los datos de la sede.',
-  sedes: 'Complete la dirección, ciudad y las preguntas de cada sede.', coberturas: [(state.opcionales.ciber && !state.sedes.every((sede) => sede.ciber.interrupciones !== null)) ? 'Responda la pregunta de interrupciones de Ciberseguridad Pymes.' : '', (state.vidaOn && !edad()) ? 'Ingrese la fecha de nacimiento del asegurado de Vida Pymes (o quítela del paquete) para ver el valor final.' : ''].filter(Boolean).join(' '),
+  sedes: 'Complete la dirección, ciudad y las preguntas de cada sede.',
+  coberturas: [(state.opcionales.ciber && !state.sedes.every((sede) => sede.ciber.interrupciones !== null)) ? 'Responda la pregunta de interrupciones de Ciberseguridad Pymes.' : '', (state.vidaOn && !edad()) ? 'Ingrese la fecha de nacimiento del asegurado de Vida Pymes (o quítela del paquete) para ver el valor final.' : ''].filter(Boolean).join(' '),
   fotos: state.sedes.length > 1 ? 'Cargue las tres fotos obligatorias de cada sede.' : 'Cargue las tres fotos obligatorias.', beneficiarios: 'El total debe sumar 100%.',
   resumenCompra: 'Ingrese la fecha de nacimiento del asegurado de Vida Pymes (o quítela del paquete) para ver el valor final y continuar.',
   resumen: 'Confirme la declaración.', pago: 'Seleccione un medio de pago.'
 }[state.paso] || '');
 
 const SIN_CTA_PROPIA = ['plan', 'resumenCompra'];
-const CON_RAIL = ['coberturas'];
+/** Pasos donde el carrito (ver render()) muestra el total en vivo a un lado, no en la barra de
+ * abajo: desde que hay un plan aplicado hasta antes de pagar (en 'pago' el botón ya dice "Pagar
+ * $X", y en 'resumen' el desglose completo ya está en la propia pantalla). */
+const MUESTRA_CARRITO = ['coberturas', 'beneficiarios', 'fotos'];
 
 /** Agrupa los pasos finos del flujo en fases grandes para el stepper lateral (usa el
  * componente sb-ui-stepper de la librería). Landing y emisión quedan fuera: son la
@@ -2825,22 +2876,48 @@ const render = () => {
     if (state.paso === 'landing') { app.innerHTML = landing(); modalRoot.innerHTML = overlays(); oliviaRoot.innerHTML = oliviaWidget(); initMapaSiNecesario(); return; }
     const nextLabel = state.paso === 'pago' ? `Pagar ${primaTxt()}` : (state.paso === 'resumen' ? 'Confirmar y validar' : 'Continuar');
     const bloqueado = !puedeSeguir();
-    const conRail = CON_RAIL.includes(state.paso);
     const conCta = state.paso !== 'emision' && !SIN_CTA_PROPIA.includes(state.paso) && !(state.paso === 'pago' && (state.procesandoPago || state.pagoError));
     ctaVisibleOlivia = conCta;
-    const cuerpo = `<div style="display:flex;flex-direction:column;gap:24px;padding:32px 0 ${conCta ? '176px' : '112px'} 0">
+    const muestraCarrito = conCta && MUESTRA_CARRITO.includes(state.paso);
+    const cuerpo = `<div style="display:flex;flex-direction:column;gap:24px;padding:32px 0 ${conCta ? 176 : 112}px 0">
       ${index > 0 && state.paso !== 'emision' && !(state.paso === 'pago' && state.procesandoPago) ? `<button type="button" class="pymes-link-volver" data-action="back"><span class="material-symbols-outlined" style="font-size:20px">chevron_left</span>Volver</button>` : ''}
       ${TITULO_EN_TARJETA.includes(state.paso) ? '' : `<div style="display:flex;flex-direction:column;gap:8px">
         <div><h1 style="margin:0 0 4px;font-weight:700;font-size:22px;line-height:1.25;letter-spacing:-.01em;color:#1B1B1B">${esc(TITULOS[state.paso])}</h1><p style="margin:0;max-width:680px;font-weight:400;font-size:13.5px;line-height:1.4;color:#5B5B5B">${esc(BAJADAS[state.paso] || '')}</p></div>
-        ${conRail ? `<div aria-live="polite" aria-atomic="true" style="background:#fff;border:1px solid #E1E1E1;border-radius:16px;padding:14px 20px;margin-top:6px">${periodPrecios(false, true)}</div>` : ''}
       </div>`}
       ${VISTAS[state.paso]()}
     </div>`;
     const fase = faseDelPaso(state.paso);
-    const ctaBar = conCta ? `<div class="pymes-cta-bar${fase !== -1 ? ' pymes-cta-bar--con-rail' : ''}"><div class="pymes-cta-bar__inner">${btn(nextLabel, 'next', 'primary', false, bloqueado)}${bloqueado ? `<span style="font-weight:400;font-size:12.5px;color:#C2C7CF">${esc(ayuda())}</span>` : ''}</div></div>` : '';
+    /** Carrito (Figma "Hogar Digital" 299:14730): tarjeta verde con el plan, el total y "Continuar"
+     * adentro. En escritorio reemplaza la barra negra de abajo para estos pasos (oculta por CSS,
+     * ver .pymes-cta-bar--con-carrito); en mobile la tarjeta pierde el botón propio
+     * (.pymes-cart__cta se oculta) y vuelve a ser la barra negra la que lleva "Continuar". */
+    const carritoPanel = muestraCarrito ? `<aside class="pymes-cart">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;gap:12px;align-items:center">
+          <div style="flex:1;min-width:0;font-weight:700;font-size:24px;line-height:1.4;color:#FFE16F">${esc(state.planElegidoNombre || 'Su plan')}</div>
+          <div style="font-weight:400;font-size:14px;color:#fff;white-space:nowrap">${fmt(aPeriodo(primaTotal()))}</div>
+        </div>
+        <div style="font-weight:400;font-size:14px;color:#fff">Incluido en su cotización</div>
+        <div style="height:1px;background:#D9D9D9;border-radius:8px"></div>
+      </div>
+      <div style="display:flex;gap:4px;align-items:baseline">
+        <div style="flex:1;min-width:0;font-weight:400;font-size:14px;color:#fff"><strong style="font-weight:700">Total ${state.periodicidad}</strong> (IVA incluido):</div>
+        <div style="font-weight:700;font-size:20px;color:#fff;white-space:nowrap">${fmt(aPeriodo(primaTotal()))}</div>
+      </div>
+      <div class="pymes-cart__cta" style="display:flex;flex-direction:column;gap:8px">
+        <button type="button" style="border:none;border-radius:999px;background:#FFE16F;color:#038450;font-weight:700;font-size:16px;padding:14px 16px;cursor:pointer;width:100%;${bloqueado ? 'opacity:.55;cursor:not-allowed;' : ''}" data-action="next" ${bloqueado ? 'disabled' : ''}>${esc(nextLabel)}</button>
+        ${bloqueado ? `<div style="font-weight:400;font-size:12px;color:rgba(255,255,255,.75);text-align:center">${esc(ayuda())}</div>` : ''}
+      </div>
+    </aside>` : '';
+    const ctaBar = conCta ? `<div class="pymes-cta-bar${fase !== -1 ? ' pymes-cta-bar--con-rail' : ''}${muestraCarrito ? ' pymes-cta-bar--con-carrito' : ''}">
+      <div class="pymes-cta-bar__inner">
+        <div></div>
+        <div class="pymes-cta-bar__accion">${btn(nextLabel, 'next', 'primary', false, bloqueado)}${bloqueado ? `<span style="font-weight:400;font-size:12.5px;color:#C2C7CF">${esc(ayuda())}</span>` : ''}</div>
+      </div>
+    </div>` : '';
     app.innerHTML = (fase === -1
       ? `<div style="padding:0 40px;max-width:1074px;margin:0 auto">${cuerpo}</div>`
-      : `<aside class="pymes-shell__rail">${stepperFases()}</aside><div class="pymes-shell__main"><div class="pymes-shell__content">${cuerpo}</div></div>`) + ctaBar;
+      : `<aside class="pymes-shell__rail">${stepperFases()}</aside><div class="pymes-shell__main"><div class="pymes-shell__body${muestraCarrito ? ' pymes-shell__body--con-carrito' : ''}"><div class="pymes-shell__content">${cuerpo}</div>${carritoPanel}</div></div>`) + ctaBar;
     modalRoot.innerHTML = overlays();
     oliviaRoot.innerHTML = oliviaWidget();
     if (state.oliviaAbierta) {
@@ -3029,7 +3106,8 @@ document.body.addEventListener('click', (event) => {
     const d = state.sedeDraft;
     if (d.direccion.trim() && d.ciudad.trim() && d.propietario !== null && d.primerPiso !== null) {
       if (d.propietario === false) d.valores.edificios = 0;
-      if (state.sedeEditIdx >= 0) state.sedes[state.sedeEditIdx] = d; else state.sedes.push(d);
+      if (state.sedeEditIdx >= 0) state.sedes[state.sedeEditIdx] = d;
+      else { state.sedes.push(d); if (state.paso === 'coberturas') state.sedeActiva = state.sedes.length - 1; }
       state.drawerSede = false;
     }
   }
@@ -3069,8 +3147,8 @@ document.body.addEventListener('click', (event) => {
   else if (action === 'cerrarDrawerVida') state.drawerVida = false;
   else if (action === 'confirmarVida') { if (edad()) { state.vidaOn = true; state.drawerVida = false; } }
   else if (action === 'quitarVida') { state.vidaOn = false; state.drawerVida = false; }
-  else if (action === 'vidaQuitar') state.vidaOn = false;
-  else if (action === 'vidaAgregar') state.vidaOn = true;
+  else if (action === 'vidaToggle') state.vidaOn = !state.vidaOn;
+  else if (action === 'vidaVerDesc') state.vidaAbierta = !state.vidaAbierta;
   else if (action.startsWith('pago:')) state.medioPago = action.slice(5);
   else if (action.startsWith('sugerir:')) sede.valores[action.slice(8)] = sugerido(sede, action.slice(8));
   else if (/^cover:.+:-?1$/.test(action)) {
@@ -3249,10 +3327,11 @@ const sembrarEstadoHasta = (paso) => {
   // plan
   if (completo('coberturas')) { state.plan = 'sugerido'; state.personalizando = false; }
 
-  /** coberturas: con las opcionales por defecto (todas off) el único requisito de puedeSeguir es
-   * que Vida Pymes tenga fecha de nacimiento (viene incluida y activada). Solo la sembramos cuando
-   * 'coberturas' quedó ATRÁS respecto al paso de arranque; si el arranque ES en 'coberturas',
-   * dejamos la fecha vacía para que el usuario la ingrese (es parte de lo que debe llenar ahí). */
+  /** Vida Pymes vive dentro de 'coberturas' (fila plegable, ver vidaPaquete()): con las opcionales
+   * por defecto (todas off) el único requisito de puedeSeguir es que tenga fecha de nacimiento
+   * (viene incluida y activada). Solo la sembramos cuando 'coberturas' quedó ATRÁS respecto al paso
+   * de arranque; si el arranque ES en 'coberturas', dejamos la fecha vacía para que el usuario la
+   * ingrese (es parte de lo que debe llenar ahí). */
   if (completo('coberturas')) {
     state.vidaOn = true;
     state.nacimiento = '15/03/1985';
@@ -3303,7 +3382,7 @@ const completarPasoActual = (paso) => {
       break;
     }
     case 'coberturas':
-      state.vidaOn = true; state.nacimiento = '15/03/1985';
+      state.vidaOn = true; state.nacimiento = '15/03/1985'; state.vidaAbierta = true;
       break;
     case 'fotos':
       state.sedes.forEach((s) => { const f = fotosDe(s); f.entrada = true; f.trabajo = true; f.almacenamiento = true; });
