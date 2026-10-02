@@ -1680,25 +1680,18 @@ const chip = (label, action, active) => `<button type="button" class="sb-ui-chip
  * ícono de chulito que se usaba antes. Es solo el indicador visual: vive dentro del botón que ya
  * hace clic en toda la fila (ver vidaPaquete() y coberturas()), no un control aparte. */
 const switchInd = (on) => `<span class="pymes-switch${on ? ' is-on' : ''}" aria-hidden="true"><span class="pymes-switch__knob"></span></span>`;
-/** El input nativo type="date" solo acepta su valor en ISO (AAAA-MM-DD); el resto de la app guarda
- * y valida la fecha de nacimiento como texto DD/MM/AAAA (ver edad()), así que se convierte justo
- * en el borde: al pintar el input (ddmmaaaaAIso) y al leer lo que el usuario eligió o escribió
- * (isoADdmmaaaa, en el delegado de 'input'). */
-const ddmmaaaaAIso = (valor) => { const m = String(valor).match(/(\d{1,2})\D(\d{1,2})\D(\d{4})/); return m ? `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}` : ''; };
-const isoADdmmaaaa = (valor) => { const m = String(valor).match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? `${m[3]}/${m[2]}/${m[1]}` : ''; };
 /** "email", "number" y "date" no soportan setSelectionRange: renderConFoco no puede restaurar el
- * cursor ahí y la escritura se siente rota (se pierde el cursor con cada tecla). Para "email" se usa
- * type="text" con inputmode para conservar el teclado sin ese problema; "date" sí necesita el tipo
- * nativo (es el que da el selector de calendario) así que ese costo se acepta ahí. autocomplete="off"
+ * cursor ahí y la escritura se siente rota (se pierde el cursor con cada tecla). Por eso "email" y
+ * "date" se pintan como type="text" (con inputmode); la fecha se escribe como DD/MM/AAAA. autocomplete="off"
  * porque el input se recrea en cada render (app.innerHTML en cada tecla) y el dropdown/calendario
  * nativo del navegador queda roto si el input no es siempre el mismo nodo (se corta o no deja
  * seleccionar). */
 const inputField = (id, label, value, placeholder = '', type = 'text') => {
   const esCorreo = type === 'email';
   const esFecha = type === 'date';
-  const attrs = esCorreo ? 'type="text" inputmode="email" autocomplete="off"' : `type="${type}" autocomplete="off"`;
-  const valorMostrado = esFecha ? ddmmaaaaAIso(value) : value;
-  return `<div><label class="sb-ui-input-label" for="${id}">${label}</label><input id="${id}" class="sb-ui-input" ${attrs} value="${esc(valorMostrado)}" placeholder="${placeholder}" data-model="${id}"></div>`;
+  // La fecha se escribe a mano como texto DD/MM/AAAA (sin calendario nativo, que fallaba al recrearse el input en cada render).
+  const attrs = esCorreo ? 'type="text" inputmode="email" autocomplete="off"' : esFecha ? 'type="text" inputmode="numeric" maxlength="10" autocomplete="off"' : `type="${type}" autocomplete="off"`;
+  return `<div><label class="sb-ui-input-label" for="${id}">${label}</label><input id="${id}" class="sb-ui-input" ${attrs} value="${esc(value)}" placeholder="${placeholder}" data-model="${id}"></div>`;
 };
 /** Campo con un "%" que siempre queda pegado al final del valor y no se puede borrar (basta con
  * escribir los dígitos). Antes era type="number": ese tipo de input no soporta setSelectionRange,
@@ -2956,6 +2949,26 @@ const formatearMilesAlEscribir = (target) => {
 };
 
 /** Vuelve a renderizar sin perder el foco/cursor del campo que se está escribiendo, ya que render() reemplaza el HTML. */
+/** Deja solo dígitos y pone las barras de DD/MM/AAAA mientras se escribe, conservando el cursor
+ * detrás del mismo número de dígitos (igual que formatearMilesAlEscribir). */
+const formatearFechaAlEscribir = (target) => {
+  const key = target.dataset.model;
+  const cursor = target.selectionStart == null ? target.value.length : target.selectionStart;
+  const digitosAntes = target.value.slice(0, cursor).replace(/\D/g, '').length;
+  const d = target.value.replace(/\D/g, '').slice(0, 8);
+  state[key] = d.length > 4 ? `${d.slice(0, 2)}/${d.slice(2, 4)}/${d.slice(4)}` : d.length > 2 ? `${d.slice(0, 2)}/${d.slice(2)}` : d;
+  render();
+  const el = document.getElementById(target.id);
+  if (!el) return;
+  el.focus();
+  let nuevaPos = digitosAntes === 0 ? 0 : el.value.length;
+  let contados = 0;
+  for (let i = 0; i < el.value.length && digitosAntes > 0; i++) {
+    if (/\d/.test(el.value[i])) contados++;
+    if (contados === digitosAntes) { nuevaPos = i + 1; break; }
+  }
+  try { el.setSelectionRange(nuevaPos, nuevaPos); } catch (e) {}
+};
 const renderConFoco = () => {
   const activo = document.activeElement;
   const id = activo && activo.id;
@@ -3152,7 +3165,7 @@ document.body.addEventListener('input', (event) => {
   if (target.dataset.model) {
     const key = target.dataset.model;
     if (key === 'ventas') { formatearMilesAlEscribir(target); }
-    else if (key === 'nacimiento') { state.nacimiento = isoADdmmaaaa(target.value); renderConFoco(); }
+    else if (key === 'nacimiento') { formatearFechaAlEscribir(target); }
     else {
       state[key] = target.value;
       if (key === 'actividadBusqueda' && state.actividadBusqueda !== state.actividad) state.actividad = '';
