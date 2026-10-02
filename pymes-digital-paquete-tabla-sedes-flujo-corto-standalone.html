@@ -2702,24 +2702,22 @@ const resumen = () => {
     ${row('Valor del seguro', fmt(aPeriodo(primaPymes())) + ' ' + state.periodicidad)}
     ${row('Sedes cubiertas', String(state.sedes.length))}
     ${opcionalesActivas.length ? `<div style="height:1px;background:#E1E1E1"></div><div style="font-weight:700;font-size:12.5px;letter-spacing:.02em;color:#5B5B5B;text-transform:uppercase">Coberturas adicionales</div>${opcionalesActivas.map((k) => `<div style="display:flex;justify-content:space-between;gap:14px;align-items:center;padding:12px 14px;background:#F2F9F6;border-radius:14px;flex-wrap:wrap"><div style="display:flex;gap:8px;align-items:flex-start"><span class="material-symbols-outlined" style="font-size:18px;color:#038450">check_circle</span><div><div style="font-weight:700;font-size:13px;color:#0B613E">${OPC[k].label}</div><div style="font-weight:400;font-size:12px;line-height:1.4;color:#5B5B5B">${OPC[k].desc}</div></div></div><div style="display:flex;align-items:center;gap:10px"><strong style="font-weight:700;font-size:13px;color:#0B613E;white-space:nowrap">${OPC[k].prima ? fmt(OPC[k].prima) : 'Incluido'}</strong><button type="button" class="sb-ui-button sb-ui-button--error sb-ui-button--text sb-ui-button--small" data-action="opc:${k}">Quitar</button></div></div>`).join('')}` : ''}
-    <div style="height:1px;background:#E1E1E1"></div>
-    <div style="display:flex;align-items:baseline;justify-content:space-between"><span style="font-weight:700;font-size:14px">Total Seguro Pymes</span><span style="font-weight:700;font-size:19px;color:#006B40">${fmt(aPeriodo(primaPymes()))}</span></div>
-  </div>
-  ${state.vidaOn ? `<div style="background:#fff;border:1px solid #E1E1E1;border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:12px">
+    ${state.vidaOn ? `<div style="height:1px;background:#E1E1E1"></div>
     <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap">
-      <div style="font-weight:700;font-size:18px">Vida Pymes</div>
+      <div style="font-weight:700;font-size:12.5px;letter-spacing:.02em;color:#5B5B5B;text-transform:uppercase">Vida Pymes incluida</div>
       <div style="display:flex;gap:8px"><button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--text sb-ui-button--small" data-action="abrirDrawerVida">Editar</button><button type="button" class="sb-ui-button sb-ui-button--error sb-ui-button--text sb-ui-button--small" data-action="quitarVida">Quitar</button></div>
     </div>
     ${row('Valor asegurado', fmt(state.vas))}
     ${row('Coberturas incluidas', 'Fallecimiento, accidental, incapacidad y desmembración')}
-    ${row('Beneficiarios', state.beneficiarios.length ? state.beneficiarios.length + ' registrados' : 'Sin registrar')}
+    ${row('Beneficiarios', state.beneficiarios.length ? state.beneficiarios.length + ' registrados' : 'Sin registrar')}` : ''}
     <div style="height:1px;background:#E1E1E1"></div>
-    <div style="display:flex;align-items:baseline;justify-content:space-between"><span style="font-weight:700;font-size:14px">Prima Vida Pymes</span><span style="font-weight:700;font-size:19px;color:#006B40">${fmt(aPeriodo(primaVida()))}</span></div>
-  </div>` : `<button type="button" class="pymes-option" style="text-align:left" data-action="abrirDrawerVida">
+    <div style="display:flex;align-items:baseline;justify-content:space-between"><span style="font-weight:700;font-size:14px">${state.vidaOn ? 'Total de su plan' : 'Total Seguro Pymes'}</span><span style="font-weight:700;font-size:19px;color:#006B40">${fmt(aPeriodo(primaTotal()))}</span></div>
+  </div>
+  ${!state.vidaOn ? `<button type="button" class="pymes-option" style="text-align:left" data-action="abrirDrawerVida">
     <span style="flex:none;width:38px;height:38px;border-radius:999px;background:#FFE16F;display:flex;align-items:center;justify-content:center"><span class="material-symbols-outlined" style="font-size:20px;color:#038450">favorite</span></span>
     <span style="flex:1"><span style="display:block;font-weight:700;font-size:14.5px;color:#1B1B1B">Agregar Vida Pymes</span><span style="display:block;font-weight:400;font-size:12.5px;color:#5B5B5B;margin-top:2px">Protección para el dueño del negocio: usted elige quién recibe el beneficio.</span></span>
     <span class="material-symbols-outlined" style="font-size:20px;color:#038450">chevron_right</span>
-  </button>`}
+  </button>` : ''}
   <div style="background:#fff;border:1px solid #E1E1E1;border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:10px">
     <div style="display:flex;align-items:center;gap:10px"><span class="material-symbols-outlined" style="font-size:22px;color:#006B40">storefront</span><div style="font-weight:700;font-size:18px">Su negocio</div></div>
     ${row('Actividad', esc(state.actividad || 'No indicada'))}
@@ -3578,7 +3576,18 @@ const resolverIndiceSede = (valor) => {
 };
 const aplicarSedePorQuery = () => {
   const idx = resolverIndiceSede(new URLSearchParams(location.search).get('sede'));
-  if (idx !== null) { state.sedeActiva = idx; state.fotoSedeActiva = idx; }
+  if (idx === null) return;
+  state.sedeActiva = idx;
+  state.fotoSedeActiva = idx;
+  /** La fecha de nacimiento de Vida Pymes es del negocio, no de una sede en particular, pero en
+   * Useberry cada sede es una tarea aparte: la de la primera sede ("local") es la que prueba
+   * llenarla, así que ahí se deja vacía a propósito (ver sembrarEstadoHasta). Las tareas de
+   * cualquier otra sede ("bodega", etc.) no buscan probar ese campo, así que se entrega ya
+   * diligenciada para no bloquear "Continuar" con algo ajeno a esa tarea. */
+  if (state.paso === 'coberturas' && idx > 0 && !state.nacimiento) {
+    state.vidaOn = true;
+    state.nacimiento = '15/03/1985';
+  }
 };
 
 
