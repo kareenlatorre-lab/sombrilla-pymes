@@ -1583,7 +1583,7 @@ const nuevaSede = () => ({ direccion: '', ciudad: '', propietario: null, tipo: '
 const state = {
   paso: 'landing', consultado: false, encontrado: true,
   tipoDoc: 'NIT', numDoc: '', nombre: '', correo: '', celular: '',
-  landingPaso: 1, claveAsesor: '', correoAsesor: '',
+  landingPaso: 1, landingValidado: false, claveAsesor: '', correoAsesor: '',
   actividadBusqueda: '', actividad: '', ventas: '',
   multiSede: null, sedes: [nuevaSede()], sedeActiva: 0, fotoSedeActiva: 0, numCotizacion: 'COT-2026-' + String(Math.floor(1000000 + Math.random() * 9000000)),
   plan: 'sugerido', periodicidad: 'anual', personalizando: false, paqueteSugerido: null,
@@ -1682,15 +1682,25 @@ const chip = (label, action, active) => `<button type="button" class="sb-ui-chip
  * ícono de chulito que se usaba antes. Es solo el indicador visual: vive dentro del botón que ya
  * hace clic en toda la fila (ver vidaPaquete() y coberturas()), no un control aparte. */
 const switchInd = (on) => `<span class="pymes-switch${on ? ' is-on' : ''}" aria-hidden="true"><span class="pymes-switch__knob"></span></span>`;
-/** "email" (y "number") no soportan setSelectionRange: renderConFoco no puede restaurar el
- * cursor ahí y la escritura se siente rota (se pierde el cursor con cada tecla). Se usa type="text"
- * con inputmode para conservar el teclado sin ese problema. autocomplete="off" porque el input
- * se recrea en cada render (app.innerHTML en cada tecla) y el dropdown nativo del navegador
- * queda roto (se corta o no deja seleccionar). */
+/** El input nativo type="date" solo acepta su valor en ISO (AAAA-MM-DD); el resto de la app guarda
+ * y valida la fecha de nacimiento como texto DD/MM/AAAA (ver edad()), así que se convierte justo
+ * en el borde: al pintar el input (ddmmaaaaAIso) y al leer lo que el usuario eligió o escribió
+ * (isoADdmmaaaa, en el delegado de 'input'). */
+const ddmmaaaaAIso = (valor) => { const m = String(valor).match(/(\d{1,2})\D(\d{1,2})\D(\d{4})/); return m ? `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}` : ''; };
+const isoADdmmaaaa = (valor) => { const m = String(valor).match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? `${m[3]}/${m[2]}/${m[1]}` : ''; };
+/** "email", "number" y "date" no soportan setSelectionRange: renderConFoco no puede restaurar el
+ * cursor ahí y la escritura se siente rota (se pierde el cursor con cada tecla). Para "email" se usa
+ * type="text" con inputmode para conservar el teclado sin ese problema; "date" sí necesita el tipo
+ * nativo (es el que da el selector de calendario) así que ese costo se acepta ahí. autocomplete="off"
+ * porque el input se recrea en cada render (app.innerHTML en cada tecla) y el dropdown/calendario
+ * nativo del navegador queda roto si el input no es siempre el mismo nodo (se corta o no deja
+ * seleccionar). */
 const inputField = (id, label, value, placeholder = '', type = 'text') => {
   const esCorreo = type === 'email';
+  const esFecha = type === 'date';
   const attrs = esCorreo ? 'type="text" inputmode="email" autocomplete="off"' : `type="${type}" autocomplete="off"`;
-  return `<div><label class="sb-ui-input-label" for="${id}">${label}</label><input id="${id}" class="sb-ui-input" ${attrs} value="${esc(value)}" placeholder="${placeholder}" data-model="${id}"></div>`;
+  const valorMostrado = esFecha ? ddmmaaaaAIso(value) : value;
+  return `<div><label class="sb-ui-input-label" for="${id}">${label}</label><input id="${id}" class="sb-ui-input" ${attrs} value="${esc(valorMostrado)}" placeholder="${placeholder}" data-model="${id}"></div>`;
 };
 /** Campo con un "%" que siempre queda pegado al final del valor y no se puede borrar (basta con
  * escribir los dígitos). Antes era type="number": ese tipo de input no soporta setSelectionRange,
@@ -1704,24 +1714,34 @@ const selectField = (id, label, value, options) => `<div><label class="sb-ui-sel
  * poco. No es obligatorio: "Continuar" en el paso 2 nunca queda bloqueado por estos dos campos. */
 const landingBarraProgreso = () => `<div style="height:6px;border-radius:999px;background:#E1E1E1;overflow:hidden"><div style="height:100%;width:${state.landingPaso === 1 ? '50%' : '100%'};background:#009056;border-radius:999px;transition:width .2s ease"></div></div>`;
 
+/** Mientras el cliente no ha tocado ningún campo, el formulario arranca vacío y es obvio que falta
+ * llenarlo: no hace falta mostrarle errores todavía. state.landingValidado se activa en el primer
+ * blur de un campo de texto o el primer clic en una casilla (ver los delegados de 'focusout' y
+ * 'change'), y desde ahí sí se explica campo por campo por qué "Continuar" sigue bloqueado. */
+const erroresCampo = (ok, mensaje) => (state.landingValidado && !ok) ? `<div style="font-weight:400;font-size:11.5px;color:#B3261E;margin-top:4px">${mensaje}</div>` : '';
 const landingFormPaso1 = () => `
   ${landingBarraProgreso()}
   ${selectField('tipoDoc', 'Tipo de documento', state.tipoDoc, [['CC', 'Cédula de ciudadanía'], ['CE', 'Cédula de extranjería'], ['NIT', 'NIT'], ['PA', 'Pasaporte']])}
   ${inputField('numDoc', 'Número de documento', state.numDoc, 'Ej. 1.020.445.778')}
+  ${erroresCampo(String(state.numDoc).replace(/\D/g, '').length >= 5, 'Ingrese un número de documento válido.')}
   ${state.consultado ? `<div style="display:flex;align-items:flex-start;gap:9px;padding:11px 13px;background:${state.encontrado ? '#E5F4EE' : '#FFF8BC'};border-radius:12px"><span class="material-symbols-outlined" style="font-size:19px;color:${state.encontrado ? '#006B40' : '#7A6100'}">${state.encontrado ? 'check_small' : 'info'}</span><span style="font-weight:400;font-size:12.5px;line-height:1.4;color:#414141">${state.encontrado ? 'Encontramos sus datos y los completamos por usted. Revíselos y edite lo que necesite.' : 'No encontramos datos asociados a este documento. Complete la información a continuación.'}</span></div>` : ''}
   ${inputField('correo', 'Correo electrónico', state.correo, 'Ej. nombre@correo.com', 'email')}
+  ${erroresCampo(!!state.correo, 'Ingrese su correo electrónico.')}
   ${inputField('celular', 'Número de celular', state.celular, 'Ej. 314 578 9001', 'tel')}
+  ${erroresCampo(!!state.celular, 'Ingrese su número de celular.')}
   <div style="display:flex;flex-direction:column;gap:2px">
     <label class="sb-ui-checkbox">
       <input type="checkbox" class="sb-ui-checkbox__input" data-acepta-terminos ${state.aceptaTerminos ? 'checked' : ''}>
       <span class="sb-ui-checkbox__box"></span>
       <span class="sb-ui-checkbox__label" style="font-size:12.5px">Acepto <span style="color:#05794A;text-decoration:underline">los términos y condiciones del canal digital.</span></span>
     </label>
+    ${erroresCampo(state.aceptaTerminos, 'Debe aceptar los términos y condiciones del canal digital.')}
     <label class="sb-ui-checkbox">
       <input type="checkbox" class="sb-ui-checkbox__input" data-acepta-datos ${state.aceptaDatos ? 'checked' : ''}>
       <span class="sb-ui-checkbox__box"></span>
       <span class="sb-ui-checkbox__label" style="font-size:12.5px">Acepto la <a href="https://d9b6rardqz97a.cloudfront.net/wp-content/uploads/2024/02/16112906/240213_transv_5335_15Feb24.pdf" target="_blank" style="color:#05794A;text-decoration:underline">Política de Tratamiento de Datos Personales</a> y el <a href="https://www.segurosbolivar.com/politicas-de-privacidad" target="_blank" style="color:#05794A;text-decoration:underline">Tratamiento de mis datos.</a></span>
     </label>
+    ${erroresCampo(state.aceptaDatos, 'Debe aceptar la Política de Tratamiento de Datos Personales.')}
   </div>
   ${btn('Continuar', 'landingPaso2', 'primary', true, !puedeSeguir())}
 `;
@@ -2138,7 +2158,7 @@ const vidaDrawer = () => {
       ${stepper(state.vas, 'data-vas', 'vas:-1', 'vas:1')}
       <div style="font-weight:400;font-size:12.5px;color:#757575;margin-top:8px">Entre ${fmt(VAS_MIN)} y ${fmt(VAS_MAX)}.</div>
     </div>
-    <div>${inputField('nacimiento', 'Fecha de nacimiento del asegurado', state.nacimiento, 'DD/MM/AAAA')}</div>
+    <div>${inputField('nacimiento', 'Fecha de nacimiento del asegurado', state.nacimiento, 'DD/MM/AAAA', 'date')}</div>
     <div>
       <div style="font-weight:700;font-size:14px;margin-bottom:9px">Coberturas incluidas</div>
       ${accordionList(VIDA_COBERTURAS.map((c) => [c.icon, c.label, c.desc]))}
@@ -2511,7 +2531,7 @@ const vidaPaquete = () => {
             <div style="font-weight:400;font-size:12px;color:#757575;margin-top:6px">Entre ${fmt(VAS_MIN)} y ${fmt(VAS_MAX)}.</div>
           </div>
           <div>
-            ${inputField('nacimiento', 'Fecha de nacimiento del asegurado', state.nacimiento, 'DD/MM/AAAA')}
+            ${inputField('nacimiento', 'Fecha de nacimiento del asegurado', state.nacimiento, 'DD/MM/AAAA', 'date')}
             <div style="font-weight:400;font-size:12px;color:${fechaInvalida ? '#B3261E' : '#9B9B9B'};margin-top:6px">${fechaInvalida ? 'Esa fecha no es válida: escríbala como DD/MM/AAAA y confirme que el asegurado tenga entre 18 y 65 años.' : 'La necesitamos para calcular el valor final.'}</div>
           </div>
         </div>
@@ -3097,6 +3117,7 @@ document.body.addEventListener('input', (event) => {
   if (target.dataset.model) {
     const key = target.dataset.model;
     if (key === 'ventas') { formatearMilesAlEscribir(target); }
+    else if (key === 'nacimiento') { state.nacimiento = isoADdmmaaaa(target.value); renderConFoco(); }
     else {
       state[key] = target.value;
       if (key === 'actividadBusqueda' && state.actividadBusqueda !== state.actividad) state.actividad = '';
@@ -3123,8 +3144,8 @@ document.body.addEventListener('input', (event) => {
   if (target.dataset.mov === 'limite') sede.mov.limite = Number(target.value.replace(/\D/g, '')) || 0;
   if (target.hasAttribute('data-vas')) state.vas = Number(target.value.replace(/\D/g, '')) || 0;
   if (target.hasAttribute('data-declaracion')) { state.declaracion = target.checked; render(); }
-  if (target.hasAttribute('data-acepta-terminos')) { state.aceptaTerminos = target.checked; render(); }
-  if (target.hasAttribute('data-acepta-datos')) { state.aceptaDatos = target.checked; render(); }
+  if (target.hasAttribute('data-acepta-terminos')) { state.aceptaTerminos = target.checked; state.landingValidado = true; render(); }
+  if (target.hasAttribute('data-acepta-datos')) { state.aceptaDatos = target.checked; state.landingValidado = true; render(); }
   if (target.hasAttribute('data-acepta-terminos-seguro')) { state.aceptaTerminosSeguro = target.checked; render(); }
   /** La Declaración de Asegurabilidad no se marca con un simple clic: siempre abre el modal para
    * leerla, y solo "Acepto la declaración" (tras llegar al final) marca el checkbox. */
@@ -3341,6 +3362,12 @@ document.body.addEventListener('focusin', (event) => {
   const tip = document.querySelector('.pymes-olivia-tip');
   if (tip) tip.classList.add('pymes-olivia-tip--oculta');
 });
+/** Apenas el cliente sale de un campo del landing (numDoc, correo o celular), se activan los
+ * mensajes de error campo por campo: así ve de inmediato si lo que escribió no basta para
+ * continuar, en vez de solo encontrarse con el botón bloqueado sin explicación. */
+document.body.addEventListener('focusout', (event) => {
+  if (['numDoc', 'correo', 'celular'].includes(event.target.id)) { state.landingValidado = true; render(); }
+});
 document.body.addEventListener('focusout', (event) => {
   if (!event.target.matches || !event.target.matches('input,select,textarea')) return;
   const tip = document.querySelector('.pymes-olivia-tip');
@@ -3456,10 +3483,14 @@ const sembrarEstadoHasta = (paso) => {
 
   /** Al arrancar EN 'coberturas' (personalización real): dejamos Ciberseguridad Pymes ya
    * seleccionada como punto de partida del ajuste. Respondemos la pregunta de interrupciones de
-   * cada sede (puedeSeguir la exige cuando ciber está activo) para no bloquear "Continuar". */
+   * cada sede (puedeSeguir la exige cuando ciber está activo) para no bloquear "Continuar". Vida
+   * Pymes queda desplegada de una vez: si la tarea es la de la primera sede ("local"), la fecha de
+   * nacimiento llega vacía a propósito (es lo que debe llenar ahí) y, contraída, el cliente no vería
+   * ni el campo ni por qué "Continuar" sigue bloqueado. */
   if (objetivo === RUTA.indexOf('coberturas')) {
     state.opcionales.ciber = true;
     state.sedes.forEach((s) => { if (s.ciber.interrupciones === null) s.ciber.interrupciones = false; });
+    state.vidaAbierta = true;
   }
 
   // beneficiarios: reparto 100 % (necesario para que "resumen" muestre la lista, no solo para
@@ -3545,10 +3576,16 @@ const aplicarSedePorQuery = () => {
    * Useberry cada sede es una tarea aparte: la de la primera sede ("local") es la que prueba
    * llenarla, así que ahí se deja vacía a propósito (ver sembrarEstadoHasta). Las tareas de
    * cualquier otra sede ("bodega", etc.) no buscan probar ese campo, así que se entrega ya
-   * diligenciada para no bloquear "Continuar" con algo ajeno a esa tarea. */
-  if (state.paso === 'coberturas' && idx > 0 && !state.nacimiento) {
-    state.vidaOn = true;
-    state.nacimiento = '15/03/1985';
+   * diligenciada para no bloquear "Continuar" con algo ajeno a esa tarea. Ciberseguridad, en
+   * cambio, sembrarEstadoHasta la deja preseleccionada para "local" (esa tarea sí prueba
+   * desactivarla/dejarla); en "bodega" llega desmarcada de una vez porque esa tarea prueba otra
+   * cosa, no el flujo de Ciberseguridad. */
+  if (state.paso === 'coberturas' && idx > 0) {
+    if (!state.nacimiento) {
+      state.vidaOn = true;
+      state.nacimiento = '15/03/1985';
+    }
+    state.opcionales.ciber = false;
   }
 };
 
