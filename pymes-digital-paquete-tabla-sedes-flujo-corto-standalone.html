@@ -1589,7 +1589,7 @@ const state = {
   opcDescAbiertas: [],
     vidaOn: true, vidaAbierta: false, vas: 100000000, nacimiento: '', beneficiarios: [],
   benefNombre: '', benefParentesco: 'Cónyuge', benefPct: 100, benefIdx: -1,
-  medioPago: '', procesandoPago: false, pagoError: null, pagoToken: 0, otp: '', otpValidado: false, otpAbierto: false, otpError: false, declaracion: false, aceptaTerminos: false, aceptaDatos: false, aceptaTerminosSeguro: false, aceptaAsegurabilidad: false, modalAsegurabilidad: false, asegurabilidadLeida: false, modalPlan: null, drawerVida: false, drawerBenef: false, benefEditIdx: -1,
+  medioPago: '', procesandoPago: false, pagoError: null, pagoToken: 0, otp: '', otpValidado: false, otpAbierto: false, otpError: false, declaracion: false, aceptaTerminos: false, aceptaDatos: false, aceptaTerminosSeguro: false, aceptaAsegurabilidad: false, modalAsegurabilidad: false, asegurabilidadLeida: false, resumenDetalleAbierto: false, modalPlan: null, drawerVida: false, drawerBenef: false, benefEditIdx: -1,
   drawerSede: false, sedeEditIdx: -1, sedeDraft: nuevaSede(),
   drawerMapa: false, mapaSedeIdx: null, mapaBusqueda: '', mapaError: '', mapaBuscando: false,
   incluirCorreoPrincipal: true, correosExtra: [], nuevoCorreoExtra: '', mostrarAgregarCorreo: false,
@@ -1687,7 +1687,7 @@ const switchInd = (on) => `<span class="pymes-switch${on ? ' is-on' : ''}" aria-
  * queda roto (se corta o no deja seleccionar). */
 const inputField = (id, label, value, placeholder = '', type = 'text') => {
   const esCorreo = type === 'email';
-  const attrs = esCorreo ? 'type="text" inputmode="email" autocomplete="off"' : `type="${type}"`;
+  const attrs = esCorreo ? 'type="text" inputmode="email" autocomplete="off"' : `type="${type}" autocomplete="off"`;
   return `<div><label class="sb-ui-input-label" for="${id}">${label}</label><input id="${id}" class="sb-ui-input" ${attrs} value="${esc(value)}" placeholder="${placeholder}" data-model="${id}"></div>`;
 };
 /** Campo con un "%" que siempre queda pegado al final del valor y no se puede borrar (basta con
@@ -2692,26 +2692,29 @@ const cotizacionCard = () => {
  * si algo falla en el camino (la póliza recién aparece después, en Emisión). */
 const chipCotizacion = () => `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:#5B5B5B"><span class="material-symbols-outlined" style="font-size:18px;color:#006B40">tag</span>Número de cotización <strong style="color:#1B1B1B">${esc(state.numCotizacion)}</strong></div>`;
 
+/** Una sola lista plana de coberturas (principales + opcionales activas + Vida Pymes si está
+ * incluida), sin encabezados que digan "Pymes" o "Vida Pymes": para el cliente es un solo pedido,
+ * no dos productos separados. Editar o quitar algo puntual se hace volviendo a "Ajuste sus
+ * coberturas" (botón Volver del stepper), no desde este resumen de solo lectura. */
+const coberturaResumenFila = (icon, label, valor, i) => `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;${i > 0 ? 'border-top:1px solid #E1E1E1;' : ''}"><span class="material-symbols-outlined" style="font-size:18px;color:#006B40">${icon}</span><span style="flex:1;font-weight:400;font-size:13.5px;color:#1B1B1B">${label}</span><span style="font-weight:700;font-size:13px;color:#0B613E;white-space:nowrap">${valor}</span></div>`;
 const resumen = () => {
   const sede = state.sedes[0];
   const opcionalesActivas = Object.keys(OPC).filter((k) => state.opcionales[k]);
+  const filasPrincipales = CLAVES.map((clave, i) => {
+    const valor = state.sedes.reduce((suma, s) => suma + (s.valores[clave] || 0), 0);
+    return valor ? { icon: LANDING_COBERTURAS[i].icon, label: ETIQUETAS[clave], valor: fmt(valor) } : null;
+  }).filter(Boolean);
+  const filasOpcionales = opcionalesActivas.map((k) => ({ icon: 'check_circle', label: OPC[k].label, valor: OPC[k].prima ? fmt(OPC[k].prima) : 'Incluido' }));
+  const filasVida = state.vidaOn ? VIDA_COBERTURAS.map((c) => ({ icon: c.icon, label: c.label, valor: 'Incluido' })) : [];
+  const filas = [...filasPrincipales, ...filasOpcionales, ...filasVida];
   return `<div style="display:flex;flex-direction:column;gap:16px;max-width:900px">
   ${chipCotizacion()}
   <div style="background:#fff;border:1px solid #B3F2D4;border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:14px">
     <div style="display:flex;align-items:center;gap:10px"><span class="material-symbols-outlined" style="font-size:22px;color:#006B40">verified_user</span><div style="font-weight:700;font-size:18px">Resumen de su plan</div></div>
-    ${row('Valor del seguro', fmt(aPeriodo(primaPymes())) + ' ' + state.periodicidad)}
     ${row('Sedes cubiertas', String(state.sedes.length))}
-    ${opcionalesActivas.length ? `<div style="height:1px;background:#E1E1E1"></div><div style="font-weight:700;font-size:12.5px;letter-spacing:.02em;color:#5B5B5B;text-transform:uppercase">Coberturas adicionales</div>${opcionalesActivas.map((k) => `<div style="display:flex;justify-content:space-between;gap:14px;align-items:center;padding:12px 14px;background:#F2F9F6;border-radius:14px;flex-wrap:wrap"><div style="display:flex;gap:8px;align-items:flex-start"><span class="material-symbols-outlined" style="font-size:18px;color:#038450">check_circle</span><div><div style="font-weight:700;font-size:13px;color:#0B613E">${OPC[k].label}</div><div style="font-weight:400;font-size:12px;line-height:1.4;color:#5B5B5B">${OPC[k].desc}</div></div></div><div style="display:flex;align-items:center;gap:10px"><strong style="font-weight:700;font-size:13px;color:#0B613E;white-space:nowrap">${OPC[k].prima ? fmt(OPC[k].prima) : 'Incluido'}</strong><button type="button" class="sb-ui-button sb-ui-button--error sb-ui-button--text sb-ui-button--small" data-action="opc:${k}">Quitar</button></div></div>`).join('')}` : ''}
-    ${state.vidaOn ? `<div style="height:1px;background:#E1E1E1"></div>
-    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap">
-      <div style="font-weight:700;font-size:12.5px;letter-spacing:.02em;color:#5B5B5B;text-transform:uppercase">Vida Pymes incluida</div>
-      <div style="display:flex;gap:8px"><button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--text sb-ui-button--small" data-action="abrirDrawerVida">Editar</button><button type="button" class="sb-ui-button sb-ui-button--error sb-ui-button--text sb-ui-button--small" data-action="quitarVida">Quitar</button></div>
-    </div>
-    ${row('Valor asegurado', fmt(state.vas))}
-    ${row('Coberturas incluidas', 'Fallecimiento, accidental, incapacidad y desmembración')}
-    ${row('Beneficiarios', state.beneficiarios.length ? state.beneficiarios.length + ' registrados' : 'Sin registrar')}` : ''}
+    <div style="display:flex;flex-direction:column">${filas.map((f, i) => coberturaResumenFila(f.icon, f.label, f.valor, i)).join('')}</div>
     <div style="height:1px;background:#E1E1E1"></div>
-    <div style="display:flex;align-items:baseline;justify-content:space-between"><span style="font-weight:700;font-size:14px">${state.vidaOn ? 'Total de su plan' : 'Total Seguro Pymes'}</span><span style="font-weight:700;font-size:19px;color:#006B40">${fmt(aPeriodo(primaTotal()))}</span></div>
+    <div style="display:flex;align-items:baseline;justify-content:space-between"><span style="font-weight:700;font-size:14px">Total de su plan</span><span style="font-weight:700;font-size:19px;color:#006B40">${fmt(aPeriodo(primaTotal()))}</span></div>
   </div>
   ${!state.vidaOn ? `<button type="button" class="pymes-option" style="text-align:left" data-action="abrirDrawerVida">
     <span style="flex:none;width:38px;height:38px;border-radius:999px;background:#FFE16F;display:flex;align-items:center;justify-content:center"><span class="material-symbols-outlined" style="font-size:20px;color:#038450">favorite</span></span>
@@ -2719,17 +2722,19 @@ const resumen = () => {
     <span class="material-symbols-outlined" style="font-size:20px;color:#038450">chevron_right</span>
   </button>` : ''}
   <div style="background:#fff;border:1px solid #E1E1E1;border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:10px">
-    <div style="display:flex;align-items:center;gap:10px"><span class="material-symbols-outlined" style="font-size:22px;color:#006B40">storefront</span><div style="font-weight:700;font-size:18px">Su negocio</div></div>
+    <button type="button" data-action="toggleResumenDetalle" aria-expanded="${state.resumenDetalleAbierto}" style="all:unset;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;box-sizing:border-box">
+      <div style="display:flex;align-items:center;gap:10px"><span class="material-symbols-outlined" style="font-size:22px;color:#006B40">storefront</span><div style="font-weight:700;font-size:18px">Su negocio y sus datos</div></div>
+      <span class="material-symbols-outlined" style="font-size:22px;color:#9B9B9B;transition:transform .15s;transform:rotate(${state.resumenDetalleAbierto ? 180 : 0}deg)">expand_more</span>
+    </button>
+    ${state.resumenDetalleAbierto ? `
     ${row('Actividad', esc(state.actividad || 'No indicada'))}
     ${row('Ventas anuales registradas', esc(String(state.ventas)))}
     ${state.sedes.length > 1 ? row('Sedes', state.sedes.map((s) => esc((s.direccion || 'Sin dirección') + ', ' + (s.ciudad || 'Sin ciudad'))).join('<br>')) : row('Sede', sede ? esc((sede.direccion || 'Sin dirección') + ', ' + (sede.ciudad || 'Sin ciudad')) : 'Sin datos')}
-  </div>
-  <div style="background:#fff;border:1px solid #E1E1E1;border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:10px">
-    <div style="display:flex;align-items:center;gap:10px"><span class="material-symbols-outlined" style="font-size:22px;color:#006B40">badge</span><div style="font-weight:700;font-size:18px">Sus datos</div></div>
+    <div style="height:1px;background:#E1E1E1"></div>
     ${row('Nombre', esc(state.nombre || 'No indicado'))}
     ${row('Documento', esc(state.tipoDoc + ' ' + state.numDoc))}
     ${row('Correo', esc(state.correo))}
-    ${row('Celular', esc(state.celular))}
+    ${row('Celular', esc(state.celular))}` : ''}
   </div>
   ${cotizacionCard()}
   <div style="background:#009056;border-radius:24px;padding:18px;display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap"><div><div style="font-weight:400;font-size:13px;color:rgba(255,255,255,.85)">Total a pagar ${state.periodicidad}</div><div style="font-weight:700;font-size:34px;line-height:1.1;color:#fff;margin-top:4px">${primaTxt()}</div></div></div>
@@ -3198,6 +3203,7 @@ document.body.addEventListener('click', (event) => {
   else if (action === 'cerrarModal') state.modalPlan = null;
   else if (action === 'abrirAsegurabilidad') { state.modalAsegurabilidad = true; state.asegurabilidadLeida = false; }
   else if (action === 'cerrarAsegurabilidad') state.modalAsegurabilidad = false;
+  else if (action === 'toggleResumenDetalle') state.resumenDetalleAbierto = !state.resumenDetalleAbierto;
   else if (action === 'aceptarAsegurabilidad') { if (state.asegurabilidadLeida) { state.aceptaAsegurabilidad = true; state.modalAsegurabilidad = false; } }
   else if (action === 'pagoSimularError') { state.pagoToken++; state.procesandoPago = false; state.pagoError = 'Parece que su conexión se interrumpió durante la transacción.'; }
   else if (action === 'pagoReintentar') iniciarPago(currentRoute[Math.min(index + 1, currentRoute.length - 1)]);
