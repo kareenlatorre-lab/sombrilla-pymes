@@ -3263,8 +3263,11 @@ document.body.addEventListener('click', (event) => {
     state.opcionales[clave] = !state.opcionales[clave];
     /** Al activar una opcional se despliega de una vez (en vez de dejarla encendida pero oculta
      * tras la flecha): así se ve de inmediato lo que hay que responder, como la pregunta de
-     * interrupciones de Ciberseguridad Pymes, que bloquea "Continuar" hasta contestarla. */
+     * interrupciones de Ciberseguridad Pymes, que bloquea "Continuar" hasta contestarla. Al
+     * apagarla se contrae de una vez, en vez de dejarla abierta mostrando un detalle que ya no
+     * aplica. */
     if (state.opcionales[clave] && !state.opcDescAbiertas.includes(clave)) state.opcDescAbiertas = [...state.opcDescAbiertas, clave];
+    if (!state.opcionales[clave]) state.opcDescAbiertas = state.opcDescAbiertas.filter((k) => k !== clave);
   }
   else if (action.startsWith('opcVerDesc:')) {
     const clave = action.slice(11);
@@ -3284,7 +3287,7 @@ document.body.addEventListener('click', (event) => {
   else if (action === 'quitarVida') { state.vidaOn = false; state.drawerVida = false; }
   else if (action === 'vidaToggle') {
     state.vidaOn = !state.vidaOn;
-    if (state.vidaOn) state.vidaAbierta = true;
+    state.vidaAbierta = state.vidaOn;
   }
   else if (action === 'vidaVerDesc') state.vidaAbierta = !state.vidaAbierta;
   else if (action.startsWith('pago:')) state.medioPago = action.slice(5);
