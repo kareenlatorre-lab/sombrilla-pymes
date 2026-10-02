@@ -2076,9 +2076,9 @@ const otpModal = () => {
       <div><div style="font-weight:700;font-size:19px">Confirme su identidad</div><div style="font-weight:400;font-size:13px;line-height:1.4;color:#5B5B5B;margin-top:3px">Enviamos un código de seis dígitos al celular ${esc(state.celular || 'registrado')}.</div></div>
       <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--circle sb-ui-button--icon-only" data-action="cerrarOtp">×</button>
     </div>
-    <div style="font-weight:400;font-size:12px;color:#9B9B9B">Para el prototipo, el código es <strong>481203</strong>.</div>
-    ${inputField('otp', 'Código de validación', state.otp, '481203')}
-    ${state.otpError ? '<div style="font-weight:600;font-size:12.5px;color:#B3261E">Código incorrecto. Vuelva a intentarlo.</div>' : ''}
+    <div style="font-weight:400;font-size:12px;color:#9B9B9B">Para el prototipo, cualquier código es válido.</div>
+    ${inputField('otp', 'Código de validación', state.otp, '123456')}
+    ${state.otpError ? '<div style="font-weight:600;font-size:12.5px;color:#B3261E">Ingrese el código que le llegó por mensaje de texto.</div>' : ''}
     <button type="button" class="sb-ui-button sb-ui-button--primary sb-ui-button--fill" data-action="validarOtp">Validar código</button>
   `);
 };
@@ -3336,7 +3336,7 @@ document.body.addEventListener('click', (event) => {
   }
   else if (action.startsWith('delBenef:')) { state.beneficiarios.splice(Number(action.slice(9)), 1); state.drawerBenef = false; }
   else if (action === 'validarOtp') {
-    if (state.otp.trim() === '481203') {
+    if (state.otp.trim().length > 0) {
       state.otpValidado = true; state.otpAbierto = false; state.otpError = false;
       state.paso = currentRoute[Math.min(index + 1, currentRoute.length - 1)];
     } else { state.otpError = true; }
