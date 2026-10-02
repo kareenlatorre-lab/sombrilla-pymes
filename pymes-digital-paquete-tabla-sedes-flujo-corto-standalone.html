@@ -211,7 +211,7 @@ button, input, select { font: inherit; }
    y el stepper no se desborda (con 286px sobraba 1px y aparecía una barra de scroll horizontal). */
 .pymes-shell__rail { position: fixed; top: 73px; bottom: 0; left: 0; width: 287px; padding: 40px 64px; background: #fff; border-right: 1px solid #e1e1e1; overflow-x: hidden; overflow-y: auto; z-index: 10; }
 .pymes-shell__main { margin-left: 287px; padding: 0 40px; }
-.pymes-shell__body { display: flex; align-items: flex-start; gap: 32px; max-width: 1074px; margin: 0 auto; }
+.pymes-shell__body { display: flex; align-items: flex-start; gap: 32px; max-width: 1074px; }
 .pymes-shell__body--con-carrito { max-width: 1406px; }
 .pymes-shell__content { flex: 1; min-width: 0; }
 .pymes-cta-bar--con-rail { left: 287px; }
@@ -1546,7 +1546,7 @@ const TITULOS = { negocio: 'Cuéntenos de su negocio', sedes: 'Las sedes que qui
 const BAJADAS = {
   negocio: 'Con la actividad y las ventas de su negocio ajustamos las coberturas recomendadas.',
   sedes: 'Agregue cada sede que quiere asegurar; puede editarlas o quitarlas cuando quiera.',
-  plan: 'Compare los tres planes y elija el que más le convenga para su negocio.',
+  plan: 'Estas son 3 propuestas sugeridas, no planes fijos: elija la que más se parezca a lo que necesita y personalícela después.',
   coberturas: 'Ajuste el valor de cada cobertura, active las opcionales y personalice Vida Pymes, incluida en su paquete.',
   fotos: 'Estas fotos nos permiten confirmar su precio y emitir la póliza.',
   resumenCompra: 'Su paquete incluye Vida Pymes. Ajuste el valor asegurado, confirme la fecha de nacimiento del asegurado para ver el valor final, o quítela si no la necesita.',
@@ -1589,12 +1589,13 @@ const state = {
   opcDescAbiertas: [],
     vidaOn: true, vidaAbierta: false, vas: 100000000, nacimiento: '', beneficiarios: [],
   benefNombre: '', benefParentesco: 'Cónyuge', benefPct: 100, benefIdx: -1,
-  medioPago: '', procesandoPago: false, pagoError: null, pagoToken: 0, otp: '', otpValidado: false, otpAbierto: false, otpError: false, declaracion: false, aceptaTerminos: false, aceptaDatos: false, modalPlan: null, drawerVida: false, drawerBenef: false, benefEditIdx: -1,
+  medioPago: '', procesandoPago: false, pagoError: null, pagoToken: 0, otp: '', otpValidado: false, otpAbierto: false, otpError: false, declaracion: false, aceptaTerminos: false, aceptaDatos: false, aceptaTerminosSeguro: false, aceptaAsegurabilidad: false, modalAsegurabilidad: false, asegurabilidadLeida: false, modalPlan: null, drawerVida: false, drawerBenef: false, benefEditIdx: -1,
   drawerSede: false, sedeEditIdx: -1, sedeDraft: nuevaSede(),
   drawerMapa: false, mapaSedeIdx: null, mapaBusqueda: '', mapaError: '', mapaBuscando: false,
   incluirCorreoPrincipal: true, correosExtra: [], nuevoCorreoExtra: '', mostrarAgregarCorreo: false,
   oliviaAbierta: false, oliviaTexto: '',
-  oliviaLog: [{ from: 'olivia', text: '¡Hola! Soy OLIVIA. Pregúnteme sobre coberturas, exclusiones o el clausulado del Seguro Pymes y Vida Pymes.' }]
+  oliviaLog: [{ from: 'olivia', text: '¡Hola! Soy OLIVIA. Pregúnteme sobre coberturas, exclusiones o el clausulado del Seguro Pymes y Vida Pymes.' }],
+  calificacion: 0
 };
 
 const app = document.getElementById('app');
@@ -1617,7 +1618,7 @@ const primaPymes = () => {
   total *= multiplicadorPlan();
   return total * 1.19;
 };
-const edad = () => { const match = String(state.nacimiento).match(/(\d{1,2})\D(\d{1,2})\D(\d{4})/); if (!match) return null; const years = 2026 - parseInt(match[3], 10); return years > 17 && years < 100 ? years : null; };
+const edad = () => { const match = String(state.nacimiento).match(/(\d{1,2})\D(\d{1,2})\D(\d{4})/); if (!match) return null; const years = 2026 - parseInt(match[3], 10); return years > 17 && years < 66 ? years : null; };
 /** Variante "paquete": Vida Pymes viene incluida en el plan sugerido. Como aún no conocemos la
  * fecha de nacimiento del asegurado (puede no ser quien llena el formulario), el precio inicial
  * usa una edad de referencia; el valor final exige la fecha real en "Personalice su seguro". */
@@ -1627,6 +1628,49 @@ const vidaEstimada = () => state.vidaOn && !edad();
 const primaTotal = () => primaPymes() + primaVida();
 const aPeriodo = (annual) => state.periodicidad === 'mensual' ? annual / 12 * 1.06 : annual;
 const primaTxt = () => fmt(aPeriodo(primaTotal()));
+
+/** Desglose del precio para el carrito: una línea por cada cobertura principal con valor asegurado
+ * (se omiten las que están en $0, p. ej. edificios cuando todas las sedes son arrendadas), una por
+ * cada opcional activa, y Vida Pymes si está incluida. Cada línea usa el mismo cálculo que
+ * primaPymes()/primaVida(), solo que separado por concepto en vez de sumado de una vez, así que
+ * sumadas dan exactamente el mismo total mostrado. */
+const desglosePrecio = () => {
+  const factor = multiplicadorPlan() * 1.19;
+  const lineas = [];
+  CLAVES.forEach((clave) => {
+    const valor = state.sedes.reduce((suma, sede) => suma + (sede.valores[clave] || 0), 0);
+    if (valor <= 0) return;
+    const prima = state.sedes.reduce((suma, sede) => suma + (sede.valores[clave] || 0) * TASA[clave], 0) * factor;
+    lineas.push({ label: ETIQUETAS[clave], valor: prima });
+  });
+  if (state.opcionales.ciber) {
+    lineas.push({ label: OPC.ciber.label, valor: state.sedes.reduce((suma, sede) => suma + (sede.ciber.monto || 0) * (CIBER_PLAN[sede.ciber.plan] || 0.0055) * (sede.ciber.interrupciones === true ? 1.25 : 1), 0) * factor });
+  }
+  if (state.opcionales.movMercancias) {
+    lineas.push({ label: OPC.movMercancias.label, valor: state.sedes.reduce((suma, sede) => suma + (sede.mov.limite || 0) * 0.006, 0) * factor });
+  }
+  ['dinero', 'muebles', 'roboEmpleados'].forEach((clave) => {
+    if (state.opcionales[clave]) lineas.push({ label: OPC[clave].label, valor: OPC[clave].prima * factor });
+  });
+  if (state.vidaOn) lineas.push({ label: 'Vida Pymes', valor: primaVida() });
+  return lineas;
+};
+
+/** Redondear cada línea con fmt()/aPeriodo() por separado puede dejar la suma 1 peso arriba o
+ * abajo del total ya redondeado (p. ej. con periodicidad mensual, por el ×1.06 de financiación).
+ * Para que las líneas del carrito siempre sumen exactamente el total mostrado, se redondean todas
+ * menos la última, y la última se calcula por diferencia (total mostrado menos la suma de las
+ * demás) en vez de redondearse de forma independiente. */
+const lineasPrecioCarrito = () => {
+  const lineas = desglosePrecio();
+  const valores = lineas.map((l) => Math.round(aPeriodo(l.valor)));
+  if (valores.length) {
+    const totalMostrado = Math.round(aPeriodo(primaTotal()));
+    const sumaSinUltima = valores.slice(0, -1).reduce((a, b) => a + b, 0);
+    valores[valores.length - 1] = totalMostrado - sumaSinUltima;
+  }
+  return lineas.map((l, i) => ({ label: l.label, valor: valores[i] }));
+};
 
 /** Componentes de presentación con clases SB UI. */
 const btn = (label, action, variant = 'primary', block = false, disabled = false) =>
@@ -1921,20 +1965,20 @@ async function buscarDireccionEnMapa() {
 }
 
 const PLANES = [
-  { id: 'basico', nombre: 'Plan Básico', nivel: 'Protección esencial', items: [
+  { id: 'basico', nombre: 'Propuesta Esencial', nivel: 'Protección esencial', items: [
     ['check_small', 'Edificios y mercancías fijas', 'Cubre el inmueble donde opera su negocio y las mercancías fijas almacenadas en él, ante daños por incendio, terremoto y otros eventos súbitos.', 'home_work'],
     ['check_small', 'Daños a terceros hasta $200 M', 'Responde por lesiones o daños que su operación pueda causar a clientes, visitantes o vecinos, hasta $200.000.000 por evento.', 'groups'],
-    ['info', 'Sin equipos electrónicos ampliados', 'Este plan no incluye la cobertura ampliada de equipos electrónicos; puede contratarla por separado si la necesita.', 'devices'],
+    ['info', 'Sin equipos electrónicos ampliados', 'Esta propuesta no incluye la cobertura ampliada de equipos electrónicos; puede contratarla por separado si la necesita.', 'devices'],
     ['info', 'Sin coberturas opcionales incluidas', 'No incluye ciberseguridad, movilización de mercancías, dinero, muebles ni robo de empleados; puede activarlas como opcionales.', 'playlist_add']
   ] },
-  { id: 'medio', nombre: 'Plan Medio', nivel: 'El más elegido por comercios', items: [
-    ['check_small', 'Todo lo del Plan Básico', 'Incluye edificios, mercancías fijas y daños a terceros del Plan Básico, con límites ampliados.', 'layers'],
+  { id: 'medio', nombre: 'Propuesta Equilibrada', nivel: 'El más elegido por comercios', items: [
+    ['check_small', 'Todo lo de la Propuesta Esencial', 'Incluye edificios, mercancías fijas y daños a terceros de la Propuesta Esencial, con límites ampliados.', 'layers'],
     ['check_small', 'Equipos electrónicos y maquinaria', 'Cubre computadores, datáfonos, maquinaria y herramienta fija ante daño o pérdida súbita.', 'devices'],
     ['check_small', 'Daños a terceros hasta $500 M', 'Responde por lesiones o daños que su operación pueda causar a terceros, hasta $500.000.000 por evento.', 'groups'],
     ['info', 'Ciberseguridad se activa aparte', 'La protección contra ataques e interrupción digital no viene incluida; puede agregarla como cobertura opcional.', 'shield_lock']
   ] },
-  { id: 'premium', nombre: 'Plan Premium', nivel: 'Protección ampliada', items: [
-    ['check_small', 'Todo lo del Plan Medio', 'Incluye edificios, equipos electrónicos, maquinaria y daños a terceros del Plan Medio, con los límites más altos.', 'layers'],
+  { id: 'premium', nombre: 'Propuesta Amplia', nivel: 'Protección ampliada', items: [
+    ['check_small', 'Todo lo de la Propuesta Equilibrada', 'Incluye edificios, equipos electrónicos, maquinaria y daños a terceros de la Propuesta Equilibrada, con los límites más altos.', 'layers'],
     ['check_small', 'Límites máximos habilitados', 'Accede a los valores asegurados más altos disponibles para cada cobertura principal.', 'trending_up'],
     ['check_small', 'Dinero y robo de empleados incluidos', 'Cubre el efectivo en caja fuerte y en tránsito interno, y las pérdidas por infidelidad de personal de confianza.', 'payments'],
     ['check_small', 'Asistencia prioritaria 24/7', 'Línea de atención prioritaria para reportar siniestros y resolver dudas en cualquier momento.', 'support_agent']
@@ -2042,12 +2086,41 @@ const otpModal = () => {
 const coberturasModal = () => {
   const p = PLANES.find((plan) => plan.id === state.modalPlan);
   if (!p) return '';
+  /** PLANES.items es la lista fija de diferencias entre propuestas; Vida Pymes no está ahí porque
+   * depende de cada tarjeta del comparativo (cfg.vidaOn), no del plan en sí, así que se agrega
+   * aparte buscando esa tarjeta por id. */
+  const cfg = (state.comparativoPlanes || []).find((c) => c.id === p.id);
+  const itemsVida = cfg && cfg.vidaOn ? VIDA_COBERTURAS.map((c) => ['check_small', 'Vida Pymes: ' + c.label, c.desc, c.icon]) : [];
   return drawerShell(`
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
-      <div><div style="font-weight:700;font-size:14px;color:#5B5B5B">Todo lo que debe conocer del</div><div style="font-weight:700;font-size:26px;line-height:1.2;margin-top:2px">${p.nombre}</div></div>
+      <div><div style="font-weight:700;font-size:14px;color:#5B5B5B">Todo lo que incluye</div><div style="font-weight:700;font-size:26px;line-height:1.2;margin-top:2px">${p.nombre}</div></div>
       <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--circle sb-ui-button--icon-only" data-action="cerrarModal">×</button>
     </div>
-    ${accordionList(p.items, true)}
+    ${accordionList([...p.items, ...itemsVida], true)}
+  `);
+};
+
+/** El botón "Acepto la declaración" solo se habilita cuando el cliente llega al final del texto
+ * (data-asegurabilidad-scroll, ver el listener de scroll más abajo): no puede marcar el checkbox
+ * de resumen() sin haber leído toda la declaración de salud. */
+const asegurabilidadModal = () => {
+  if (!state.modalAsegurabilidad) return '';
+  return drawerShell(`
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+      <div style="display:flex;align-items:center;gap:10px"><span class="material-symbols-outlined" style="font-size:26px;color:#006B40">edit_note</span><div style="font-weight:700;font-size:22px">Declaración de asegurabilidad</div></div>
+      <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--circle sb-ui-button--icon-only" data-action="cerrarAsegurabilidad">×</button>
+    </div>
+    <div data-asegurabilidad-scroll style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:12px;font-weight:400;font-size:13.5px;line-height:1.5;color:#414141;padding-right:4px">
+      <p style="margin:0">Antes de activar su seguro, necesitamos confirmar su estado de salud y algunos datos. Léala con calma: esta declaración define su cobertura, por eso es importante que sea veraz.</p>
+      <p style="margin:0;font-weight:700;color:#1B1B1B">En mi calidad de Asegurado, declaro que:</p>
+      <p style="margin:0"><strong>1. Mi estado de salud.</strong> A la fecha no tengo ni he tenido ninguna de estas condiciones: enfermedades congénitas; del corazón o de las arterias; tensión arterial alta; cáncer; diabetes; VIH/Sida; hepatitis B; enfermedad crónica del hígado o del riñón; enfermedades neurológicas, psiquiátricas o pulmonares; lupus; várices en el esófago; trombosis, derrame cerebral o tromboflebitis; enfermedades de la sangre o del páncreas; ni he recibido trasplantes.</p>
+      <p style="margin:0"><strong>2. Tratamientos.</strong> No me han realizado ni programado tratamientos o intervenciones quirúrgicas por esas condiciones, ni por dolencias directamente relacionadas con ellas.</p>
+      <p style="margin:0"><strong>3. Mi situación actual.</strong> No tengo limitaciones físicas o mentales, ni síntomas, enfermedades crónicas o adicciones que puedan afectar mi salud.</p>
+      <p style="margin:0"><strong>4. Mi ocupación.</strong> Mi actividad, ocupación y trabajo son lícitos y los ejerzo dentro del marco legal.</p>
+      <p style="margin:0"><strong>Autorización de información.</strong> Con esta aceptación, autorizo a Seguros Bolívar a acceder a mi historia clínica y a los datos que en ella estén o lleguen a registrarse, y a obtener copia de este documento y sus anexos, con el único fin de evaluar y administrar este seguro. Esta autorización continuará vigente incluso después de mi fallecimiento, conforme a las normas legales.</p>
+    </div>
+    <button type="button" class="sb-ui-button sb-ui-button--primary sb-ui-button--fill" style="width:100%" data-action="aceptarAsegurabilidad" ${state.asegurabilidadLeida ? '' : 'disabled'}>Acepto la declaración</button>
+    ${!state.asegurabilidadLeida ? '<div data-asegurabilidad-aviso style="font-weight:400;font-size:11.5px;color:#9B9B9B;text-align:center">Desplácese hasta el final para habilitar este botón.</div>' : ''}
   `);
 };
 
@@ -2078,14 +2151,17 @@ const vidaDrawer = () => {
   `);
 };
 
-const overlays = () => coberturasModal() + vidaDrawer() + benefDrawer() + sedeDrawer() + mapaDrawer() + otpModal();
+const overlays = () => coberturasModal() + asegurabilidadModal() + vidaDrawer() + benefDrawer() + sedeDrawer() + mapaDrawer() + otpModal();
 
 /** OLIVIA es un panel flotante disponible en todo el flujo, para resolver dudas sobre coberturas
  * sin interrumpir la cotización en curso. */
 /** true cuando hay barra fija de "Continuar" abajo: el botón de OLIVIA se sube por encima de ella y
  * el contenido reserva espacio al final (ver render), así ningún control queda tapado por el FAB. */
 let ctaVisibleOlivia = false;
-const oliviaFab = () => `<div class="pymes-olivia-tip${ctaVisibleOlivia ? ' pymes-olivia-tip--sobre-cta' : ''}" role="note"><strong>¿Tiene los datos a la mano?</strong> OLIVIA los completa por usted.</div><button type="button" class="pymes-olivia-fab${ctaVisibleOlivia ? ' pymes-olivia-fab--sobre-cta' : ''}" data-action="toggleOlivia" title="Preguntar a OLIVIA" aria-label="Abrir OLIVIA"><span class="material-symbols-outlined">auto_awesome</span></button>`;
+/** La burbuja que invita a usar OLIVIA solo se muestra en la landing (la primera vez que el
+ * cliente la ve); en el resto del flujo queda solo el botón redondo, sin el mensaje, para no
+ * competir con el carrito ni con el resto de la pantalla en cada paso. */
+const oliviaFab = () => `${state.paso === 'landing' ? `<div class="pymes-olivia-tip${ctaVisibleOlivia ? ' pymes-olivia-tip--sobre-cta' : ''}" role="note"><strong>¿Tiene los datos a la mano?</strong> OLIVIA los completa por usted.</div>` : ''}<button type="button" class="pymes-olivia-fab${ctaVisibleOlivia ? ' pymes-olivia-fab--sobre-cta' : ''}" data-action="toggleOlivia" title="Preguntar a OLIVIA" aria-label="Abrir OLIVIA"><span class="material-symbols-outlined">auto_awesome</span></button>`;
 
 const oliviaPanel = () => `<div class="pymes-olivia-panel">
   <div class="pymes-olivia-panel__header">
@@ -2180,9 +2256,9 @@ const crearComparativoPlanes = () => {
     sedes: state.sedes.map((sede) => ({ valores: escalar(sede, mult) }))
   });
   return [
-    armar('basico', 'Plan Básico', 'Protección esencial', false, 0.7, { dinero: false, muebles: false, roboEmpleados: false, ciber: false, movMercancias: false }, false, state.vas),
-    armar('medio', 'Plan Medio', 'El más elegido por comercios', true, 1, { ...state.opcionales }, state.vidaOn, state.vas),
-    armar('premium', 'Plan Premium', 'Protección ampliada', false, 1.3, { dinero: true, muebles: true, roboEmpleados: true, ciber: true, movMercancias: true }, true, vasPremium)
+    armar('basico', 'Propuesta Esencial', 'Protección esencial', false, 0.7, { dinero: false, muebles: false, roboEmpleados: false, ciber: false, movMercancias: false }, false, state.vas),
+    armar('medio', 'Propuesta Equilibrada', 'El más elegido por comercios', true, 1, { ...state.opcionales }, state.vidaOn, state.vas),
+    armar('premium', 'Propuesta Amplia', 'Protección ampliada', false, 1.3, { dinero: true, muebles: true, roboEmpleados: true, ciber: true, movMercancias: true }, true, vasPremium)
   ];
 };
 
@@ -2196,6 +2272,12 @@ const aplicarPlanElegido = (cfg) => {
   state.vas = cfg.vas;
   state.plan = 'sugerido';
   state.planElegidoNombre = cfg.nombre;
+  /** El plan llega con opcionales ya activadas (p. ej. Ciberseguridad en la Propuesta Amplia), pero
+   * con preguntas pendientes por responder (como la de interrupciones, por sede). Si quedan
+   * contraídas, el cliente no las ve y "Continuar" se bloquea sin que entienda por qué. Se
+   * despliegan de una vez, igual que al activarlas a mano. */
+  state.opcDescAbiertas = Object.keys(state.opcionales).filter((clave) => state.opcionales[clave]);
+  state.vidaAbierta = !!state.vidaOn;
 };
 
 /** "Elegir y continuar" acepta el plan tal cual y va directo a Fotos, salvo que el plan traiga Vida
@@ -2254,7 +2336,7 @@ const tarjetaPlanComparativo = (cfg, i) => {
         ${cfg.sedes.length > 1 ? `<div style="font-weight:400;font-size:12px;color:#757575;padding-bottom:8px">Suma de ${cfg.sedes.length} sedes</div>` : ''}
         ${resumenClaves}
         <div style="padding:10px 0;border-top:1px solid ${colorDivisor};font-weight:400;font-size:12px;line-height:1.4;color:${colorSuave};min-height:2.8em;box-sizing:content-box">${opcionalesActivas.length ? '+ ' + esc(opcionalesActivas.join(', ')) : 'Sin coberturas opcionales'}</div>
-        <div style="padding:10px 0;border-top:1px solid ${colorDivisor};display:flex;justify-content:space-between;gap:10px"><span style="font-weight:400;font-size:12.5px;color:${colorSuave}">Vida Pymes</span><span style="font-weight:${cfg.vidaOn ? 700 : 400};font-size:12.5px;color:${cfg.vidaOn ? colorCheck : colorSuave}">${cfg.vidaOn ? fmt(cfg.vas) : 'No incluida'}</span></div>
+        <div style="padding:10px 0;border-top:1px solid ${colorDivisor};display:flex;justify-content:space-between;gap:10px"><span style="font-weight:400;font-size:12.5px;color:${colorSuave}">Vida Pymes</span><span style="font-weight:${cfg.vidaOn ? 700 : 400};font-size:12.5px;color:${cfg.vidaOn ? colorCheck : colorSuave}">${cfg.vidaOn ? 'Desde ' + fmt(cfg.vas) : 'No incluida'}</span></div>
       </div>
       <button type="button" style="border:none;border-radius:16px;background:#FFF6D4;color:#303030;font-weight:400;font-size:14px;padding:14px 16px;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto" data-action="verCoberturas:${cfg.id}">Ver el detalle completo<span class="material-symbols-outlined" style="font-size:18px;color:#038450">chevron_right</span></button>
     </div>
@@ -2378,7 +2460,7 @@ const coberturas = () => {
     ${selectorSedes}
     <div class="pymes-coberturas-grid">
       <div style="background:#fff;border:1px solid #E1E1E1;border-radius:24px;padding:20px 24px 22px;display:flex;flex-direction:column;gap:18px">
-        <div style="display:flex;flex-direction:column;gap:4px"><div style="font-weight:700;font-size:17px">Coberturas principales</div><div style="font-weight:400;font-size:12.5px;color:#757575">Ajuste el valor con − y + o escríbalo directamente.</div></div>
+        <div style="font-weight:700;font-size:17px">Coberturas principales</div>
         <div style="display:flex;flex-direction:column">${principales}</div>
         <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--small sb-ui-button--icon-left" style="align-self:flex-start" data-action="restaurarTodo"><span class="material-symbols-outlined" style="font-size:18px">restart_alt</span>Restaurar sugeridos</button>
       </div>
@@ -2454,11 +2536,8 @@ const vidaPaquete = () => {
   const on = state.vidaOn;
   const abierta = state.vidaAbierta;
   const fechaInvalida = state.nacimiento.trim() && !edad();
-  const resumen = !on
-    ? 'No incluida en su paquete'
-    : `${fmt(state.vas)} asegurados · prima ${fmt(aPeriodo(primaVida()))} ${state.periodicidad}${vidaEstimada() ? ' (estimada)' : ''}`;
   const detalle = !on
-    ? `<div style="font-weight:400;font-size:12.5px;line-height:1.4;color:#5B5B5B">Protección para usted o un empleado clave, para todo el negocio (no por sede). Puede volver a incluirla cuando quiera.</div>`
+    ? `<div style="font-weight:400;font-size:12.5px;line-height:1.4;color:#5B5B5B">Protección para el dueño del negocio: usted elige si el beneficio queda para su familia, la empresa o sus socios. Puede volver a incluirla cuando quiera.</div>`
     : `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;align-items:start">
         <div style="display:flex;flex-direction:column;gap:16px">
           <div>
@@ -2468,7 +2547,7 @@ const vidaPaquete = () => {
           </div>
           <div>
             ${inputField('nacimiento', 'Fecha de nacimiento del asegurado', state.nacimiento, 'DD/MM/AAAA')}
-            <div style="font-weight:400;font-size:12px;color:${fechaInvalida ? '#B3261E' : '#9B9B9B'};margin-top:6px">${fechaInvalida ? 'Esa fecha no es válida: escríbala como DD/MM/AAAA.' : 'La necesitamos para calcular el valor final.'}</div>
+            <div style="font-weight:400;font-size:12px;color:${fechaInvalida ? '#B3261E' : '#9B9B9B'};margin-top:6px">${fechaInvalida ? 'Esa fecha no es válida: escríbala como DD/MM/AAAA y confirme que el asegurado tenga entre 18 y 65 años.' : 'La necesitamos para calcular el valor final.'}</div>
           </div>
         </div>
         <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
@@ -2481,8 +2560,7 @@ const vidaPaquete = () => {
       <button type="button" data-action="vidaToggle" style="all:unset;flex:1;min-width:0;display:flex;align-items:center;gap:12px;cursor:pointer">
         <span style="flex:none;width:38px;height:38px;border-radius:999px;background:${on ? '#FFE16F' : '#E1E1E1'};display:flex;align-items:center;justify-content:center"><span class="material-symbols-outlined" style="font-size:18px;color:${on ? '#038450' : '#5B5B5B'}">favorite</span></span>
         <span style="flex:1;min-width:0">
-          <span style="display:block;font-weight:700;font-size:14.5px;color:#1B1B1B">Vida Pymes <span style="font-weight:400;font-size:11.5px;color:#9B9B9B">· todo el negocio, no por sede</span></span>
-          <span style="display:block;font-weight:400;font-size:12.5px;color:#5B5B5B;margin-top:2px">${esc(resumen)}</span>
+          <span style="display:block;font-weight:700;font-size:14.5px;color:#1B1B1B">Vida Pymes</span>
         </span>
         ${switchInd(on)}
       </button>
@@ -2527,7 +2605,7 @@ const resumenCompra = () => `<div style="display:flex;flex-direction:column;gap:
   <div style="display:flex;gap:10px;align-items:flex-start;padding:13px 16px;background:#E2F0FF;border-radius:12px"><span class="material-symbols-outlined" style="font-size:18px;color:#1D347F">info</span><span style="font-weight:400;font-size:12.5px;line-height:1.5;color:#1D347F">Puede personalizar su plan antes de confirmar. Cualquier cambio actualizará el precio automáticamente.</span></div>
 </div>`;
 
-const PARENTESCOS = [['Cónyuge', 'Cónyuge'], ['Hijo o hija', 'Hijo o hija'], ['Padre o madre', 'Padre o madre'], ['Otro', 'Otro']];
+const PARENTESCOS = [['Cónyuge', 'Cónyuge'], ['Compañero permanente', 'Compañero permanente'], ['Hijos', 'Hijos'], ['Padre', 'Padre'], ['Otros', 'Otros']];
 const progressBar = (pct) => `<div>
   <div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><span style="font-weight:700;font-size:14px">Total asignado</span><span style="font-weight:700;font-size:14px">${pct}%</span></div>
   <div style="height:8px;border-radius:999px;background:#E1E1E1;overflow:hidden;margin-top:6px"><div style="height:100%;width:${Math.min(100, pct)}%;background:${pct >= 100 ? '#009056' : '#FFE16F'};border-radius:999px"></div></div>
@@ -2603,11 +2681,11 @@ const cotizacionCard = () => {
       <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--icon-only" data-action="agregarCorreoExtra" title="Agregar correo" aria-label="Agregar correo" ${esValidoCorreo(state.nuevoCorreoExtra) ? '' : 'disabled'}><span class="material-symbols-outlined" style="font-size:20px">check</span></button>
       <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--icon-only" data-action="cancelarAgregarCorreo" title="Cancelar" aria-label="Cancelar"><span class="material-symbols-outlined" style="font-size:20px">close</span></button>
     </div>` : `<button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--text sb-ui-button--small sb-ui-button--icon-left" style="align-self:flex-start" data-action="mostrarAgregarCorreo"><span class="material-symbols-outlined" style="font-size:18px">add</span>Agregar otro correo</button>`}
-    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:4px">
-      <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--icon-left" data-action="descargarCotizacion"><span class="material-symbols-outlined" style="font-size:20px">download</span>Descargar cotización</button>
-      <button type="button" class="sb-ui-button sb-ui-button--primary sb-ui-button--fill sb-ui-button--icon-left" data-action="enviarCotizacion" ${destinos.length ? '' : 'disabled'}><span class="material-symbols-outlined" style="font-size:20px">send</span>Enviar por correo</button>
+    <div style="display:flex;flex-direction:column;gap:10px;align-items:center;margin-top:4px">
+      <button type="button" class="sb-ui-button sb-ui-button--primary sb-ui-button--fill sb-ui-button--icon-left" style="width:100%" data-action="enviarCotizacion" ${destinos.length ? '' : 'disabled'}><span class="material-symbols-outlined" style="font-size:20px">send</span>Enviar por correo</button>
+      <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--text sb-ui-button--small sb-ui-button--icon-left" data-action="descargarCotizacion"><span class="material-symbols-outlined" style="font-size:18px">download</span>Descargar cotización</button>
     </div>
-    ${!destinos.length ? '<div style="font-weight:400;font-size:12px;color:#757575">Marque el correo del inicio o agregue uno para poder enviarla.</div>' : ''}
+    ${!destinos.length ? '<div style="font-weight:400;font-size:12px;color:#757575;text-align:center">Marque el correo del inicio o agregue uno para poder enviarla.</div>' : ''}
   </div>`;
 };
 /** Número de referencia de la cotización, visible antes de pagar para poder verificar la transacción
@@ -2639,7 +2717,7 @@ const resumen = () => {
     <div style="display:flex;align-items:baseline;justify-content:space-between"><span style="font-weight:700;font-size:14px">Prima Vida Pymes</span><span style="font-weight:700;font-size:19px;color:#006B40">${fmt(aPeriodo(primaVida()))}</span></div>
   </div>` : `<button type="button" class="pymes-option" style="text-align:left" data-action="abrirDrawerVida">
     <span style="flex:none;width:38px;height:38px;border-radius:999px;background:#FFE16F;display:flex;align-items:center;justify-content:center"><span class="material-symbols-outlined" style="font-size:20px;color:#038450">favorite</span></span>
-    <span style="flex:1"><span style="display:block;font-weight:700;font-size:14.5px;color:#1B1B1B">Agregar Vida Pymes</span><span style="display:block;font-weight:400;font-size:12.5px;color:#5B5B5B;margin-top:2px">Protección para usted o un empleado clave.</span></span>
+    <span style="flex:1"><span style="display:block;font-weight:700;font-size:14.5px;color:#1B1B1B">Agregar Vida Pymes</span><span style="display:block;font-weight:400;font-size:12.5px;color:#5B5B5B;margin-top:2px">Protección para el dueño del negocio: usted elige quién recibe el beneficio.</span></span>
     <span class="material-symbols-outlined" style="font-size:20px;color:#038450">chevron_right</span>
   </button>`}
   <div style="background:#fff;border:1px solid #E1E1E1;border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:10px">
@@ -2658,9 +2736,19 @@ const resumen = () => {
   ${cotizacionCard()}
   <div style="background:#009056;border-radius:24px;padding:18px;display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap"><div><div style="font-weight:400;font-size:13px;color:rgba(255,255,255,.85)">Total a pagar ${state.periodicidad}</div><div style="font-weight:700;font-size:34px;line-height:1.1;color:#fff;margin-top:4px">${primaTxt()}</div></div></div>
   <label class="sb-ui-checkbox">
+    <input type="checkbox" class="sb-ui-checkbox__input" data-acepta-terminos-seguro ${state.aceptaTerminosSeguro ? 'checked' : ''}>
+    <span class="sb-ui-checkbox__box"></span>
+    <span class="sb-ui-checkbox__label">Acepto los <span style="color:#05794A;text-decoration:underline">Términos y Condiciones del seguro</span>.</span>
+  </label>
+  <label class="sb-ui-checkbox">
+    <input type="checkbox" class="sb-ui-checkbox__input" data-acepta-asegurabilidad ${state.aceptaAsegurabilidad ? 'checked' : ''}>
+    <span class="sb-ui-checkbox__box"></span>
+    <span class="sb-ui-checkbox__label">Manifiesto que he leído y acepto firmar la <span role="button" tabindex="0" style="color:#05794A;text-decoration:underline;cursor:pointer" data-action="abrirAsegurabilidad">Declaración de Asegurabilidad</span>.</span>
+  </label>
+  <label class="sb-ui-checkbox">
     <input type="checkbox" class="sb-ui-checkbox__input" data-declaracion ${state.declaracion ? 'checked' : ''}>
     <span class="sb-ui-checkbox__box"></span>
-    <span class="sb-ui-checkbox__label">Declaro que toda la información registrada sobre mi negocio y mis datos es verídica y completa.</span>
+    <span class="sb-ui-checkbox__label">Declaro que todas las respuestas registradas en los formularios tanto del tomador como de los asegurados son verdaderas y completas. De igual forma confirmo que conozco que la mala fe en la reclamación de este seguro causará la pérdida del derecho al pago.</span>
   </label>
 </div>`; };
 
@@ -2735,7 +2823,12 @@ const emision = () => `<div style="display:flex;flex-direction:column;gap:16px;m
     ${state.vidaOn ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:13px 15px;background:#FAFAFA;border-radius:16px"><div><div style="font-weight:700;font-size:13.5px">Vida Pymes</div><div style="font-weight:400;font-size:12.5px;color:#5B5B5B">${fmt(aPeriodo(primaVida()))} ${state.periodicidad}</div></div><span style="font-weight:700;font-size:12px;color:#038450;align-self:center">Emitido</span></div>` : ''}
     <div style="font-weight:700;font-size:14px;margin-top:4px">Sedes aseguradas</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">${state.sedes.map((s) => `<span style="padding:8px 14px;border-radius:999px;background:#F5F5F5;font-weight:600;font-size:12.5px;color:#414141">${esc(s.direccion || 'Sede')}, ${esc(s.ciudad || '')}</span>`).join('')}</div>
-    <button type="button" class="sb-ui-button sb-ui-button--primary sb-ui-button--fill sb-ui-button--icon-left" style="align-self:flex-start" data-action="download"><span class="material-symbols-outlined" style="font-size:20px">arrow_forward</span>Descargar mi póliza</button>
+    <div style="height:1px;background:#E1E1E1"></div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="font-weight:700;font-size:14px">¿Cómo fue su experiencia?</div>
+      <div style="display:flex;gap:6px">${[1, 2, 3, 4, 5].map((n) => `<button type="button" aria-label="Calificar con ${n} estrella${n > 1 ? 's' : ''}" style="border:none;background:none;cursor:pointer;padding:2px;line-height:0" data-action="calificar:${n}"><span class="material-symbols-outlined" style="font-size:30px;color:${n <= state.calificacion ? '#FFDC5D' : '#D9D9D9'}">${n <= state.calificacion ? 'star' : 'star_outline'}</span></button>`).join('')}</div>
+      ${state.calificacion ? '<div style="font-weight:400;font-size:13px;color:#006B40">¡Gracias por calificar su experiencia!</div>' : ''}
+    </div>
   </div>
 </div>`;
 
@@ -2759,15 +2852,15 @@ const puedeSeguir = () => ({
   coberturas: (!state.opcionales.ciber || state.sedes.every((sede) => sede.ciber.interrupciones !== null)) && (!state.vidaOn || !!edad()),
   fotos: fotosMinimas(), resumenCompra: !state.vidaOn || !!edad(),
   beneficiarios: totalBenef() === 100 && state.beneficiarios.length > 0,
-  resumen: state.declaracion, pago: !!state.medioPago, emision: false
+  resumen: state.declaracion && state.aceptaTerminosSeguro && state.aceptaAsegurabilidad, pago: !!state.medioPago, emision: false
 }[state.paso]);
 const ayuda = () => ({
   landing: 'Complete documento, correo y celular, y acepte los términos y la política de datos.', negocio: 'Elija una actividad, indique si asegura una o varias sedes y complete los datos de la sede.',
   sedes: 'Complete la dirección, ciudad y las preguntas de cada sede.',
-  coberturas: [(state.opcionales.ciber && !state.sedes.every((sede) => sede.ciber.interrupciones !== null)) ? 'Responda la pregunta de interrupciones de Ciberseguridad Pymes.' : '', (state.vidaOn && !edad()) ? 'Ingrese la fecha de nacimiento del asegurado de Vida Pymes (o quítela del paquete) para ver el valor final.' : ''].filter(Boolean).join(' '),
+  coberturas: [(state.opcionales.ciber && !state.sedes.every((sede) => sede.ciber.interrupciones !== null)) ? `Responda la pregunta de interrupciones de Ciberseguridad Pymes${state.sedes.length > 1 ? ' en cada sede' : ''}.` : '', (state.vidaOn && !edad()) ? 'Ingrese la fecha de nacimiento del asegurado de Vida Pymes (o quítela del paquete) para ver el valor final.' : ''].filter(Boolean).join(' '),
   fotos: state.sedes.length > 1 ? 'Cargue las tres fotos obligatorias de cada sede.' : 'Cargue las tres fotos obligatorias.', beneficiarios: 'El total debe sumar 100%.',
   resumenCompra: 'Ingrese la fecha de nacimiento del asegurado de Vida Pymes (o quítela del paquete) para ver el valor final y continuar.',
-  resumen: 'Confirme la declaración.', pago: 'Seleccione un medio de pago.'
+  resumen: 'Acepte los términos, la Declaración de Asegurabilidad y confirme que la información es verídica.', pago: 'Seleccione un medio de pago.'
 }[state.paso] || '');
 
 const SIN_CTA_PROPIA = ['plan', 'resumenCompra'];
@@ -2879,25 +2972,32 @@ const render = () => {
     const conCta = state.paso !== 'emision' && !SIN_CTA_PROPIA.includes(state.paso) && !(state.paso === 'pago' && (state.procesandoPago || state.pagoError));
     ctaVisibleOlivia = conCta;
     const muestraCarrito = conCta && MUESTRA_CARRITO.includes(state.paso);
-    const cuerpo = `<div style="display:flex;flex-direction:column;gap:24px;padding:32px 0 ${conCta ? 176 : 112}px 0">
-      ${index > 0 && state.paso !== 'emision' && !(state.paso === 'pago' && state.procesandoPago) ? `<button type="button" class="pymes-link-volver" data-action="back"><span class="material-symbols-outlined" style="font-size:20px">chevron_left</span>Volver</button>` : ''}
-      ${TITULO_EN_TARJETA.includes(state.paso) ? '' : `<div style="display:flex;flex-direction:column;gap:8px">
-        <div><h1 style="margin:0 0 4px;font-weight:700;font-size:22px;line-height:1.25;letter-spacing:-.01em;color:#1B1B1B">${esc(TITULOS[state.paso])}</h1><p style="margin:0;max-width:680px;font-weight:400;font-size:13.5px;line-height:1.4;color:#5B5B5B">${esc(BAJADAS[state.paso] || '')}</p></div>
-      </div>`}
-      ${VISTAS[state.paso]()}
+    /** "Volver" y el título van juntos en la misma columna alineada (misma clase .pymes-shell__body
+     * / .pymes-shell__content que la fila de abajo), para que ambos queden exactamente debajo uno
+     * del otro y alineados con el contenido — en vez de que "Volver" quede pegado al borde de
+     * .pymes-shell__main mientras el título queda centrado en su propia columna más angosta. La
+     * fila de contenido+carrito va aparte, debajo, para que el carrito arranque justo ahí y no a la
+     * altura de "Volver". */
+    const volverBtn = index > 0 && state.paso !== 'emision' && !(state.paso === 'pago' && state.procesandoPago) ? `<button type="button" class="pymes-link-volver" data-action="back"><span class="material-symbols-outlined" style="font-size:20px">chevron_left</span>Volver</button>` : '';
+    const tituloBlock = TITULO_EN_TARJETA.includes(state.paso) ? '' : `<div style="display:flex;flex-direction:column;gap:8px">
+      <div><h1 style="margin:0 0 4px;font-weight:700;font-size:22px;line-height:1.25;letter-spacing:-.01em;color:#1B1B1B">${esc(TITULOS[state.paso])}</h1><p style="margin:0;max-width:680px;font-weight:400;font-size:13.5px;line-height:1.4;color:#5B5B5B">${esc(BAJADAS[state.paso] || '')}</p></div>
     </div>`;
+    const encabezado = `${volverBtn}${tituloBlock}`;
+    const contenido = VISTAS[state.paso]();
     const fase = faseDelPaso(state.paso);
     /** Carrito (Figma "Hogar Digital" 299:14730): tarjeta verde con el plan, el total y "Continuar"
      * adentro. En escritorio reemplaza la barra negra de abajo para estos pasos (oculta por CSS,
      * ver .pymes-cta-bar--con-carrito); en mobile la tarjeta pierde el botón propio
      * (.pymes-cart__cta se oculta) y vuelve a ser la barra negra la que lleva "Continuar". */
     const carritoPanel = muestraCarrito ? `<aside class="pymes-cart">
-      <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;flex-direction:column;gap:14px">
         <div style="display:flex;gap:12px;align-items:center">
           <div style="flex:1;min-width:0;font-weight:700;font-size:24px;line-height:1.4;color:#FFE16F">${esc(state.planElegidoNombre || 'Su plan')}</div>
           <div style="font-weight:400;font-size:14px;color:#fff;white-space:nowrap">${fmt(aPeriodo(primaTotal()))}</div>
         </div>
-        <div style="font-weight:400;font-size:14px;color:#fff">Incluido en su cotización</div>
+        <div style="display:flex;flex-direction:column;gap:9px">
+          ${lineasPrecioCarrito().map((l) => `<div style="display:flex;justify-content:space-between;gap:10px;font-weight:400;font-size:13px;color:rgba(255,255,255,.85)"><span>${esc(l.label)}</span><strong style="color:#fff;font-weight:600;white-space:nowrap">${fmt(l.valor)}</strong></div>`).join('')}
+        </div>
         <div style="height:1px;background:#D9D9D9;border-radius:8px"></div>
       </div>
       <div style="display:flex;gap:4px;align-items:baseline">
@@ -2915,14 +3015,35 @@ const render = () => {
         <div class="pymes-cta-bar__accion">${btn(nextLabel, 'next', 'primary', false, bloqueado)}${bloqueado ? `<span style="font-weight:400;font-size:12.5px;color:#C2C7CF">${esc(ayuda())}</span>` : ''}</div>
       </div>
     </div>` : '';
+    const cuerpo = `<div style="display:flex;flex-direction:column;gap:24px;padding:32px 0 ${conCta ? 176 : 112}px 0">
+      ${encabezado ? `<div class="pymes-shell__body${muestraCarrito ? ' pymes-shell__body--con-carrito' : ''}"><div class="pymes-shell__content" style="display:flex;flex-direction:column;gap:16px">${encabezado}</div></div>` : ''}
+      <div class="pymes-shell__body${muestraCarrito ? ' pymes-shell__body--con-carrito' : ''}">
+        <div class="pymes-shell__content">${contenido}</div>
+        ${carritoPanel}
+      </div>
+    </div>`;
     app.innerHTML = (fase === -1
       ? `<div style="padding:0 40px;max-width:1074px;margin:0 auto">${cuerpo}</div>`
-      : `<aside class="pymes-shell__rail">${stepperFases()}</aside><div class="pymes-shell__main"><div class="pymes-shell__body${muestraCarrito ? ' pymes-shell__body--con-carrito' : ''}"><div class="pymes-shell__content">${cuerpo}</div>${carritoPanel}</div></div>`) + ctaBar;
+      : `<aside class="pymes-shell__rail">${stepperFases()}</aside><div class="pymes-shell__main">${cuerpo}</div>`) + ctaBar;
     modalRoot.innerHTML = overlays();
     oliviaRoot.innerHTML = oliviaWidget();
     if (state.oliviaAbierta) {
       const log = document.getElementById('oliviaLog');
       if (log) log.scrollTop = log.scrollHeight;
+    }
+    /** Si el texto de la declaración ya cabe completo sin necesidad de hacer scroll (pantallas
+     * altas, zoom bajo, etc.), nunca se dispara el evento 'scroll' y el botón quedaría bloqueado
+     * para siempre. Se revisa apenas se pinta el drawer y, si ya está todo a la vista, se habilita
+     * de una vez. */
+    if (state.modalAsegurabilidad && !state.asegurabilidadLeida) {
+      const caja = modalRoot.querySelector('[data-asegurabilidad-scroll]');
+      if (caja && caja.scrollHeight <= caja.clientHeight + 4) {
+        state.asegurabilidadLeida = true;
+        const boton = modalRoot.querySelector('[data-action="aceptarAsegurabilidad"]');
+        if (boton) boton.disabled = false;
+        const aviso = modalRoot.querySelector('[data-asegurabilidad-aviso]');
+        if (aviso) aviso.remove();
+      }
     }
     initMapaSiNecesario();
     persistirEstado();
@@ -2930,7 +3051,7 @@ const render = () => {
     renderizando = false;
   }
 };
-window.__cerrarOverlays = () => { state.modalPlan = null; state.drawerVida = false; state.drawerBenef = false; state.drawerSede = false; state.drawerMapa = false; state.otpAbierto = false; render(); };
+window.__cerrarOverlays = () => { state.modalPlan = null; state.modalAsegurabilidad = false; state.drawerVida = false; state.drawerBenef = false; state.drawerSede = false; state.drawerMapa = false; state.otpAbierto = false; render(); };
 
 /** Persistencia de estado para entornos que recargan el prototipo entre pantallas (p. ej. Useberry
  * embebe el standalone en un iframe y puede recargarlo al pasar de una task a la siguiente). Sin
@@ -2941,7 +3062,7 @@ const STORAGE_KEY = 'pymes-digital-flujo-corto:v1';
 const persistirEstado = () => {
   try {
     // No persistimos overlays/drawers efímeros: al recargar deben empezar cerrados.
-    const { modalPlan, drawerVida, drawerBenef, drawerSede, drawerMapa, oliviaAbierta, mapaBuscando, mapaError, ...persistible } = state;
+    const { modalPlan, modalAsegurabilidad, drawerVida, drawerBenef, drawerSede, drawerMapa, oliviaAbierta, mapaBuscando, mapaError, ...persistible } = state;
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(persistible));
   } catch (e) { /* sessionStorage puede no estar disponible (modo restringido del iframe): degradar sin romper. */ }
 };
@@ -3036,6 +3157,10 @@ document.body.addEventListener('input', (event) => {
   if (target.hasAttribute('data-declaracion')) { state.declaracion = target.checked; render(); }
   if (target.hasAttribute('data-acepta-terminos')) { state.aceptaTerminos = target.checked; render(); }
   if (target.hasAttribute('data-acepta-datos')) { state.aceptaDatos = target.checked; render(); }
+  if (target.hasAttribute('data-acepta-terminos-seguro')) { state.aceptaTerminosSeguro = target.checked; render(); }
+  /** La Declaración de Asegurabilidad no se marca con un simple clic: siempre abre el modal para
+   * leerla, y solo "Acepto la declaración" (tras llegar al final) marca el checkbox. */
+  if (target.hasAttribute('data-acepta-asegurabilidad')) { state.modalAsegurabilidad = true; state.asegurabilidadLeida = false; render(); }
   if (target.hasAttribute('data-incluir-correo-principal')) { state.incluirCorreoPrincipal = target.checked; render(); }
 });
 /** Los sliders/inputs numéricos solo re-renderizan al soltar/perder foco, para no interrumpir el arrastre. */
@@ -3073,6 +3198,9 @@ document.body.addEventListener('click', (event) => {
   else if (action.startsWith('verCoberturas:')) state.modalPlan = action.slice(14);
   else if (action.startsWith('verSede:')) state.sedeActiva = Number(action.slice(8));
   else if (action === 'cerrarModal') state.modalPlan = null;
+  else if (action === 'abrirAsegurabilidad') { state.modalAsegurabilidad = true; state.asegurabilidadLeida = false; }
+  else if (action === 'cerrarAsegurabilidad') state.modalAsegurabilidad = false;
+  else if (action === 'aceptarAsegurabilidad') { if (state.asegurabilidadLeida) { state.aceptaAsegurabilidad = true; state.modalAsegurabilidad = false; } }
   else if (action === 'pagoSimularError') { state.pagoToken++; state.procesandoPago = false; state.pagoError = 'Parece que su conexión se interrumpió durante la transacción.'; }
   else if (action === 'pagoReintentar') iniciarPago(currentRoute[Math.min(index + 1, currentRoute.length - 1)]);
   else if (action === 'pagoCambiarMedio') { state.pagoError = null; state.medioPago = ''; }
@@ -3130,7 +3258,14 @@ document.body.addEventListener('click', (event) => {
   else if (action.startsWith('ciberInt:')) sede.ciber.interrupciones = action.endsWith('1');
   else if (action.startsWith('ciberPlan:')) sede.ciber.plan = action.slice(10);
   else if (action.startsWith('mov:') && !action.startsWith('mov:limite:')) sede.mov.frecuencia = action.slice(4);
-  else if (action.startsWith('opc:')) state.opcionales[action.slice(4)] = !state.opcionales[action.slice(4)];
+  else if (action.startsWith('opc:')) {
+    const clave = action.slice(4);
+    state.opcionales[clave] = !state.opcionales[clave];
+    /** Al activar una opcional se despliega de una vez (en vez de dejarla encendida pero oculta
+     * tras la flecha): así se ve de inmediato lo que hay que responder, como la pregunta de
+     * interrupciones de Ciberseguridad Pymes, que bloquea "Continuar" hasta contestarla. */
+    if (state.opcionales[clave] && !state.opcDescAbiertas.includes(clave)) state.opcDescAbiertas = [...state.opcDescAbiertas, clave];
+  }
   else if (action.startsWith('opcVerDesc:')) {
     const clave = action.slice(11);
     state.opcDescAbiertas = state.opcDescAbiertas.includes(clave) ? state.opcDescAbiertas.filter((c) => c !== clave) : [...state.opcDescAbiertas, clave];
@@ -3147,7 +3282,10 @@ document.body.addEventListener('click', (event) => {
   else if (action === 'cerrarDrawerVida') state.drawerVida = false;
   else if (action === 'confirmarVida') { if (edad()) { state.vidaOn = true; state.drawerVida = false; } }
   else if (action === 'quitarVida') { state.vidaOn = false; state.drawerVida = false; }
-  else if (action === 'vidaToggle') state.vidaOn = !state.vidaOn;
+  else if (action === 'vidaToggle') {
+    state.vidaOn = !state.vidaOn;
+    if (state.vidaOn) state.vidaAbierta = true;
+  }
   else if (action === 'vidaVerDesc') state.vidaAbierta = !state.vidaAbierta;
   else if (action.startsWith('pago:')) state.medioPago = action.slice(5);
   else if (action.startsWith('sugerir:')) sede.valores[action.slice(8)] = sugerido(sede, action.slice(8));
@@ -3198,6 +3336,7 @@ document.body.addEventListener('click', (event) => {
   }
   else if (action === 'cerrarOtp') { state.otpAbierto = false; state.otpError = false; }
   else if (action === 'download') { window.alert('Descarga de póliza simulada en el prototipo.'); return; }
+  else if (action.startsWith('calificar:')) { state.calificacion = Number(action.slice(10)); }
   else if (action === 'mostrarAgregarCorreo') { state.mostrarAgregarCorreo = true; state.nuevoCorreoExtra = ''; }
   else if (action === 'cancelarAgregarCorreo') { state.mostrarAgregarCorreo = false; state.nuevoCorreoExtra = ''; }
   else if (action === 'agregarCorreoExtra') {
@@ -3243,6 +3382,20 @@ document.body.addEventListener('focusout', (event) => {
   const tip = document.querySelector('.pymes-olivia-tip');
   if (tip) tip.classList.remove('pymes-olivia-tip--oculta');
 });
+
+/** 'scroll' no hace bubbling, así que este delegado va en fase de captura. Habilita "Acepto la
+ * declaración" sin pasar por render() (perdería la posición del scroll al regenerar el modal). */
+document.body.addEventListener('scroll', (event) => {
+  const target = event.target;
+  if (!target.hasAttribute || !target.hasAttribute('data-asegurabilidad-scroll') || state.asegurabilidadLeida) return;
+  if (target.scrollTop + target.clientHeight >= target.scrollHeight - 4) {
+    state.asegurabilidadLeida = true;
+    const boton = modalRoot.querySelector('[data-action="aceptarAsegurabilidad"]');
+    if (boton) boton.disabled = false;
+    const aviso = modalRoot.querySelector('[data-asegurabilidad-aviso]');
+    if (aviso) aviso.remove();
+  }
+}, true);
 
 /** Permite arrancar directo en un paso puntual vía ?paso=..., para pruebas de usabilidad (p. ej.
  * Useberry) que necesitan una URL de inicio distinta a la landing. Ej.: ...standalone.html?paso=negocio
@@ -3360,7 +3513,7 @@ const sembrarEstadoHasta = (paso) => {
   // resumen: declaración aceptada + identidad validada (el modal de OTP ya no es un paso aparte:
   // se dispara desde el botón "Confirmar y validar" de resumen, así que ambos requisitos se
   // cumplen juntos antes de llegar a "pago")
-  if (completo('resumen')) { state.declaracion = true; state.otpValidado = true; }
+  if (completo('resumen')) { state.declaracion = true; state.aceptaTerminosSeguro = true; state.aceptaAsegurabilidad = true; state.otpValidado = true; }
 
   // pago: medio seleccionado
   if (completo('emision')) state.medioPago = 'PSE';
@@ -3390,7 +3543,7 @@ const completarPasoActual = (paso) => {
     case 'beneficiarios':
       state.beneficiarios = [{ nombre: 'María Ramírez', parentesco: 'Cónyuge', pct: 100 }];
       break;
-    case 'resumen': state.declaracion = true; break;
+    case 'resumen': state.declaracion = true; state.aceptaTerminosSeguro = true; state.aceptaAsegurabilidad = true; break;
     case 'pago': state.medioPago = 'PSE'; break;
     default: break;
   }
