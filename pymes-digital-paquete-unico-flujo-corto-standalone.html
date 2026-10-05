@@ -2343,22 +2343,18 @@ const tarjetaPaqueteSugerido = (cfg) => {
    * reutiliza la misma fila que ya se usa en el resumen final (coberturaResumenFila). */
   const filasPrincipales = CLAVES.map((clave, i) => coberturaResumenFila(LANDING_COBERTURAS[i].icon, ETIQUETAS[clave], fmt(cfg.sedes.reduce((suma, s) => suma + (s.valores[clave] || 0), 0)), i)).join('');
   const opcionalesActivas = Object.keys(OPC).filter((clave) => cfg.opcionales[clave]).map((clave) => OPC[clave].label);
-  return `<div style="width:100%;display:flex;flex-direction:column;background:#fff;border:1px solid #E1E1E1;border-radius:24px;overflow:hidden">
-    <div style="background:${sug ? '#009056' : '#fff'};${sug ? '' : 'border-bottom:1px solid #E1E1E1;'}padding:24px 28px;display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap">
-      <div style="display:flex;flex-direction:column;align-items:flex-start;gap:10px;flex:1 1 260px;min-width:0">
-        ${sug
-          ? '<span style="background:#FFDC5D;color:#282828;font-weight:600;font-size:12px;padding:4px 12px;border-radius:999px">Sugerido</span>'
-          : '<span aria-hidden="true" style="visibility:hidden;font-weight:600;font-size:12px;padding:4px 12px">Sugerido</span>'}
-        <div><div style="font-weight:700;font-size:24px;color:${headerTexto}">${cfg.nombre}</div><div style="font-weight:400;font-size:13px;line-height:1.4;min-height:2.8em;color:${headerSuave};margin-top:2px">${cfg.nivel}</div></div>
-        <button type="button" style="border:none;border-radius:999px;background:#FFE16F;color:#05794A;font-weight:700;font-size:14px;padding:12px 22px;cursor:pointer;white-space:nowrap" data-action="planElegir:${cfg.id}">Elegir y continuar</button>
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px">
-        <button type="button" aria-label="Personalizar ${esc(cfg.nombre)}" title="Personalizar este paquete: ajustar sus coberturas y valores" style="display:flex;align-items:center;gap:6px;border:1.5px solid ${btnPersonalizarBorde};background:${btnPersonalizarFondo};border-radius:999px;padding:8px 14px;cursor:pointer;color:${btnPersonalizarIcono}" data-action="planAbrirPersonalizar:${cfg.id}">
-          <span class="material-symbols-outlined" style="font-size:18px">edit</span>
-          <span style="font-size:12px;font-weight:600">Editar</span>
-        </button>
-        <div style="text-align:right"><div style="font-weight:400;font-size:11px;letter-spacing:.03em;text-transform:uppercase;color:${headerSuaveTenue}">Desde</div><div style="font-weight:700;font-size:30px;line-height:1;color:${headerTexto}">${fmt(mensual)}<span style="font-weight:400;font-size:14px">/mes</span></div><div style="font-weight:400;font-size:12.5px;color:${headerSuave};margin-top:4px">o ${fmt(anual)}/año (IVA incluido)</div></div>
-      </div>
+  return `<div style="width:100%;display:flex;flex-direction:column;background:#fff;border:1px solid #E1E1E1;border-radius:24px;overflow:hidden;position:relative">
+    <button type="button" aria-label="Personalizar ${esc(cfg.nombre)}" title="Personalizar este paquete: ajustar sus coberturas y valores" style="position:absolute;top:24px;right:28px;display:flex;align-items:center;gap:6px;border:1.5px solid ${btnPersonalizarBorde};background:${btnPersonalizarFondo};border-radius:999px;padding:8px 14px;cursor:pointer;color:${btnPersonalizarIcono}" data-action="planAbrirPersonalizar:${cfg.id}">
+      <span class="material-symbols-outlined" style="font-size:18px">edit</span>
+      <span style="font-size:12px;font-weight:600">Editar</span>
+    </button>
+    <div style="background:${sug ? '#009056' : '#fff'};${sug ? '' : 'border-bottom:1px solid #E1E1E1;'}padding:24px 28px;display:flex;flex-direction:column;align-items:flex-start;gap:14px">
+      ${sug
+        ? '<span style="background:#FFDC5D;color:#282828;font-weight:600;font-size:12px;padding:4px 12px;border-radius:999px">Sugerido</span>'
+        : '<span aria-hidden="true" style="visibility:hidden;font-weight:600;font-size:12px;padding:4px 12px">Sugerido</span>'}
+      <div style="max-width:calc(100% - 100px)"><div style="font-weight:700;font-size:24px;color:${headerTexto}">${cfg.nombre}</div><div style="font-weight:400;font-size:13px;line-height:1.4;min-height:2.8em;color:${headerSuave};margin-top:2px">${cfg.nivel}</div></div>
+      <div><div style="font-weight:400;font-size:11px;letter-spacing:.03em;text-transform:uppercase;color:${headerSuaveTenue}">Desde</div><div style="font-weight:700;font-size:30px;line-height:1;color:${headerTexto}">${fmt(mensual)}<span style="font-weight:400;font-size:14px">/mes</span></div><div style="font-weight:400;font-size:12.5px;color:${headerSuave};margin-top:4px">o ${fmt(anual)}/año (IVA incluido)</div></div>
+      <button type="button" style="border:none;border-radius:999px;background:#FFE16F;color:#05794A;font-weight:700;font-size:14px;padding:12px 22px;cursor:pointer;white-space:nowrap" data-action="planElegir:${cfg.id}">Elegir y continuar</button>
     </div>
     <div style="padding:22px 26px;display:flex;flex-direction:column;gap:16px">
       ${cfg.sedes.length > 1 ? `<div style="font-weight:700;font-size:13px;color:${colorTexto}">${cfg.sedes.length} sedes incluidas</div>` : ''}
