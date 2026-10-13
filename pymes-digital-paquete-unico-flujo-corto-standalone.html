@@ -1546,9 +1546,9 @@ const PLAN_MULT = { basico: 0.85, medio: 1, premium: 1.28, sugerido: 1 };
 /** Variante "paquete": no hay pantalla de venta cruzada ('resumenCompra'); Vida Pymes viene
  * incluida en el paquete sugerido y se personaliza dentro de 'coberturas', junto al resto del
  * plan (fila plegable, ver vidaPaquete()). */
-const RUTA = ['landing', 'negocio', 'sedes', 'plan', 'coberturas', 'beneficiarios', 'fotos', 'resumen', 'pago', 'emision'];
+const RUTA = ['landing', 'negocio', 'sedes', 'plan', 'coberturas', 'beneficiarios', 'sarlaftEmpresa', 'sarlaftRepresentante1', 'sarlaftRepresentante2', 'sarlaftFamiliarPep', 'sarlaftAccionistas', 'fotos', 'resumen', 'pago', 'emision'];
 
-const TITULOS = { negocio: 'Cuéntenos de su negocio', sedes: 'Las sedes que quiere asegurar', plan: 'Este es el paquete que le sugerimos', coberturas: 'Ajuste sus coberturas y valores', fotos: 'Las fotos de su negocio', resumenCompra: 'Personalice su seguro', beneficiarios: 'Beneficiarios de Vida Pymes', resumen: 'Revise antes de pagar', pago: 'Elija cómo quiere pagar', emision: 'Listo, su negocio quedó protegido' };
+const TITULOS = { negocio: 'Cuéntenos de su negocio', sedes: 'Las sedes que quiere asegurar', plan: 'Este es el paquete que le sugerimos', coberturas: 'Ajuste sus coberturas y valores', fotos: 'Las fotos de su negocio', resumenCompra: 'Personalice su seguro', beneficiarios: 'Beneficiarios de Vida Pymes', sarlaftEmpresa: 'Datos de la empresa', sarlaftRepresentante1: 'Representante legal', sarlaftRepresentante2: 'Representante legal', sarlaftFamiliarPep: 'Familiar expuesto políticamente', sarlaftAccionistas: 'Accionistas con más del 5%', resumen: 'Revise antes de pagar', pago: 'Elija cómo quiere pagar', emision: 'Listo, su negocio quedó protegido' };
 const BAJADAS = {
   negocio: 'Con la actividad y las ventas de su negocio ajustamos las coberturas recomendadas.',
   sedes: 'Agregue cada sede que quiere asegurar; puede editarlas o quitarlas cuando quiera.',
@@ -1557,6 +1557,11 @@ const BAJADAS = {
   fotos: 'Estas fotos nos permiten confirmar su precio y emitir la póliza.',
   resumenCompra: 'Su paquete incluye Vida Pymes. Ajuste el valor asegurado, confirme la fecha de nacimiento del asegurado para ver el valor final, o quítela si no la necesita.',
   beneficiarios: 'Registre quién recibirá el beneficio de Vida Pymes y en qué porcentaje.',
+  sarlaftEmpresa: 'Complete la información de contacto y ubicación de la empresa para el envío de su póliza.',
+  sarlaftRepresentante1: 'Indique el tipo y número de documento, y los datos de contacto del representante legal.',
+  sarlaftRepresentante2: 'Complete el nombre del representante legal y confirme si es una persona expuesta políticamente.',
+  sarlaftFamiliarPep: 'Complete la información de su familiar expuesto políticamente.',
+  sarlaftAccionistas: 'Indique si la empresa está listada en bolsa y quiénes son sus accionistas con más del 5% de participación.',
   resumen: 'Revise el detalle de su plan, sus datos y el valor total antes de pagar.',
   pago: 'Elija el medio de pago con el que quiere completar su compra.',
   emision: 'Guarde el número de su póliza; ya puede descargarla o consultarla cuando quiera.'
@@ -1569,12 +1574,13 @@ const BAJADAS = {
  * con varios elementos en paralelo (tabla de sedes, grilla de coberturas, comparativo de planes,
  * fotos, resumen, pago) quedan fuera a propósito: ahí el título de página suelto sí tiene sentido
  * porque no hay una única tarjeta central a la que "pertenecer". */
-const TITULO_EN_TARJETA = ['negocio', 'beneficiarios'];
+const TITULO_EN_TARJETA = ['negocio', 'beneficiarios', 'sarlaftEmpresa', 'sarlaftRepresentante1', 'sarlaftRepresentante2', 'sarlaftFamiliarPep', 'sarlaftAccionistas'];
 
 /** Tarjeta única para las pantallas de TITULO_EN_TARJETA: título + bajada arriba, un divisor, y el
  * contenido propio de la pantalla debajo — todo en una sola tarjeta blanca centrada. */
-const formCard = (paso, contenido, anchoPx = 640) => `<div style="max-width:${anchoPx}px;margin:0 auto;width:100%;background:#fff;border:1px solid #E1E1E1;border-radius:24px;padding:28px;display:flex;flex-direction:column;gap:20px">
+const formCard = (paso, contenido, anchoPx = 640, pasoCounter = '') => `<div style="max-width:${anchoPx}px;margin:0 auto;width:100%;background:#fff;border:1px solid #E1E1E1;border-radius:24px;padding:28px;display:flex;flex-direction:column;gap:20px">
   <div style="display:flex;flex-direction:column;gap:6px">
+    ${pasoCounter ? `<div style="font-weight:400;font-size:13px;color:#1B1B1B">${esc(pasoCounter)}</div>` : ''}
     <h1 style="margin:0;font-weight:700;font-size:22px;line-height:1.3;letter-spacing:-.01em;color:#1B1B1B">${esc(TITULOS[paso])}</h1>
     <p style="margin:0;font-weight:400;font-size:13.5px;line-height:1.4;color:#5B5B5B">${esc(BAJADAS[paso] || '')}</p>
   </div>
@@ -1595,6 +1601,13 @@ const state = {
   opcDescAbiertas: [],
     vidaOn: true, vidaAbierta: false, vas: 100000000, nacimiento: '', beneficiarios: [],
   benefNombre: '', benefParentesco: 'Cónyuge', benefPct: 100, benefIdx: -1,
+  sarlaftCorreo: '', sarlaftTieneAccionistas: null,
+  sarlaftRvne: null, sarlaftRegistroBolsa: '', sarlaftAccionistas: [],
+  sarlaftRepTipoDoc: 'CC', sarlaftRepNumDoc: '', sarlaftRepCelular: '', sarlaftRepCorreo: '',
+  sarlaftRepPrimerNombre: '', sarlaftRepSegundoNombre: '', sarlaftRepPrimerApellido: '', sarlaftRepSegundoApellido: '',
+  sarlaftRepPep: null, sarlaftRepVinculoPep: null,
+  sarlaftFamiliarNombre: '', sarlaftFamiliarNumDoc: '', sarlaftFamiliarParentesco: 'Cónyuge', sarlaftFamiliarCargo: '',
+  drawerAccionista: false, accionistaEditIdx: -1, accTipoDoc: 'CC', accNumDoc: '', accNombre: '', accPct: '', accCotizaBolsa: null, accPep: null,
   medioPago: '', procesandoPago: false, pagoError: null, pagoToken: 0, otp: '', otpValidado: false, otpAbierto: false, otpError: false, declaracion: false, aceptaTerminos: false, aceptaDatos: false, aceptaTerminosSeguro: false, aceptaAsegurabilidad: false, modalAsegurabilidad: false, asegurabilidadLeida: false, resumenDetalleAbierto: false, modalPlan: null, drawerVida: false, drawerBenef: false, benefEditIdx: -1,
   drawerSede: false, sedeEditIdx: -1, sedeDraft: nuevaSede(),
   drawerMapa: false, mapaSedeIdx: null, mapaBusqueda: '', mapaError: '', mapaBuscando: false,
@@ -1706,12 +1719,12 @@ const switchInd = (on) => `<span class="pymes-switch${on ? ' is-on' : ''}" aria-
  * porque el input se recrea en cada render (app.innerHTML en cada tecla) y el dropdown/calendario
  * nativo del navegador queda roto si el input no es siempre el mismo nodo (se corta o no deja
  * seleccionar). */
-const inputField = (id, label, value, placeholder = '', type = 'text') => {
+const inputField = (id, label, value, placeholder = '', type = 'text', disabled = false) => {
   const esCorreo = type === 'email';
   const esFecha = type === 'date';
   // La fecha se escribe a mano como texto DD/MM/AAAA (sin calendario nativo, que fallaba al recrearse el input en cada render).
   const attrs = esCorreo ? 'type="text" inputmode="email" autocomplete="off"' : esFecha ? 'type="text" inputmode="numeric" maxlength="10" autocomplete="off"' : `type="${type}" autocomplete="off"`;
-  return `<div><label class="sb-ui-input-label" for="${id}">${label}</label><input id="${id}" class="sb-ui-input" ${attrs} value="${esc(value)}" placeholder="${placeholder}" data-model="${id}"></div>`;
+  return `<div><label class="sb-ui-input-label" for="${id}">${label}</label><input id="${id}" class="sb-ui-input" ${attrs} value="${esc(value)}" placeholder="${placeholder}" data-model="${id}" ${disabled ? 'disabled' : ''}></div>`;
 };
 /** Campo con un "%" que siempre queda pegado al final del valor y no se puede borrar (basta con
  * escribir los dígitos). Antes era type="number": ese tipo de input no soporta setSelectionRange,
@@ -2202,7 +2215,7 @@ const vidaDrawer = () => {
   `);
 };
 
-const overlays = () => coberturasModal() + asegurabilidadModal() + vidaDrawer() + benefDrawer() + sedeDrawer() + mapaDrawer() + otpModal();
+const overlays = () => coberturasModal() + asegurabilidadModal() + vidaDrawer() + benefDrawer() + accionistaDrawer() + sedeDrawer() + mapaDrawer() + otpModal();
 
 /** OLIVIA es un panel flotante disponible en todo el flujo, para resolver dudas sobre coberturas
  * sin interrumpir la cotización en curso. */
@@ -2707,6 +2720,104 @@ const benefDrawer = () => {
   `);
 };
 
+/** SARLAFT (debida diligencia de lavado de activos) para el tomador persona jurídica: va después de
+ * los beneficiarios de Vida Pymes y antes de las fotos. Dos pantallas (sarlaftRepresentante1/2) se
+ * reparten los datos del representante legal; sarlaftFamiliarPep y sarlaftAccionistas solo entran en
+ * ruta() cuando sus preguntas disparadoras se contestan con "Sí" (ver ruta()). */
+const TIPOS_DOC = [['CC', 'Cédula de ciudadanía'], ['CE', 'Cédula de extranjería'], ['NIT', 'NIT'], ['PA', 'Pasaporte']];
+const yesNoSarlaft = (accionBase, current) => `<div class="pymes-chips">${chip('Sí', `${accionBase}:1`, current === true)}${chip('No', `${accionBase}:0`, current === false)}</div>`;
+
+/** "Paso N de M" como en el Figma de SARLAFT, pero calculado sobre las pantallas que de verdad
+ * entran en ruta() (así se ajusta solo si las condicionales de familiar PEP/accionistas aplican o
+ * no), en vez de copiar un número fijo que no correspondería a nuestro propio flujo. */
+const SARLAFT_PASOS = ['sarlaftEmpresa', 'sarlaftRepresentante1', 'sarlaftRepresentante2', 'sarlaftFamiliarPep', 'sarlaftAccionistas'];
+const pasoSarlaft = (paso) => {
+  const activos = SARLAFT_PASOS.filter((p) => ruta().includes(p));
+  const n = activos.indexOf(paso) + 1;
+  return n > 0 ? `Paso ${n} de ${activos.length}` : '';
+};
+
+/** Razón social, NIT, dirección y ciudad ya se capturaron antes (landing y negocio/sedes), así que
+ * aquí solo se muestran deshabilitados para confirmarlos, no para volver a diligenciarlos. El único
+ * campo editable es el correo de la empresa, que puede ser distinto al de contacto de la landing. */
+const sarlaftEmpresa = () => {
+  if (!state.sarlaftCorreo) state.sarlaftCorreo = state.correo;
+  const sedePrincipal = state.sedes[0] || { direccion: '', ciudad: '' };
+  return formCard('sarlaftEmpresa', `
+    ${inputField('sarlaftRazonSocialDisabled', 'Nombre o razón social', state.nombre, '', 'text', true)}
+    ${inputField('sarlaftNitDisabled', 'NIT', state.numDoc, '', 'text', true)}
+    ${inputField('sarlaftDireccionDisabled', 'Dirección oficina principal', sedePrincipal.direccion, '', 'text', true)}
+    ${inputField('sarlaftCiudadDisabled', 'Ciudad oficina principal', sedePrincipal.ciudad, '', 'text', true)}
+    ${inputField('sarlaftCorreo', 'Correo electrónico de la empresa', state.sarlaftCorreo, 'Ej. contacto@empresa.com', 'email')}
+    <div><div style="font-weight:700;font-size:12.5px;margin-bottom:8px">¿La empresa tiene accionistas o asociados con más del 5%?</div>${yesNoSarlaft('sarlaftBool:TieneAccionistas', state.sarlaftTieneAccionistas)}</div>
+  `, 560, pasoSarlaft('sarlaftEmpresa'));
+};
+
+const sarlaftRepresentante1 = () => formCard('sarlaftRepresentante1', `
+  ${selectField('sarlaftRepTipoDoc', 'Tipo de documento', state.sarlaftRepTipoDoc, TIPOS_DOC)}
+  ${inputField('sarlaftRepNumDoc', 'Número de documento', state.sarlaftRepNumDoc)}
+  ${inputField('sarlaftRepCelular', 'Número de celular', state.sarlaftRepCelular, 'Ej. 3103025462')}
+  ${inputField('sarlaftRepCorreo', 'Correo electrónico', state.sarlaftRepCorreo, 'Ej. sucorreo@email.com', 'email')}
+`, 560, pasoSarlaft('sarlaftRepresentante1'));
+
+const sarlaftRepresentante2 = () => formCard('sarlaftRepresentante2', `
+  ${inputField('sarlaftRepPrimerNombre', 'Primer nombre', state.sarlaftRepPrimerNombre)}
+  ${inputField('sarlaftRepSegundoNombre', 'Segundo nombre (Opcional)', state.sarlaftRepSegundoNombre)}
+  ${inputField('sarlaftRepPrimerApellido', 'Primer apellido', state.sarlaftRepPrimerApellido)}
+  ${inputField('sarlaftRepSegundoApellido', 'Segundo apellido (Opcional)', state.sarlaftRepSegundoApellido)}
+  <div><div style="font-weight:700;font-size:12.5px;margin-bottom:8px">¿Es una persona expuesta políticamente?</div>${yesNoSarlaft('sarlaftBool:RepPep', state.sarlaftRepPep)}</div>
+  <div><div style="font-weight:700;font-size:12.5px;margin-bottom:8px">¿Tiene vínculos familiares con una persona expuesta políticamente?</div>${yesNoSarlaft('sarlaftBool:RepVinculoPep', state.sarlaftRepVinculoPep)}</div>
+`, 560, pasoSarlaft('sarlaftRepresentante2'));
+
+const sarlaftFamiliarPep = () => formCard('sarlaftFamiliarPep', `
+  ${inputField('sarlaftFamiliarNombre', 'Nombres y apellidos', state.sarlaftFamiliarNombre)}
+  ${inputField('sarlaftFamiliarNumDoc', 'Número de documento', state.sarlaftFamiliarNumDoc)}
+  ${selectField('sarlaftFamiliarParentesco', 'Parentesco', state.sarlaftFamiliarParentesco, PARENTESCOS)}
+  ${inputField('sarlaftFamiliarCargo', 'Cargo o actividad', state.sarlaftFamiliarCargo, 'Ej. Administrador de empresas')}
+`, 560, pasoSarlaft('sarlaftFamiliarPep'));
+
+const sarlaftAccionistas = () => formCard('sarlaftAccionistas', `
+  <div><div style="font-weight:700;font-size:12.5px;margin-bottom:8px">¿La empresa está en el Registro Nacional de Valores y Emisores (RNVE) o en una bolsa internacional?</div>${yesNoSarlaft('sarlaftBool:Rvne', state.sarlaftRvne)}</div>
+  ${state.sarlaftRvne === true ? inputField('sarlaftRegistroBolsa', 'Registro o bolsa donde está listada', state.sarlaftRegistroBolsa, 'Ej. RNVE') : ''}
+  <div style="height:1px;background:#E1E1E1"></div>
+  <div>
+    <div style="font-weight:700;font-size:16px">Accionistas con más del 5%</div>
+    <div style="font-weight:400;font-size:13.5px;color:#5B5B5B;margin-top:2px">Agregue a cada persona o empresa con más del 5% de participación.</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    ${state.sarlaftAccionistas.map((a, i) => `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:12px;border-top:1px solid #E1E1E1">
+      <div>
+        <div style="font-weight:700;font-size:14px">${esc(a.nombre)}</div>
+        <div style="font-weight:400;font-size:13px;color:#5B5B5B;margin-top:2px">${a.pct}% de participación</div>
+      </div>
+      <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--circle sb-ui-button--icon-only" data-action="editarAccionista:${i}"><span class="material-symbols-outlined" style="font-size:18px">edit</span></button>
+    </div>`).join('')}
+  </div>
+  <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--icon-left" style="align-self:center" data-action="abrirDrawerAccionistaNuevo"><span class="material-symbols-outlined" style="font-size:20px">person_add</span>Agregar accionista</button>
+`, 560, pasoSarlaft('sarlaftAccionistas'));
+
+const accionistaDrawer = () => {
+  if (!state.drawerAccionista) return '';
+  const editando = state.accionistaEditIdx >= 0;
+  const valido = state.accNombre.trim() && String(state.accNumDoc).replace(/\D/g, '').length >= 5 && Number(state.accPct) > 0 && state.accCotizaBolsa !== null && state.accPep !== null;
+  return drawerShell(`
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+      <div style="font-weight:700;font-size:20px">${editando ? 'Editar accionista' : 'Agregar accionista'}</div>
+      <button type="button" class="sb-ui-button sb-ui-button--secondary sb-ui-button--stroke sb-ui-button--circle sb-ui-button--icon-only" data-action="cerrarDrawerAccionista">×</button>
+    </div>
+    ${selectField('accTipoDoc', 'Tipo de documento', state.accTipoDoc, TIPOS_DOC)}
+    ${inputField('accNumDoc', 'Número de documento', state.accNumDoc)}
+    ${inputField('accNombre', 'Nombres o razón social', state.accNombre)}
+    ${campoPorcentaje('accPct', 'Porcentaje de participación', state.accPct, 'data-porcentaje="accPct"')}
+    <div><div style="font-weight:700;font-size:12.5px;margin-bottom:8px">¿Es persona jurídica que cotiza en Bolsa?</div>${yesNoSarlaft('accBool:CotizaBolsa', state.accCotizaBolsa)}</div>
+    <div><div style="font-weight:700;font-size:12.5px;margin-bottom:8px">¿Es persona Políticamente Expuesta o tiene vínculos familiares con una de ellas?</div>${yesNoSarlaft('accBool:Pep', state.accPep)}</div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:auto">
+      <button type="button" class="sb-ui-button sb-ui-button--primary sb-ui-button--fill sb-ui-button--block" data-action="guardarAccionista" ${valido ? '' : 'disabled'}>${editando ? 'Guardar cambios' : 'Agregar accionista'}</button>
+      ${editando ? `<button type="button" class="sb-ui-button sb-ui-button--error sb-ui-button--stroke sb-ui-button--block" data-action="delAccionista:${state.accionistaEditIdx}">Eliminar</button>` : ''}
+    </div>
+  `);
+};
+
 const row = (label, value) => `<div style="display:flex;justify-content:space-between;gap:12px;font-weight:400;font-size:13.5px;color:#414141"><span style="color:#5B5B5B">${label}</span><strong>${value}</strong></div>`;
 
 /** Correos a los que se enviaría la cotización: el del inicio (si está marcado) + los que el
@@ -2892,13 +3003,15 @@ const emision = () => `<div style="display:flex;flex-direction:column;gap:16px;m
   </div>
 </div>`;
 
-const VISTAS = { landing, negocio, sedes, plan, coberturas, fotos, resumenCompra, beneficiarios, resumen, pago, emision };
+const VISTAS = { landing, negocio, sedes, plan, coberturas, fotos, resumenCompra, beneficiarios, sarlaftEmpresa, sarlaftRepresentante1, sarlaftRepresentante2, sarlaftFamiliarPep, sarlaftAccionistas, resumen, pago, emision };
 
 /** Ruta dinámica: beneficiarios solo con Vida. Ciberseguridad y Movilización de mercancías ya
  * no son pasos aparte: se configuran dentro de "coberturas" apenas se activan. */
 const ruta = () => RUTA.filter((step) => {
   if (step === 'sedes') return state.multiSede === true;
   if (step === 'beneficiarios') return state.vidaOn;
+  if (step === 'sarlaftFamiliarPep') return state.sarlaftRepVinculoPep === true;
+  if (step === 'sarlaftAccionistas') return state.sarlaftTieneAccionistas === true;
   return true;
 });
 
@@ -2912,6 +3025,11 @@ const puedeSeguir = () => ({
   coberturas: (!state.opcionales.ciber || state.sedes.every((sede) => sede.ciber.interrupciones !== null)) && (!state.vidaOn || !!edad()),
   fotos: fotosMinimas(), resumenCompra: !state.vidaOn || !!edad(),
   beneficiarios: totalBenef() === 100 && state.beneficiarios.length > 0,
+  sarlaftEmpresa: esValidoCorreo(state.sarlaftCorreo) && state.sarlaftTieneAccionistas !== null,
+  sarlaftRepresentante1: String(state.sarlaftRepNumDoc).replace(/\D/g, '').length >= 5 && !!state.sarlaftRepCelular.trim() && esValidoCorreo(state.sarlaftRepCorreo),
+  sarlaftRepresentante2: !!state.sarlaftRepPrimerNombre.trim() && !!state.sarlaftRepPrimerApellido.trim() && state.sarlaftRepPep !== null && state.sarlaftRepVinculoPep !== null,
+  sarlaftFamiliarPep: !!state.sarlaftFamiliarNombre.trim() && String(state.sarlaftFamiliarNumDoc).replace(/\D/g, '').length >= 5 && !!state.sarlaftFamiliarParentesco && !!state.sarlaftFamiliarCargo.trim(),
+  sarlaftAccionistas: state.sarlaftRvne !== null && (state.sarlaftRvne === false || !!state.sarlaftRegistroBolsa.trim()) && state.sarlaftAccionistas.length > 0,
   resumen: state.declaracion && state.aceptaTerminosSeguro && state.aceptaAsegurabilidad, pago: !!state.medioPago, emision: false
 }[state.paso]);
 const ayuda = () => ({
@@ -2920,6 +3038,11 @@ const ayuda = () => ({
   coberturas: [(state.opcionales.ciber && !state.sedes.every((sede) => sede.ciber.interrupciones !== null)) ? `Responda la pregunta de interrupciones de Ciberseguridad Pymes${state.sedes.length > 1 ? ' en cada sede' : ''}.` : '', (state.vidaOn && !edad()) ? 'Ingrese la fecha de nacimiento del asegurado de Vida Pymes (o quítela del paquete) para ver el valor final.' : ''].filter(Boolean).join(' '),
   fotos: state.sedes.length > 1 ? 'Cargue las tres fotos obligatorias de cada sede.' : 'Cargue las tres fotos obligatorias.', beneficiarios: 'El total debe sumar 100%.',
   resumenCompra: 'Ingrese la fecha de nacimiento del asegurado de Vida Pymes (o quítela del paquete) para ver el valor final y continuar.',
+  sarlaftEmpresa: 'Confirme el correo de la empresa e indique si tiene accionistas con más del 5% de participación.',
+  sarlaftRepresentante1: 'Complete el documento y los datos de contacto del representante legal.',
+  sarlaftRepresentante2: 'Complete el nombre y responda las dos preguntas sobre personas expuestas políticamente.',
+  sarlaftFamiliarPep: 'Complete los datos de su familiar expuesto políticamente.',
+  sarlaftAccionistas: 'Responda si cotiza en bolsa (y dónde, si aplica) y agregue al menos un accionista con más del 5%.',
   resumen: 'Acepte los términos, la Declaración de Asegurabilidad y confirme que la información es verídica.', pago: 'Seleccione un medio de pago.'
 }[state.paso] || '');
 
@@ -2935,7 +3058,7 @@ const MUESTRA_CARRITO = ['coberturas', 'beneficiarios', 'fotos'];
 const FASES = [
   { titulo: 'Su negocio', pasos: ['negocio', 'sedes'] },
   { titulo: 'Arme su paquete', pasos: ['plan', 'coberturas', 'beneficiarios'] },
-  { titulo: 'Revise su seguro', pasos: ['fotos', 'resumen'] },
+  { titulo: 'Revise su seguro', pasos: ['sarlaftEmpresa', 'sarlaftRepresentante1', 'sarlaftRepresentante2', 'sarlaftFamiliarPep', 'sarlaftAccionistas', 'fotos', 'resumen'] },
   { titulo: 'Pago', pasos: ['pago'] }
 ];
 const faseDelPaso = (paso) => FASES.findIndex((f) => f.pasos.includes(paso));
@@ -3044,6 +3167,22 @@ const render = () => {
      * que sigue manejado por state.paso, no por el historial del navegador. */
     const rutaHash = '#/' + state.paso;
     if (location.hash !== rutaHash) history.replaceState(null, '', rutaHash);
+    /** Si el prototipo corre embebido (iframe del wrapper de usability test), avisamos a la ventana
+     * contenedora el paso actual y la sede activa en cada render, para que el wrapper detecte la
+     * finalización de cada tarea (incluido el cambio local→bodega). Se envía a '*' porque el wrapper
+     * puede servirse desde otro origen; el wrapper valida el formato, no el origen, y no se
+     * transmiten datos sensibles. */
+    if (window.parent && window.parent !== window) {
+      const sedeAct = state.sedes[state.sedeActiva];
+      try {
+        window.parent.postMessage({
+          tipo: 'pymes:paso',
+          paso: state.paso,
+          sedeActiva: state.sedeActiva,
+          sedeTipo: sedeAct ? (sedeAct.tipo || '') : ''
+        }, '*');
+      } catch (e) { /* iframe sandbox restrictivo: ignorar */ }
+    }
     const currentRoute = ruta();
     const index = currentRoute.indexOf(state.paso);
     if (state.paso === 'landing') { app.innerHTML = landing(); modalRoot.innerHTML = overlays(); oliviaRoot.innerHTML = oliviaWidget(); initMapaSiNecesario(); return; }
@@ -3052,7 +3191,8 @@ const render = () => {
      * traen valores sugeridos por defecto) sin que el cliente haya abierto esa pestaña ni una vez.
      * No bloquea nada: solo alimenta el indicador visual de las pestañas (ver selectorSedes). */
     if (state.paso === 'coberturas' && !state.sedesVisitadas.includes(state.sedeActiva)) state.sedesVisitadas = [...state.sedesVisitadas, state.sedeActiva];
-    const nextLabel = state.paso === 'pago' ? `Pagar ${primaTxt()}` : (state.paso === 'resumen' ? 'Confirmar y validar' : 'Continuar');
+    const destinoSiguiente = currentRoute[Math.min(index + 1, currentRoute.length - 1)];
+    const nextLabel = state.paso === 'pago' ? `Pagar ${primaTxt()}` : ((destinoSiguiente === 'sarlaftEmpresa' && !state.otpValidado) ? 'Confirmar y validar' : 'Continuar');
     const bloqueado = !puedeSeguir();
     const conCta = state.paso !== 'emision' && !SIN_CTA_PROPIA.includes(state.paso) && !(state.paso === 'pago' && (state.procesandoPago || state.pagoError));
     ctaVisibleOlivia = conCta;
@@ -3270,7 +3410,7 @@ document.body.addEventListener('click', (event) => {
     if (!puedeSeguir()) { render(); return; }
     const destino = currentRoute[Math.min(index + 1, currentRoute.length - 1)];
     if (state.paso === 'pago') iniciarPago(destino);
-    else if (state.paso === 'resumen' && !state.otpValidado) { state.otpAbierto = true; state.otpError = false; }
+    else if (destino === 'sarlaftEmpresa' && !state.otpValidado) { state.otpAbierto = true; state.otpError = false; }
     else state.paso = destino;
   } else if (action === 'back') {
     if (state.paso === 'emision') return;
@@ -3442,6 +3582,23 @@ document.body.addEventListener('click', (event) => {
     }
   }
   else if (action.startsWith('delBenef:')) { state.beneficiarios.splice(Number(action.slice(9)), 1); state.drawerBenef = false; }
+  /** Las preguntas Sí/No de SARLAFT (empresa, representante legal y el drawer de accionistas)
+   * comparten esta misma acción genérica: "sarlaftBool:Campo:1" o "accBool:Campo:0" reconstruyen la
+   * llave plana del state (ver sarlaftBool()/accBool() arriba) porque el delegado de 'input' solo
+   * sabe escribir state[key] = valor, no state.sarlaft.campo. */
+  else if (/^sarlaftBool:[A-Za-z]+:[01]$/.test(action)) { const [, campo, val] = action.match(/^sarlaftBool:([A-Za-z]+):([01])$/); state['sarlaft' + campo] = val === '1'; }
+  else if (/^accBool:[A-Za-z]+:[01]$/.test(action)) { const [, campo, val] = action.match(/^accBool:([A-Za-z]+):([01])$/); state['acc' + campo] = val === '1'; }
+  else if (action === 'abrirDrawerAccionistaNuevo') { state.accionistaEditIdx = -1; state.accTipoDoc = 'CC'; state.accNumDoc = ''; state.accNombre = ''; state.accPct = ''; state.accCotizaBolsa = null; state.accPep = null; state.drawerAccionista = true; }
+  else if (action.startsWith('editarAccionista:')) { const i = Number(action.slice(17)); const a = state.sarlaftAccionistas[i]; state.accionistaEditIdx = i; state.accTipoDoc = a.tipoDoc; state.accNumDoc = a.numDoc; state.accNombre = a.nombre; state.accPct = a.pct; state.accCotizaBolsa = a.cotizaBolsa; state.accPep = a.pep; state.drawerAccionista = true; }
+  else if (action === 'cerrarDrawerAccionista') state.drawerAccionista = false;
+  else if (action === 'guardarAccionista') {
+    if (state.accNombre.trim() && String(state.accNumDoc).replace(/\D/g, '').length >= 5 && Number(state.accPct) > 0 && state.accCotizaBolsa !== null && state.accPep !== null) {
+      const entry = { tipoDoc: state.accTipoDoc, numDoc: state.accNumDoc, nombre: state.accNombre, pct: Number(state.accPct), cotizaBolsa: state.accCotizaBolsa, pep: state.accPep };
+      if (state.accionistaEditIdx >= 0) state.sarlaftAccionistas[state.accionistaEditIdx] = entry; else state.sarlaftAccionistas.push(entry);
+      state.drawerAccionista = false;
+    }
+  }
+  else if (action.startsWith('delAccionista:')) { state.sarlaftAccionistas.splice(Number(action.slice(14)), 1); state.drawerAccionista = false; }
   else if (action === 'validarOtp') {
     if (state.otp.trim().length > 0) {
       state.otpValidado = true; state.otpAbierto = false; state.otpError = false;
@@ -3630,6 +3787,41 @@ const sembrarEstadoHasta = (paso) => {
     state.beneficiarios = [{ nombre: 'María Ramírez', parentesco: 'Cónyuge', pct: 100 }];
   }
 
+  /** SARLAFT: empresa + representante legal (siempre en la ruta) se siembran en cuanto quedan atrás,
+   * igual que el resto de pasos de arriba. Las dos pantallas condicionales (familiar PEP y
+   * accionistas) solo existen en ruta() si su pregunta disparadora es "Sí": si el arranque pide
+   * justo esa pantalla la forzamos a "Sí" (si no, ?paso= la filtraría antes de llegar); si ya quedó
+   * atrás la dejamos en "No" por defecto, porque nada más adelante depende de sus datos. */
+  if (completo('sarlaftEmpresa')) {
+    state.sarlaftCorreo = state.correo || 'contacto@andina.com.co';
+  }
+  // El gate del OTP se dispara justo antes de entrar a sarlaftEmpresa: si el arranque es esa
+  // pantalla o cualquiera posterior, el gate ya quedó atrás en un recorrido real.
+  if (completo('sarlaftEmpresa') || objetivo === RUTA.indexOf('sarlaftEmpresa')) {
+    state.otpValidado = true;
+  }
+  if (completo('sarlaftRepresentante1')) {
+    state.sarlaftRepNumDoc = '1020445778';
+    state.sarlaftRepCelular = '314 578 9001';
+    state.sarlaftRepCorreo = 'andres.ramirez@andina.com.co';
+  }
+  if (completo('sarlaftRepresentante2')) {
+    state.sarlaftRepPrimerNombre = 'Andrés';
+    state.sarlaftRepPrimerApellido = 'Ramírez';
+    if (state.sarlaftRepPep === null) state.sarlaftRepPep = false;
+  }
+  if (objetivo === RUTA.indexOf('sarlaftFamiliarPep')) {
+    state.sarlaftRepVinculoPep = true;
+  } else if (completo('sarlaftFamiliarPep')) {
+    state.sarlaftRepVinculoPep = false;
+  }
+  if (objetivo === RUTA.indexOf('sarlaftAccionistas')) {
+    state.sarlaftTieneAccionistas = true;
+    state.sarlaftRvne = false;
+  } else if (completo('sarlaftAccionistas')) {
+    state.sarlaftTieneAccionistas = false;
+  }
+
   // fotos: las tres obligatorias
   if (completo('fotos')) {
     state.sedes.forEach((s) => { const f = fotosDe(s); f.entrada = true; f.trabajo = true; f.almacenamiento = true; });
@@ -3667,6 +3859,25 @@ const completarPasoActual = (paso) => {
       break;
     case 'beneficiarios':
       state.beneficiarios = [{ nombre: 'María Ramírez', parentesco: 'Cónyuge', pct: 100 }];
+      break;
+    case 'sarlaftEmpresa':
+      state.sarlaftCorreo = state.correo || 'contacto@andina.com.co'; state.sarlaftTieneAccionistas = false;
+      break;
+    case 'sarlaftRepresentante1':
+      state.sarlaftRepNumDoc = '1020445778'; state.sarlaftRepCelular = '314 578 9001';
+      state.sarlaftRepCorreo = 'andres.ramirez@andina.com.co';
+      break;
+    case 'sarlaftRepresentante2':
+      state.sarlaftRepPrimerNombre = 'Andrés'; state.sarlaftRepPrimerApellido = 'Ramírez';
+      state.sarlaftRepPep = false; state.sarlaftRepVinculoPep = false;
+      break;
+    case 'sarlaftFamiliarPep':
+      state.sarlaftFamiliarNombre = 'Carlos Ramírez'; state.sarlaftFamiliarNumDoc = '79456123';
+      state.sarlaftFamiliarCargo = 'Senador';
+      break;
+    case 'sarlaftAccionistas':
+      state.sarlaftRvne = false;
+      state.sarlaftAccionistas = [{ tipoDoc: 'CC', numDoc: '1020445778', nombre: 'Simón Libertador', pct: 30, cotizaBolsa: false, pep: false }];
       break;
     case 'resumen': state.declaracion = true; state.aceptaTerminosSeguro = true; state.aceptaAsegurabilidad = true; break;
     case 'pago': state.medioPago = 'PSE'; break;
@@ -3730,6 +3941,37 @@ if (pasoPorQuery && RUTA.includes(pasoPorQuery)) {
   sembrarEstadoHasta(pasoInicial);
   state.paso = pasoInicial;
   aplicarSedePorQuery();
+}
+
+/** Captura de clics para mapa de calor (solo embebido en el wrapper de usability test). Emite por
+ * postMessage la posición RELATIVA del clic (fracción 0..1 del viewport, comparable entre pantallas)
+ * y una etiqueta corta del elemento. No captura valores de inputs ni datos personales. */
+if (window.parent && window.parent !== window) {
+  const etiquetaClic = (el) => {
+    if (!el || !el.closest) return '';
+    const accionEl = el.closest('[data-action]');
+    if (accionEl) return 'action:' + (accionEl.getAttribute('data-action') || '').slice(0, 40);
+    const btn = el.closest('button, a, [role="tab"], label');
+    if (btn) {
+      const t = (btn.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 30);
+      return (btn.tagName.toLowerCase()) + (t ? (':' + t) : '');
+    }
+    if (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA') return el.tagName.toLowerCase();
+    return (el.tagName || '').toLowerCase();
+  };
+  document.addEventListener('click', (e) => {
+    const w = window.innerWidth || 1, h = window.innerHeight || 1;
+    try {
+      window.parent.postMessage({
+        tipo: 'pymes:click',
+        paso: state.paso,
+        xr: +(e.clientX / w).toFixed(4),
+        yr: +(e.clientY / h).toFixed(4),
+        el: etiquetaClic(e.target),
+        t: Date.now()
+      }, '*');
+    } catch (err) { /* sandbox restrictivo: ignorar */ }
+  }, true);
 }
 
 render();
